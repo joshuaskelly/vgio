@@ -1,0 +1,9 @@
+# Ignore local Blender test copy
+blender
+
+# Ignore IDE files
+.idea
+.vscode
+
+# No compiled Python artifacts
+*.pyc
