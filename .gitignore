@@ -1,5 +1,5 @@
 # Ignore local Blender test copy
-blender
+/blender
 
 # Ignore IDE files
 .idea
