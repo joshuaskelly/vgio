@@ -1,9 +1,10 @@
 import bpy
 import bmesh
 import time
+from mathutils import Vector
+from mathutils.geometry import tessellate_polygon
 
 from . import wadfile
-from . import polygon_utils
 
 def load(operator,
          context,
@@ -124,85 +125,30 @@ def load(operator,
 
     # Render sectors
     for sector_index in sector_map:
-        print("Processing sector: %r" % sector_index)
         lines = sector_map[sector_index]
-        lines2 = [[[vertices[line["vertex_1"]]["x"], vertices[line["vertex_1"]]["y"]], [vertices[line["vertex_2"]]["x"], vertices[line["vertex_2"]]["y"]]] for line in lines]
         floor_height = sectors[sector_index]["floor_height"]
 
-        splitter = polygon_utils.PolygonSplitter()
-        splitter.open(lines2)
-        poly = polygon_utils.Polygon2D()
-        splitter.doSplitting(poly)
+        points = []
 
-        bverts = {}
-
-        sub_me = bpy.data.meshes.new("SECTOR_%r" % sector_index)
-        sub_bm = bmesh.new()
-
-        if poly.subpolys:
-            for subpoly in poly.subpolys:
-                pass
-        else:
-            vs = []
-            # Sort edges
-
-            # Render simple sectors
-            for line in lines:
-                v1 = line["vertex_1"]
-                v2 = line["vertex_2"]
-
-                vert = vertices[v1]
-                bv1 = sub_bm.verts.new([vert["x"], vert["y"], floor_height])
-                vs.append(bv1)
-
-                vert = vertices[v2]
-                bv2 = sub_bm.verts.new([vert["x"], vert["y"], floor_height])
-                vs.append(bv2)
-
-            sub_bm.faces.new(vs)
-
-        """
+        # Render simple sectors
         for line in lines:
             v1 = line["vertex_1"]
             v2 = line["vertex_2"]
 
-            if v1 not in bverts:
-                vert = vertices[v1]
-                bverts[v1] = sub_bm.verts.new([vert["x"], vert["y"], 0])
+            vert = vertices[v1]
+            points.append(Vector(([vert["x"], vert["y"], floor_height])))
 
-            if v2 not in bverts:
-                vert = vertices[v2]
-                bverts[v2] = sub_bm.verts.new([vert["x"], vert["y"], 0])
+            vert = vertices[v2]
+            points.append(Vector(([vert["x"], vert["y"], floor_height])))
 
-            try:
-                sub_bm.edges.new((bverts[v1], bverts[v2]))
-            except:
-                pass
-        """
+        tesselation = tessellate_polygon((points,))
 
-        sub_bm.to_mesh(sub_me)
-        sub_bm.free()
-        sub_ob = bpy.data.objects.new("SECTOR_%r" % sector_index, sub_me)
-        bpy.context.scene.objects.link(sub_ob)
-
-        """
-        sub_ob.select = True
-        bpy.ops.object.convert(target="CURVE")
-        sub_ob.dimensions = "2D"
-        bpy.ops.object.convert(target="MESH")
-        sub_ob.select = False
-        """
-
-    """
-    bverts = []
-    for vert in [[v["x"], v["y"], 0] for v in vertices]:
-        bverts.append(bm.verts.new(vert))
-
-    for line in lines:
-        v1 = bverts[line["vertex_1"]]
-        v2 = bverts[line["vertex_2"]]
-        bm.edges.new((v1, v2))
-    """
+        faces = []
+        for tri in tesselation:
+            verts = []
+            for point in tri:
+                verts.append(bm.verts.new(points[point]))
+            faces.append(bm.faces.new(verts))
 
     bm.to_mesh(me)
     bm.free()

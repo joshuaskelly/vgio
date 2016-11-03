@@ -4,6 +4,8 @@
 # Ignore IDE files
 .idea
 .vscode
+.vs
+/vs
 
 # No compiled Python artifacts
 *.pyc
