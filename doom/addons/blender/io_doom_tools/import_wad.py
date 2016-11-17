@@ -1,10 +1,9 @@
 import bpy
 import bmesh
 import time
-from mathutils import Vector
-from mathutils.geometry import tessellate_polygon
 
 from . import wadfile
+from . import polygon_utils
 
 def load(operator,
          context,
@@ -16,6 +15,7 @@ def load(operator,
     loaded_wad = wadfile.load(filepath)
 
     # MAP01
+    # TODO: Handle loading better for missing lumps
     offset = 6
     lines = loaded_wad["lumps"][offset + 2]["value"]
     sides = loaded_wad["lumps"][offset + 3]["value"]
@@ -126,29 +126,40 @@ def load(operator,
     # Render sectors
     for sector_index in sector_map:
         lines = sector_map[sector_index]
+        lines2 = [[[vertices[line["vertex_1"]]["x"], vertices[line["vertex_1"]]["y"]], [vertices[line["vertex_2"]]["x"], vertices[line["vertex_2"]]["y"]]] for line in lines]
         floor_height = sectors[sector_index]["floor_height"]
 
-        points = []
+        sector_name = "SECTOR"+str(sector_index)
+        sector_mesh = bpy.data.meshes.new(sector_name)
+        sector_bmesh = bmesh.new()
 
-        # Render simple sectors
-        for line in lines:
-            v1 = line["vertex_1"]
-            v2 = line["vertex_2"]
 
-            vert = vertices[v1]
-            points.append(Vector(([vert["x"], vert["y"], floor_height])))
+        splitter = polygon_utils.PolygonSplitter()
+        splitter.open(lines2)
+        poly = polygon_utils.Polygon2D()
+        splitter.doSplitting(poly)
 
-            vert = vertices[v2]
-            points.append(Vector(([vert["x"], vert["y"], floor_height])))
+        bm_verts = []
 
-        tesselation = tessellate_polygon((points,))
+        if poly.subpolys:
+            for subpoly in poly.subpolys:
+                for vertex in subpoly.vertices:
+                    bm_verts.append(sector_bmesh.verts.new((vertex.x, vertex.y, floor_height)))
 
-        faces = []
-        for tri in tesselation:
-            verts = []
-            for point in tri:
-                verts.append(bm.verts.new(points[point]))
-            faces.append(bm.faces.new(verts))
+                sector_bmesh.faces.new(bm_verts[-len(subpoly.vertices):])
+        else:
+            for line in lines2:
+                bm_verts.append(sector_bmesh.verts.new((line[0][0], line[0][1], floor_height)))
+                bm_verts.append(sector_bmesh.verts.new((line[1][0], line[1][1], floor_height)))
+
+            sector_bmesh.faces.new(bm_verts[-len(subpoly.vertices):])
+
+        sector_bmesh.to_mesh(sector_mesh)
+        sector_bmesh.free()
+        
+        mesh_object = bpy.data.objects.new(sector_name, sector_mesh)
+        bpy.context.scene.objects.link(mesh_object)
+
 
     bm.to_mesh(me)
     bm.free()
