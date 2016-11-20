@@ -87,8 +87,10 @@ class LumpList(list):
     def __getitem__(self, key):
         if type(key) is str:
             return next((i for i in self if i.name == key), None)
-        else:
-            return list.__getitem__(self, key)
+        elif type(key) is slice:
+            key = slice(self.index(key.start), self.index(key.stop), key.step)
+
+        return list.__getitem__(self, key)
 
     def __contains__(self, key):
         return self[key] is not None
