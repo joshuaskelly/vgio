@@ -88,7 +88,9 @@ class LumpList(list):
         if type(key) is str:
             return next((i for i in self if i.name == key), None)
         elif type(key) is slice:
-            key = slice(self.index(key.start), self.index(key.stop), key.step)
+            start = self.index(key.start) if key.start else 0
+            stop = self.index(key.stop) if key.stop else -1
+            key = slice(start, stop)
 
         return list.__getitem__(self, key)
 
