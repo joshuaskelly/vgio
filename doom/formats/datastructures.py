@@ -39,7 +39,7 @@ Node = namedtuple('Node',
      "left_child")
     )
 
-node_format = '<14h'
+node_format = '<12h2H'
 
 NODES = {'typename': Node, 'format': node_format}
 

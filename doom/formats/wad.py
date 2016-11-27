@@ -11,17 +11,17 @@ from collections import namedtuple
 from doom.formats import datastructures
 from doom.formats.datastructures import Header, header_format
 
-def load(file_path):
+def load(filepath):
     """Creates a dictionary representation of a wad file.
 
     Args:
-        file_path (string): The pathn to the wad file.
+        filepath (string): The pathn to the wad file.
 
     Returns:
         (Wad): Wad file of parsed data.
     """
 
-    with open(file_path, 'rb') as file:
+    with open(filepath, 'rb') as file:
         def read_struct(file, tup, format):
             read_data = file.read(struct.calcsize(format))
             unpacked_tuple = struct.unpack(format, read_data)
@@ -39,7 +39,7 @@ def load(file_path):
                 if entry.size == 0:
                     return None
 
-                with open(file_path, 'rb') as file:
+                with open(filepath, 'rb') as file:
                     file.seek(entry.pointer)
 
                     # See if we have a definition for the lump data structure
@@ -88,9 +88,10 @@ class LumpList(list):
         if type(key) is str:
             return next((i for i in self if i.name == key), None)
         elif type(key) is slice:
-            start = self.index(key.start) if key.start else 0
-            stop = self.index(key.stop) if key.stop else -1
-            key = slice(start, stop)
+            start = self.index(key.start) if isinstance(key.start, str) else key.start or 0
+            stop = self.index(key.stop) if isinstance(key.stop, str) else key.stop or -1
+
+            return LumpList(list.__getitem__(self, slice(start, stop)))
 
         return list.__getitem__(self, key)
 
