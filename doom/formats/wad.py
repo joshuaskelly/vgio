@@ -56,12 +56,12 @@ def load(filepath):
 
         return Wad(header.type, lumps)
 
-class Wad:
+class Wad(object):
     def __init__(self, type, lumps):
         self.type = type
         self.lumps = lumps
 
-class Lump:
+class Lump(object):
     def __init__(self, pointer, size, name):
         self.__data = None
         self.name = name
