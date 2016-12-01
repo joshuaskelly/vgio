@@ -35,15 +35,15 @@ class Thing(object):
 
 class LineDefFlags(object):
     def __init__(self, flags):
-        self.impassable     = flags & 0b000000001 is not 0
-        self.block_monsters = flags & 0b000000010 is not 0
-        self.two_sided      = flags & 0b000000100 is not 0
-        self.upper_unpegged = flags & 0b000001000 is not 0
-        self.lower_unpegged = flags & 0b000010000 is not 0
-        self.secret         = flags & 0b000100000 is not 0
-        self.block_sound    = flags & 0b001000000 is not 0
-        self.not_on_map     = flags & 0b010000000 is not 0
-        self.already_on_map = flags & 0b100000000 is not 0
+        self.impassable     = flags & 1 << 0 > 0
+        self.block_monsters = flags & 1 << 1 > 0
+        self.two_sided      = flags & 1 << 2 > 0
+        self.upper_unpegged = flags & 1 << 3 > 0
+        self.lower_unpegged = flags & 1 << 4 > 0
+        self.secret         = flags & 1 << 5 > 0
+        self.block_sound    = flags & 1 << 6 > 0
+        self.not_on_map     = flags & 1 << 7 > 0
+        self.already_on_map = flags & 1 << 8 > 0
 
 class LineDef(object):
     LUMP_NAME = 'LINEDEFS'
