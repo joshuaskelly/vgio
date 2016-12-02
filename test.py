@@ -9,8 +9,51 @@ from doom.core.wad import Wad
 
 from camera import FirstPersonCamera as Camera
 
-wad = Wad('C:\\Users\\Joshua\\Desktop\\DOOM2.WAD')
-doom_map = wad.map('MAP01')
+#wad = Wad('C:\\Users\\Joshua\\Desktop\\DOOM2.WAD')
+#doom_map = wad.map('MAP01')
+
+import struct
+
+from quake.formats.pak import PakFile
+
+#pak = pak.load('/Users/joshua/Games/Quake/id1/PAK0.PAK')
+
+pak_file = PakFile('/Users/joshua/Games/Quake/id1/PAK0.PAK')
+#pak_file.extract('progs/player.mdl', '/Users/joshua/Desktop/out')
+pak_file.extractall('/Users/joshua/Desktop/out')
+
+quit()
+
+with PakFile('/Users/joshua/Games/Quake/id1/PAK0.PAK') as pak_file:
+    with pak_file.open('quake.rc') as file:
+        r = file.read()
+
+    with pak_file.open('progs/player.mdl') as file:
+        mdl_struct = '<4sl10f8lf'
+        mdl_size = struct.calcsize(mdl_struct)
+        mdl_header = file.read(mdl_size)
+        mdl_header = struct.unpack(mdl_struct, mdl_header)
+
+        magic_number = mdl_header[0].split(b'\00')[0].decode('ascii')
+        version = mdl_header[1]
+        scale = mdl_header[2:5]
+        origin = mdl_header[5:8]
+        radius = mdl_header[8]
+        offsets = mdl_header[9:12]
+        numskins = mdl_header[12]
+        skinwidth = mdl_header[13]
+        skinheight = mdl_header[14]
+        numverts = mdl_header[15]
+        numtris = mdl_header[16]
+        numframes = mdl_header[17]
+        synctype = mdl_header[18]
+        flags = mdl_header[19]
+        size = mdl_header[20]
+
+        print(magic_number)
+
+
+quit()
 
 class Mesh:
     def __init__(self, vertices, triangles):
