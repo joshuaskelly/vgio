@@ -111,11 +111,16 @@ class PakExtFile(io.BufferedIOBase):
     It is returned by PakFile.open()
     """
 
+    MAX_N = 1 << 31 - 1
+    MIN_READ_SIZE = 4096
+
     def __init__(self, file_object, mode, pak_info, close_file_object=False):
         self._file_object = file_object
         self._close_file_object = close_file_object
+        self._bytes_left = pak_info.file_size
 
         self._eof = False
+        self._readbuffer = b''
         self._offset = 0
         self._size = pak_info.file_size
 
@@ -130,22 +135,62 @@ class PakExtFile(io.BufferedIOBase):
         """
 
         if n is None or n < 0:
+            buffer = self._readbuffer[self._offset:]
+            self._readbuffer = b''
             self._offset = 0
-            buffer = self._file_object.read(self._size)
+
+            while not self._eof:
+                buffer += self._read_internal(self.MAX_N)
 
             return buffer
 
         end = n + self._offset
 
-        if n < self._size:
+        if end < len(self._readbuffer):
+            buffer = self._readbuffer[self._offset:end]
             self._offset = end
 
-            return self._file_object.read(n)
+            return buffer
 
-        n = self._size - end
+        n = end - len(self._readbuffer)
+        buffer = self._readbuffer[self._offset:]
+        self._readbuffer = b''
         self._offset = 0
 
-        return self._file_object.read(n)
+        while n > 0 and not self._eof:
+            data = self._read_internal(n)
+
+            if n < len(data):
+                self._readbuffer = data
+                self._offset = n
+                buffer += data[:n]
+                break
+
+            buffer += data
+            n -= len(data)
+
+        return buffer
+
+    def _read_internal(self, n):
+        """Read up to n compressed bytes with at most one read() system call"""
+
+        if self._eof or n <= 0:
+            return b''
+
+        # Read from file.
+        n = max(n, self.MIN_READ_SIZE)
+        data = self._file_object.read(n)
+
+        if not data:
+            raise EOFError
+
+        data = data[:self._bytes_left]
+        self._bytes_left -= len(data)
+
+        if self._bytes_left <= 0:
+            self._eof = True
+
+        return data
 
     def close(self):
         try:

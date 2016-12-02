@@ -19,7 +19,6 @@ from quake.formats.pak import PakFile
 #pak = pak.load('/Users/joshua/Games/Quake/id1/PAK0.PAK')
 
 pak_file = PakFile('/Users/joshua/Games/Quake/id1/PAK0.PAK')
-#pak_file.extract('progs/player.mdl', '/Users/joshua/Desktop/out')
 pak_file.extractall('/Users/joshua/Desktop/out')
 
 quit()
