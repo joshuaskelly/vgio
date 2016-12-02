@@ -14,7 +14,7 @@ from camera import FirstPersonCamera as Camera
 
 import struct
 
-from quake.formats.pak import PakFile
+from quake.formats.pakfile import PakFile
 
 #pak = pak.load('/Users/joshua/Games/Quake/id1/PAK0.PAK')
 
