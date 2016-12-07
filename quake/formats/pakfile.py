@@ -192,6 +192,20 @@ class PakExtFile(io.BufferedIOBase):
 
         return data
 
+    def peek(self, n=1):
+        """Returns buffered bytes without advancing the position."""
+
+        if n > len(self._readbuffer) - self._offset:
+            chunk = self.read(n)
+            if len(chunk) > self._offset:
+                self._readbuffer = chunk + self._readbuffer[self._offset:]
+                self._offset = 0
+            else:
+                self._offset -= len(chunk)
+
+        # Return up to 512 bytes to reduce allocation overhead for tight loops.
+        return self._readbuffer[self._offset: self._offset + 512]
+
     def close(self):
         try:
             if self._close_file_object:
@@ -203,7 +217,7 @@ class PakExtFile(io.BufferedIOBase):
 class PakFile(object):
     """Class with methods to open, read, close, and list pak files.
 
-     p =  PakFile(file, mode='r')
+     p = PakFile(file, mode='r')
 
     file: Either the path to the file, or a file-like object. If it is a path,
         the file will be opened and closed by PakFile.
@@ -252,7 +266,7 @@ class PakFile(object):
         header = struct.unpack(header_struct, header)
 
         if header[_HEADER_SIGNATURE] != header_magic_number:
-            raise BadPakFile("Bad magic number for pak file")
+            raise BadPakFile('Bad magic number: %r' % header[_HEADER_SIGNATURE])
 
         start_of_directory = header[_HEADER_DIRECTORY_OFFSET]
         size_of_directory = header[_HEADER_DIRECTORY_SIZE]
