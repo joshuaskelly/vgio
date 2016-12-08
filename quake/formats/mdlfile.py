@@ -22,10 +22,10 @@ header_size = struct.calcsize(header_format)
 # Indexes of the header structure
 _HEADER_SIGNATURE = 0
 _HEADER_VERSION = 1
-_HEADER_SCALE = 2#slice(2,5)
-_HEADER_ORIGIN = 5#slice(5,8)
+_HEADER_SCALE = 2
+_HEADER_ORIGIN = 5
 _HEADER_RADIUS = 8
-_HEADER_OFFSETS = 9#slice(9,12) 9:12
+_HEADER_OFFSETS = 9
 _HEADER_NUMSKINS = 12
 _HEADER_SKINWIDTH = 13
 _HEADER_SKINHEIGHT = 14
