@@ -74,13 +74,6 @@ _FRAME_MAX = 4
 _FRAME_NAME = 8
 _FRAME_VERTS = 9
 
-def calculate_framegroup_format(numverts, numframes):
-    fs = calculate_frame_format(numverts).lstrip('<')
-    return '<8B%if%s' % (numframes, fs * numframes)
-
-framegroup_format = None
-framegroup_size = None
-
 _FRAMEGROUP_NUMBER_OF_FRAMES = 0
 _FRAMEGROUP_MIN = 1
 _FRAMEGROUP_MAX = 2
@@ -184,7 +177,7 @@ default_palette = (
 
 
 class MdlSkin(object):
-    """ """
+    """Class for representing an mdl skin"""
 
     __slots__ = (
         'group',
@@ -197,7 +190,7 @@ class MdlSkin(object):
 
 
 class MdlSkinGroup(object):
-    """ """
+    """Class for representing an mdl skin group"""
 
     __slots__ = (
         'group',
@@ -214,7 +207,7 @@ class MdlSkinGroup(object):
 
 
 class MdlStVertex(object):
-    """ """
+    """Class for representing an mdl st vertex"""
 
     __slots__ = (
         'on_seam',
@@ -238,7 +231,7 @@ class MdlStVertex(object):
 
 
 class MdlTriangle(object):
-    """ """
+    """Class for representing an mdl triangle"""
 
     __slots__ = (
         'faces_front',
@@ -257,7 +250,7 @@ class MdlTriangle(object):
 
 
 class MdlTriVertex(object):
-    """ """
+    """Class for representing an mdl trivertex"""
 
     __slots__ = (
         'x',
@@ -285,7 +278,7 @@ class MdlTriVertex(object):
 
 
 class MdlFrame(object):
-    """ """
+    """Class for representing an mdl frame"""
 
     __slots__ = (
         'type',
@@ -306,7 +299,7 @@ class MdlFrame(object):
 
 
 class MdlFrameGroup(object):
-    """ """
+    """Class for representing an mdl frame group"""
 
     __slots__ = (
         'number_of_frames',
@@ -395,7 +388,12 @@ class Mdl(object):
 
     @staticmethod
     def open(file, mode='r'):
-        """Returns an Mdl object"""
+        """Returns an Mdl object
+
+        file: Either the path to the file, a file-like object, or bytes.
+
+        mode: Currently the only supported mode is 'r'
+        """
 
         if mode not in ['r', 'w']:
             raise ValueError("invalid mode: '%s'" % mode)
@@ -496,17 +494,6 @@ class Mdl(object):
                 mdl.frames.append(MdlFrame(data))
 
             else:
-                """
-                framegroup_struct = calculate_framegroup_struct(self.numverts, self.numframes)
-                framegroup_size = struct.calcsize(framegroup_struct)
-
-                data = fp.read(framegroup_size)
-                unpacked_data = struct.unpack(framegroup_struct, data)
-                framegroup_struct = unpacked_data
-
-                self.frames.append(MdlFrameGroup(framegroup_struct))
-                """
-
                 number_of_frames = file.read(4)
                 number_of_frames = struct.unpack('<l', number_of_frames)[0]
 
@@ -537,6 +524,14 @@ class Mdl(object):
         self.fp.close()
 
     def mesh(self, frame=0, subframe=0):
+        """Returns a Mesh object
+
+        frame: The index of the frame to get mesh data for.
+
+        subframe: If the frame is a FrameGroup, a subframe index is needed to
+            get the mesh data.
+        """
+
         mesh = Mesh()
 
         frame = self.frames[frame]
@@ -555,7 +550,7 @@ class Mdl(object):
                 st_vertex = self.st_vertices[vertex]
                 s, t = st_vertex
 
-                if st_vertex.on_seam  and not triangle.faces_front:
+                if st_vertex.on_seam and not triangle.faces_front:
                     s += self.skin_width / 2
 
                 uv_coord = s / self.skin_width, 1 - t / self.skin_height
@@ -580,6 +575,14 @@ class Mdl(object):
         return mesh
 
     def image(self, index=0, palette=default_palette):
+        """Returns an Image object.
+
+        index: The index of the skin to get image data for.
+
+        palette: A 256 color palette to use for converted index color data to
+            RGB data.
+        """
+
         if index > len(self.skins):
             raise IndexError('list index out of range')
 
@@ -603,5 +606,3 @@ class Mdl(object):
         image.pixels = d
 
         return image
-
-

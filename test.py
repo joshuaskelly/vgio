@@ -25,6 +25,7 @@ image = ImageData(image.width, image.height, image.format, rawData)
 def lerp(a, b, step):
     return a + step * (b - a)
 
+
 class Model:
     def __init__(self, mesh, image=None):
         self.mesh = mesh

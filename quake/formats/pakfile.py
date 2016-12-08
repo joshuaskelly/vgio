@@ -222,7 +222,7 @@ class PakFile(object):
     file: Either the path to the file, or a file-like object. If it is a path,
         the file will be opened and closed by PakFile.
 
-    mode: Currently the only support mode is 'r'
+    mode: Currently the only supported mode is 'r'
     """
 
     fp = None
