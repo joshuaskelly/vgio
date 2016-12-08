@@ -227,6 +227,15 @@ class MdlStVertex(object):
         self.s = st_vertex_struct[_ST_VERTEX_S]
         self.t = st_vertex_struct[_ST_VERTEX_T]
 
+    def __getitem__(self, item):
+        if item > 1:
+            raise IndexError('list index of out of range')
+
+        if item == 0:
+            return self.s
+        else:
+            return self.t
+
 
 class MdlTriangle(object):
     """ """
@@ -537,15 +546,14 @@ class Mdl(object):
         else:
             mesh.vertices = [(v.x, v.y, v.z) for v in frame.frames[subframe].vertices]
 
-        mesh.triangles = [list(reversed(t.vertices)) for t in self.triangles]
+        triangles = self.triangles[:]
 
         mesh.uvs = [None for _ in range(len(mesh.vertices))]
 
-        for tri_index, triangle in enumerate(self.triangles):
-            for vert_index, vertex in enumerate(list(reversed(triangle.vertices))):
+        for tri_index, triangle in enumerate(triangles):
+            for vert_index, vertex in enumerate(triangle.vertices):
                 st_vertex = self.st_vertices[vertex]
-                s = st_vertex.s
-                t = st_vertex.t
+                s, t = st_vertex
 
                 if st_vertex.on_seam  and not triangle.faces_front:
                     s += self.skin_width / 2
@@ -556,12 +564,18 @@ class Mdl(object):
                     mesh.uvs[vertex] = uv_coord
 
                 elif mesh.uvs[vertex] != uv_coord:
-                    # Split this vertex
-                    vert = mesh.vertices[vertex]
-                    mesh.vertices.append(vert)
-                    vertex = len(mesh.vertices) - 1
-                    mesh.triangles[tri_index][vert_index] = vertex
+                    # Duplicate this vertex to accommodate new uv coordinate
+                    duplicated_vertex = mesh.vertices[vertex]
+                    mesh.vertices.append(duplicated_vertex)
+                    duplicated_vertex_index = len(mesh.vertices) - 1
+
+                    updated_triangle = list(triangles[tri_index].vertices)
+                    updated_triangle[vert_index] = duplicated_vertex_index
+                    triangle.vertices = tuple(updated_triangle)
+
                     mesh.uvs.append(uv_coord)
+
+            mesh.triangles.append(tuple(reversed(triangle.vertices)))
 
         return mesh
 
