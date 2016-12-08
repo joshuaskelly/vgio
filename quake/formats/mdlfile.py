@@ -7,7 +7,9 @@ Supported games:
 import io
 import struct
 
-__all__ = ['BadMdlFile', 'is_mdlfile', 'MdlFile']
+__all__ = ['BadMdlFile', 'is_mdlfile', 'BadMdlFile', 'MdlSkin', 'MdlSkinGroup',
+           'MdlStVertex', 'MdlTriangle', 'MdlTriVertex', 'MdlFrame',
+           'MdlFrameGroup', 'Mesh', 'Image', 'Mdl']
 
 
 class BadMdlFile(Exception):
@@ -63,7 +65,7 @@ _TRIVERTEX_Y = 1
 _TRIVERTEX_Z = 2
 _TRIVERTEX_LIGHT_NORMAL_INDEX = 3
 
-def calculate_frame_format(numverts):
+def _calculate_frame_format(numverts):
     return '<4B4B16s%iB' % (numverts * 4)
 
 frame_format = None
@@ -474,7 +476,7 @@ class Mdl(object):
 
             mdl.triangles.append(MdlTriangle(data))
 
-        frame_format = calculate_frame_format(mdl.number_of_vertices)
+        frame_format = _calculate_frame_format(mdl.number_of_vertices)
         frame_size = struct.calcsize(frame_format)
 
         for _ in range(mdl.number_of_frames):
