@@ -527,12 +527,16 @@ class Mdl(object):
     def close(self):
         self.fp.close()
 
-    def mesh(self, frame=0):
+    def mesh(self, frame=0, subframe=0):
         mesh = Mesh()
 
         frame = self.frames[frame]
 
-        mesh.vertices = [(v.x, v.y, v.z) for v in frame.vertices]
+        if isinstance(frame, MdlFrame):
+            mesh.vertices = [(v.x, v.y, v.z) for v in frame.vertices]
+        else:
+            mesh.vertices = [(v.x, v.y, v.z) for v in frame.frames[subframe].vertices]
+
         mesh.triangles = [list(reversed(t.vertices)) for t in self.triangles]
 
         mesh.uvs = [None for _ in range(len(mesh.vertices))]

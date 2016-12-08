@@ -7,8 +7,8 @@ from camera import FirstPersonCamera as Camera
 from quake.formats.pakfile import PakFile
 from quake.formats.mdlfile import Mdl, Mesh
 
-with PakFile('/Users/joshua/Games/Quake/id1/PAK1.PAK') as pak_file:
-    with pak_file.open('progs/oldone.mdl') as mdl:
+with PakFile('/Users/joshua/Games/Quake/id1/PAK0.PAK') as pak_file:
+    with pak_file.open('progs/flame.mdl') as mdl:
         mdl_file = Mdl.open(mdl)
         mdl_file.close()
 
