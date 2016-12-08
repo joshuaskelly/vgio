@@ -224,10 +224,7 @@ class MdlStVertex(object):
         if item > 1:
             raise IndexError('list index of out of range')
 
-        if item == 0:
-            return self.s
-        else:
-            return self.t
+        return self.s if item == 0 else self.t
 
 
 class MdlTriangle(object):
@@ -243,9 +240,6 @@ class MdlTriangle(object):
         self.vertices = triangle_struct[_TRIANGLE_VERTICES:]
 
     def __getitem__(self, item):
-        if item > 2:
-            raise IndexError('list index out of range')
-
         return self.vertices[item]
 
 
@@ -295,7 +289,7 @@ class MdlFrame(object):
         self.name = frame_struct[_FRAME_NAME].split(b'\00')[0].decode('ascii')
 
         vs = frame_struct[_FRAME_VERTS:]
-        self.vertices = [MdlTriVertex((vs[4*i], vs[4*i + 1], vs[4*i + 2], vs[4*i + 3])) for i in range(len(vs) // 4)]
+        self.vertices = [MdlTriVertex((vs[i], vs[i + 1], vs[i + 2], vs[i + 3])) for i in range(0, len(vs), 4)]
 
 
 class MdlFrameGroup(object):
@@ -395,7 +389,7 @@ class Mdl(object):
         mode: Currently the only supported mode is 'r'
         """
 
-        if mode not in ['r', 'w']:
+        if mode not in ['r']:
             raise ValueError("invalid mode: '%s'" % mode)
 
         mdl = Mdl()
