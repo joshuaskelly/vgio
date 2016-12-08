@@ -4,6 +4,7 @@ Supported games:
     - QUAKE
 """
 
+import enum
 import io
 import struct
 
@@ -178,16 +179,31 @@ default_palette = (
 )
 
 
+class MdlSkinType(enum.Enum):
+    SINGLE = 0
+    GROUP = 1
+
+
+ROCKET = 1      # leave a trail
+GRENADE = 2     # leave a trail
+GIB = 4         # leave a trail
+ROTATE = 8      # rotate (bonus items)
+TRACER = 16     # green split trail
+ZOMGIB = 32     # small blood trail
+TRACER2 = 64    # orange split trail + rotate
+TRACER3 = 128   # purple trail
+
+
 class MdlSkin(object):
     """Class for representing an mdl skin"""
 
     __slots__ = (
-        'group',
+        'type',
         'skin'
     )
 
     def __init__(self, skin_struct):
-        self.group = skin_struct[0]
+        self.type = MdlSkinType.SINGLE
         self.skin = skin_struct[1:]
 
 
@@ -195,14 +211,14 @@ class MdlSkinGroup(object):
     """Class for representing an mdl skin group"""
 
     __slots__ = (
-        'group',
+        'type',
         'number_of_skins',
         'intervals',
         'skins'
     )
 
     def __init__(self, skingroup_struct):
-        self.group = skingroup_struct[0]
+        self.type = MdlSkinType.GROUP
         self.number_of_skins = skingroup_struct[1]
         self.intervals = skingroup_struct[2:self.number_of_skins + 2]
         self.skins = skingroup_struct[self.number_of_skins + 2:]
@@ -273,6 +289,11 @@ class MdlTriVertex(object):
             return self.z
 
 
+class MdlFrameType(enum.Enum):
+    SINGLE = 0
+    GROUP = 1
+
+
 class MdlFrame(object):
     """Class for representing an mdl frame"""
 
@@ -285,7 +306,7 @@ class MdlFrame(object):
     )
 
     def __init__(self, frame_struct):
-        self.type = 0
+        self.type = MdlFrameType.SINGLE
         self.min = MdlTriVertex(frame_struct[_FRAME_MIN:_FRAME_MAX])
         self.max = MdlTriVertex(frame_struct[_FRAME_MAX:_FRAME_NAME])
         self.name = frame_struct[_FRAME_NAME].split(b'\00')[0].decode('ascii')
@@ -307,12 +328,18 @@ class MdlFrameGroup(object):
     )
 
     def __init__(self, framegroup_struct):
-        self.type = 1
+        self.type = MdlFrameType.GROUP
         self.number_of_frames = framegroup_struct[_FRAMEGROUP_NUMBER_OF_FRAMES]
         self.min = MdlTriVertex(framegroup_struct[_FRAMEGROUP_MIN])
         self.max = MdlTriVertex(framegroup_struct[_FRAMEGROUP_MAX])
         self.intervals = framegroup_struct[_FRAMEGROUP_INTERVALS]
         self.frames = [MdlFrame(f) for f in framegroup_struct[_FRAMEGROUP_FRAMES]]
+
+
+
+class SyncType(enum.Enum):
+    SYNC = 0
+    RAND = 1
 
 
 class Mesh(object):
@@ -482,8 +509,9 @@ class Mdl(object):
         for _ in range(mdl.number_of_frames):
             frame_type = file.read(4)
             frame_type = struct.unpack('<l', frame_type)[0]
+            frame_type = MdlFrameType(frame_type)
 
-            if frame_type == 0:
+            if frame_type is MdlFrameType.SINGLE:
                 data = file.read(frame_size)
                 data = struct.unpack(frame_format, data)
 
@@ -532,7 +560,7 @@ class Mdl(object):
 
         frame = self.frames[frame]
 
-        if isinstance(frame, MdlFrame):
+        if frame.type is MdlFrameType.SINGLE:
             mesh.vertices = [(v.x, v.y, v.z) for v in frame.vertices]
         else:
             mesh.vertices = [(v.x, v.y, v.z) for v in frame.frames[subframe].vertices]
