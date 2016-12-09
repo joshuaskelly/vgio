@@ -20,6 +20,7 @@ class BadMdlFile(Exception):
 # The mdl header structure
 header_format = '<4sl10f8lf'
 header_magic_number = b'IDPO'
+header_version = 6
 header_size = struct.calcsize(header_format)
 
 # Indexes of the header structure
@@ -178,24 +179,112 @@ default_palette = (
     (0xff,0xf3,0x93),(0xff,0xf7,0xc7),(0xff,0xff,0xff),(0x9f,0x5b,0x53),
 )
 
+vertex_normals = (
+    (-0.525731, 0.000000, 0.850651), (-0.442863, 0.238856, 0.864188),
+    (-0.295242, 0.000000, 0.955423), (-0.309017, 0.500000, 0.809017),
+    (-0.162460, 0.262866, 0.951056), (0.000000, 0.000000, 1.000000),
+    (0.000000, 0.850651, 0.525731), (-0.147621, 0.716567, 0.681718),
+    (0.147621, 0.716567, 0.681718), (0.000000, 0.525731, 0.850651),
+    (0.309017, 0.500000, 0.809017), (0.525731, 0.000000, 0.850651),
+    (0.295242, 0.000000, 0.955423), (0.442863, 0.238856, 0.864188),
+    (0.162460, 0.262866, 0.951056), (-0.681718, 0.147621, 0.716567),
+    (-0.809017, 0.309017, 0.500000), (-0.587785, 0.425325, 0.688191),
+    (-0.850651, 0.525731, 0.000000), (-0.864188, 0.442863, 0.238856),
+    (-0.716567, 0.681718, 0.147621), (-0.688191, 0.587785, 0.425325),
+    (-0.500000, 0.809017, 0.309017), (-0.238856, 0.864188, 0.442863),
+    (-0.425325, 0.688191, 0.587785), (-0.716567, 0.681718, -0.147621),
+    (-0.500000, 0.809017, -0.309017), (-0.525731, 0.850651, 0.000000),
+    (0.000000, 0.850651, -0.525731), (-0.238856, 0.864188, -0.442863),
+    (0.000000, 0.955423, -0.295242), (-0.262866, 0.951056, -0.162460),
+    (0.000000, 1.000000, 0.000000), (0.000000, 0.955423, 0.295242),
+    (-0.262866, 0.951056, 0.162460), (0.238856, 0.864188, 0.442863),
+    (0.262866, 0.951056, 0.162460), (0.500000, 0.809017, 0.309017),
+    (0.238856, 0.864188, -0.442863), (0.262866, 0.951056, -0.162460),
+    (0.500000, 0.809017, -0.309017), (0.850651, 0.525731, 0.000000),
+    (0.716567, 0.681718, 0.147621), (0.716567, 0.681718, -0.147621),
+    (0.525731, 0.850651, 0.000000), (0.425325, 0.688191, 0.587785),
+    (0.864188, 0.442863, 0.238856), (0.688191, 0.587785, 0.425325),
+    (0.809017, 0.309017, 0.500000), (0.681718, 0.147621, 0.716567),
+    (0.587785, 0.425325, 0.688191), (0.955423, 0.295242, 0.000000),
+    (1.000000, 0.000000, 0.000000), (0.951056, 0.162460, 0.262866),
+    (0.850651, -0.525731, 0.000000), (0.955423, -0.295242, 0.000000),
+    (0.864188, -0.442863, 0.238856), (0.951056, -0.162460, 0.262866),
+    (0.809017, -0.309017, 0.500000), (0.681718, -0.147621, 0.716567),
+    (0.850651, 0.000000, 0.525731), (0.864188, 0.442863, -0.238856),
+    (0.809017, 0.309017, -0.500000), (0.951056, 0.162460, -0.262866),
+    (0.525731, 0.000000, -0.850651), (0.681718, 0.147621, -0.716567),
+    (0.681718, -0.147621, -0.716567), (0.850651, 0.000000, -0.525731),
+    (0.809017, -0.309017, -0.500000), (0.864188, -0.442863, -0.238856),
+    (0.951056, -0.162460, -0.262866), (0.147621, 0.716567, -0.681718),
+    (0.309017, 0.500000, -0.809017), (0.425325, 0.688191, -0.587785),
+    (0.442863, 0.238856, -0.864188), (0.587785, 0.425325, -0.688191),
+    (0.688191, 0.587785, -0.425325), (-0.147621, 0.716567, -0.681718),
+    (-0.309017, 0.500000, -0.809017), (0.000000, 0.525731, -0.850651),
+    (-0.525731, 0.000000, -0.850651), (-0.442863, 0.238856, -0.864188),
+    (-0.295242, 0.000000, -0.955423), (-0.162460, 0.262866, -0.951056),
+    (0.000000, 0.000000, -1.000000), (0.295242, 0.000000, -0.955423),
+    (0.162460, 0.262866, -0.951056), (-0.442863, -0.238856, -0.864188),
+    (-0.309017, -0.500000, -0.809017), (-0.162460, -0.262866, -0.951056),
+    (0.000000, -0.850651, -0.525731), (-0.147621, -0.716567, -0.681718),
+    (0.147621, -0.716567, -0.681718), (0.000000, -0.525731, -0.850651),
+    (0.309017, -0.500000, -0.809017), (0.442863, -0.238856, -0.864188),
+    (0.162460, -0.262866, -0.951056), (0.238856, -0.864188, -0.442863),
+    (0.500000, -0.809017, -0.309017), (0.425325, -0.688191, -0.587785),
+    (0.716567, -0.681718, -0.147621), (0.688191, -0.587785, -0.425325),
+    (0.587785, -0.425325, -0.688191), (0.000000, -0.955423, -0.295242),
+    (0.000000, -1.000000, 0.000000), (0.262866, -0.951056, -0.162460),
+    (0.000000, -0.850651, 0.525731), (0.000000, -0.955423, 0.295242),
+    (0.238856, -0.864188, 0.442863), (0.262866, -0.951056, 0.162460),
+    (0.500000, -0.809017, 0.309017), (0.716567, -0.681718, 0.147621),
+    (0.525731, -0.850651, 0.000000), (-0.238856, -0.864188, -0.442863),
+    (-0.500000, -0.809017, -0.309017), (-0.262866, -0.951056, -0.162460),
+    (-0.850651, -0.525731, 0.000000), (-0.716567, -0.681718, -0.147621),
+    (-0.716567, -0.681718, 0.147621), (-0.525731, -0.850651, 0.000000),
+    (-0.500000, -0.809017, 0.309017), (-0.238856, -0.864188, 0.442863),
+    (-0.262866, -0.951056, 0.162460), (-0.864188, -0.442863, 0.238856),
+    (-0.809017, -0.309017, 0.500000), (-0.688191, -0.587785, 0.425325),
+    (-0.681718, -0.147621, 0.716567), (-0.442863, -0.238856, 0.864188),
+    (-0.587785, -0.425325, 0.688191), (-0.309017, -0.500000, 0.809017),
+    (-0.147621, -0.716567, 0.681718), (-0.425325, -0.688191, 0.587785),
+    (-0.162460, -0.262866, 0.951056), (0.442863, -0.238856, 0.864188),
+    (0.162460, -0.262866, 0.951056), (0.309017, -0.500000, 0.809017),
+    (0.147621, -0.716567, 0.681718), (0.000000, -0.525731, 0.850651),
+    (0.425325, -0.688191, 0.587785), (0.587785, -0.425325, 0.688191),
+    (0.688191, -0.587785, 0.425325), (-0.955423, 0.295242, 0.000000),
+    (-0.951056, 0.162460, 0.262866), (-1.000000, 0.000000, 0.000000),
+    (-0.850651, 0.000000, 0.525731), (-0.955423, -0.295242, 0.000000),
+    (-0.951056, -0.162460, 0.262866), (-0.864188, 0.442863, -0.238856),
+    (-0.951056, 0.162460, -0.262866), (-0.809017, 0.309017, -0.500000),
+    (-0.864188, -0.442863, -0.238856), (-0.951056, -0.162460, -0.262866),
+    (-0.809017, -0.309017, -0.500000), (-0.681718, 0.147621, -0.716567),
+    (-0.681718, -0.147621, -0.716567), (-0.850651, 0.000000, -0.525731),
+    (-0.688191, 0.587785, -0.425325), (-0.587785, 0.425325, -0.688191),
+    (-0.425325, 0.688191, -0.587785), (-0.425325, -0.688191, -0.587785),
+    (-0.587785, -0.425325, -0.688191), (-0.688191, -0.587785, -0.425325),
+)
 
 class MdlSkinType(enum.Enum):
     SINGLE = 0
     GROUP = 1
 
 
-ROCKET = 1      # leave a trail
-GRENADE = 2     # leave a trail
-GIB = 4         # leave a trail
-ROTATE = 8      # rotate (bonus items)
-TRACER = 16     # green split trail
-ZOMGIB = 32     # small blood trail
-TRACER2 = 64    # orange split trail + rotate
-TRACER3 = 128   # purple trail
-
-
 class MdlSkin(object):
-    """Class for representing an mdl skin"""
+    """Class for representing an mdl skin
+
+    A skin is an indexed image embedded within the model. Models may contain
+    more than one skin, and there may be as many skins as are there are
+    separate parts in the model.
+
+    Attributes:
+        type: The MdlSkinType for the skin. For an MdlSkin object the type must
+            be MdlSkinType.SINGLE
+
+        skin: A tuple of unstructured indexed pixel data represented as
+            integers. A palette must be used to obtain RGB data.
+            The size of this tuple is:
+
+            mdl.skin_width * mdl.skin_height.
+    """
 
     __slots__ = (
         'type',
@@ -208,7 +297,24 @@ class MdlSkin(object):
 
 
 class MdlSkinGroup(object):
-    """Class for representing an mdl skin group"""
+    """Class for representing an mdl skin group
+
+    A skin group is a sequence of indexed images embedded within the model.
+
+    Attributes:
+        type: The MdlSkinType for the skin group. For an MdlSkinGroup the type
+            must be MdlSkinType.GROUP
+
+        number_of_skins: The number of skins contain within this MdlSkinGroup.
+
+        intervals: The time intervals between skin.
+
+        skins: A tuple of unstructured indexed pixel data represented as
+            integers. A palette must be used to obtain RGB data.
+            This size of this tuple is:
+
+            mdl.skin_width * mdl.skin_height * number_of_frames
+    """
 
     __slots__ = (
         'type',
@@ -225,7 +331,22 @@ class MdlSkinGroup(object):
 
 
 class MdlStVertex(object):
-    """Class for representing an mdl st vertex"""
+    """Class for representing an mdl st vertex
+
+    MdlStVertices are basically UV coordinates with the following caveat:
+
+    Note:
+        If an MdlStVertex lies on a seam and belongs to a back facing triangle,
+        the s-component must be incremented by half of the skin width.
+
+    Attributes:
+        on_seam: Indicates if the MdlStVertex is on a skin boundary. The value
+            will be 0 if not on the seam and 0x20 if it does lie on the seam.
+
+        s: The x-coordinate on the skin.
+
+        t: The y-coordinate on the skin.
+    """
 
     __slots__ = (
         'on_seam',
@@ -246,7 +367,19 @@ class MdlStVertex(object):
 
 
 class MdlTriangle(object):
-    """Class for representing an mdl triangle"""
+    """Class for representing an mdl triangle
+
+    Note:
+        The triangle winding direction is clockwise.
+
+    Attributes:
+        faces_front: Indicates if the triangle faces the front of the model, or
+            towards the back. The value will be 0 for back-facing and 0x10 for
+            front-facing.
+
+        vertices: A triple of vertex indexes. XYZ data can be obtained by
+            indexing into the frame.vertices attribute.
+    """
 
     __slots__ = (
         'faces_front',
@@ -262,7 +395,31 @@ class MdlTriangle(object):
 
 
 class MdlTriVertex(object):
-    """Class for representing an mdl trivertex"""
+    """Class for representing an mdl trivertex
+
+    An MdlTriVertex is a set of XYZ coordinates and a light normal index.
+
+    Note:
+        The XYZ coordinates are packed into a (0, 0, 0) to (255, 255, 255)
+        local space. The actual position can be calculated:
+
+        position = (packed_vertex * mdl.scale) + mdl.offset
+
+    Note:
+        The light normal index is an index into a set of pre-calculated normal
+        vectors. These can be found in the vertex_normals attribute of this
+        module.
+
+    Attributes:
+        x: The x-coordinate
+
+        y: The y-coordinate
+
+        z: The z-coordinate
+
+        light_normal_index: The index for the pre-calculated normal vector of
+            this vertex used for lighting.
+    """
 
     __slots__ = (
         'x',
@@ -295,20 +452,42 @@ class MdlFrameType(enum.Enum):
 
 
 class MdlFrame(object):
-    """Class for representing an mdl frame"""
+    """Class for representing an mdl frame
+
+    An MdlFrame is a set of vertices that represent the state of the model at
+    a single frame of animation.
+
+    Note:
+        The MdlTriVertices that describe the bounding box do not use their
+        light_normal_index attribute.
+
+    Attributes:
+        type: The MdlFrameType of the frame. For an MdlFrame object the type
+            must be MdlFrameType.SINGLE
+
+        bounding_box_min: The minimum coordinate of the bounding box containing
+            the vertices in this frame.
+
+        bounding_box_max: The maximum coordinate of the bounding box containing
+            all the vertices in this frame.
+
+        name: The name of the frame.
+
+        vertices: A list of MdlTriVertex objects.
+    """
 
     __slots__ = (
         'type',
-        'min',
-        'max',
+        'bounding_box_min',
+        'bounding_box_max',
         'name',
         'vertices'
     )
 
     def __init__(self, frame_struct):
         self.type = MdlFrameType.SINGLE
-        self.min = MdlTriVertex(frame_struct[_FRAME_MIN:_FRAME_MAX])
-        self.max = MdlTriVertex(frame_struct[_FRAME_MAX:_FRAME_NAME])
+        self.bounding_box_min = MdlTriVertex(frame_struct[_FRAME_MIN:_FRAME_MAX])
+        self.bounding_box_max = MdlTriVertex(frame_struct[_FRAME_MAX:_FRAME_NAME])
         self.name = frame_struct[_FRAME_NAME].split(b'\00')[0].decode('ascii')
 
         vs = frame_struct[_FRAME_VERTS:]
@@ -316,13 +495,30 @@ class MdlFrame(object):
 
 
 class MdlFrameGroup(object):
-    """Class for representing an mdl frame group"""
+    """Class for representing an mdl frame group
+
+    Attributes:
+        type: The MdlFrameType of the frame group. For an MdlFrame object the
+            type must be MdlFrameType.GROUP
+
+        bounding_box_min: The minimum coordinate of the bounding box containing
+            the vertices of all frames in this group.
+
+        bounding_box_max: The maximum coordinate of the bounding box containing
+            the vertices of all the frames in this group.
+
+        number_of_frames: The number of frames in this group.
+
+        intervals: A sequence of timings for each frame.
+
+        frames: A list of MdlFrame objects.
+    """
 
     __slots__ = (
-        'number_of_frames',
         'type',
-        'min',
-        'max',
+        'bounding_box_min',
+        'bounding_box_max',
+        'number_of_frames',
         'intervals',
         'frames'
     )
@@ -330,8 +526,8 @@ class MdlFrameGroup(object):
     def __init__(self, framegroup_struct):
         self.type = MdlFrameType.GROUP
         self.number_of_frames = framegroup_struct[_FRAMEGROUP_NUMBER_OF_FRAMES]
-        self.min = MdlTriVertex(framegroup_struct[_FRAMEGROUP_MIN])
-        self.max = MdlTriVertex(framegroup_struct[_FRAMEGROUP_MAX])
+        self.bounding_box_min = MdlTriVertex(framegroup_struct[_FRAMEGROUP_MIN])
+        self.bounding_box_max = MdlTriVertex(framegroup_struct[_FRAMEGROUP_MAX])
         self.intervals = framegroup_struct[_FRAMEGROUP_INTERVALS]
         self.frames = [MdlFrame(f) for f in framegroup_struct[_FRAMEGROUP_FRAMES]]
 
@@ -342,8 +538,29 @@ class SyncType(enum.Enum):
     RAND = 1
 
 
+ROCKET = 1      # leave a trail
+GRENADE = 2     # leave a trail
+GIB = 4         # leave a trail
+ROTATE = 8      # rotate (bonus items)
+TRACER = 16     # green split trail
+ZOMGIB = 32     # small blood trail
+TRACER2 = 64    # orange split trail + rotate
+TRACER3 = 128   # purple trail
+
+
 class Mesh(object):
-    """Class for representing mesh data"""
+    """Class for representing mesh data
+
+    Attributes:
+        vertices: A list of vertex data represented as XYZ three-tuples.
+
+        triangles: A list of triangle data represented by a three-tuple of
+            vertex indexes.
+
+        uvs: A list of uv coordinates represented as UV tuples.
+
+        normals: A list of vertex normal data represented as XYZ three-tuples.
+    """
 
     __slots = (
         'vertices',
@@ -360,7 +577,21 @@ class Mesh(object):
 
 
 class Image(object):
-    """Class for representing pixel data"""
+    """Class for representing pixel data
+
+    Attributes:
+        width: The width of the image.
+
+        height: The height of the image.
+
+        format: A string describing the format of the color data. Usually 'RGB'
+            or 'RGBA'
+
+        pixels: The raw pixel data of the image.
+            The length of this attribute is:
+
+            width * height * len(format)
+    """
 
     __slots__ = (
         'width',
@@ -377,23 +608,77 @@ class Image(object):
 
 
 class Mdl(object):
-    """Class for working with Mdl files.
+    """Class for working with Mdl files
 
-    m = MdlFile()
-    m.open(file)
+    Example:
+        m = MdlFile()
+        m.open(file)
 
+    Attributes:
+        identifier: The magic number of the model, must be b'IDPO'
+
+        version: The version of the model, should be 6.
+
+        scale: The scale of the model. Used to correctly resize the model as
+            the frame vertices are packed into a (0, 0, 0) to (255, 255, 255)
+            local space.
+
+        origin: The offset of the model. Used to correctly position the model
+            as the frame vertices are packed into a (0, 0, 0) to
+            (255, 255, 255) local space.
+
+        bounding_radius: The bounding radius of the model.
+
+        eye_position: The eye position for the model.
+
+        number_of_skins: The number of skins contained inside the model.
+
+        skin_width: The pixel width of the skin texture.
+
+        skin_height: The pixel height of the skin texture.
+
+        number_of_vertices: The number of vertices for the model.
+
+        number_of_triangles: The number of triangles for the model.
+
+        number_of_frames: The number of frames for the model.
+
+        synctype: The synchronization type for the model. It is either
+            MdlSyncType.SYNC or MdlSyncType.RAND.
+
+        flags: A bit field of entity effects.
+
+        size: The average size of the triangles.
+
+
+        skins: The list of MdlSkin or MdlSkinGroup objects. Use the type
+            attribute to identify the object. The type is either
+            MdlSkinType.SINGLE or MdlSkinType.GROUP.
+
+        st_vertices: The list of MdlStVertex objects.
+
+        triangles: The list of MdlTriangle objects.
+
+        frames: The list of MdlFrame or MdlFrameGroup objects. Use the type
+            attribute to identify the object. The type is either
+            MdlFrameType.SINGLE or MdlFrameType.GROUP.
+
+
+        fp: The file-like object to read data from.
+
+        mode: The file mode for the file-like object.
     """
 
     def __init__(self):
         self.fp = None
         self.mode = None
 
-        self.signature = header_magic_number
-        self.version = 6
+        self.identifier = header_magic_number
+        self.version = header_version
         self.scale = 1, 1, 1
         self.origin = 0, 0, 0
-        self.radius = 0
-        self.offsets = 0, 0, 0
+        self.bounding_radius = 0
+        self.eye_position = 0, 0, 0
         self.number_of_skins = 0
         self.skin_width = 0
         self.skin_height = 0
@@ -413,9 +698,14 @@ class Mdl(object):
     def open(file, mode='r'):
         """Returns an Mdl object
 
-        file: Either the path to the file, a file-like object, or bytes.
+        Args:
+            file: Either the path to the file, a file-like object, or bytes.
 
-        mode: Currently the only supported mode is 'r'
+            mode: Currently the only supported mode is 'r'
+
+        Returns:
+            An Mdl object constructed from the information read from the
+            file-like object.
         """
 
         if mode not in ['r']:
@@ -441,14 +731,17 @@ class Mdl(object):
         data = struct.unpack(header_format, data)
 
         if data[_HEADER_SIGNATURE] != header_magic_number:
-            raise BadMdlFile('Bad magic number: %r' % mdl.signature)
+            raise BadMdlFile('Bad magic number: %r' % data[_HEADER_SIGNATURE])
 
-        mdl.signature = data[_HEADER_SIGNATURE]
+        if data[_HEADER_VERSION] != header_version:
+            raise BadMdlFile('Bad version number: %r' % data[_HEADER_VERSION])
+
+        mdl.identifier = data[_HEADER_SIGNATURE]
         mdl.version = data[_HEADER_VERSION]
         mdl.scale = data[_HEADER_SCALE:_HEADER_ORIGIN]
         mdl.origin = data[_HEADER_ORIGIN:_HEADER_RADIUS]
-        mdl.radius = data[_HEADER_RADIUS]
-        mdl.offsets = data[_HEADER_OFFSETS:_HEADER_NUMSKINS]
+        mdl.bounding_radius = data[_HEADER_RADIUS]
+        mdl.eye_position = data[_HEADER_OFFSETS:_HEADER_NUMSKINS]
         mdl.number_of_skins = data[_HEADER_NUMSKINS]
         mdl.skin_width = data[_HEADER_SKINWIDTH]
         mdl.skin_height = data[_HEADER_SKINHEIGHT]
@@ -550,10 +843,14 @@ class Mdl(object):
     def mesh(self, frame=0, subframe=0):
         """Returns a Mesh object
 
-        frame: The index of the frame to get mesh data for.
+        Args:
+            frame: The index of the frame to get mesh data for.
 
-        subframe: If the frame is a FrameGroup, a subframe index is needed to
-            get the mesh data.
+            subframe: If the frame is a FrameGroup, a subframe index is needed
+                to get the mesh data.
+
+        Returns:
+            A Mesh object
         """
 
         mesh = Mesh()
@@ -601,10 +898,14 @@ class Mdl(object):
     def image(self, index=0, palette=default_palette):
         """Returns an Image object.
 
-        index: The index of the skin to get image data for.
+        Args:
+            index: The index of the skin to get image data for.
 
-        palette: A 256 color palette to use for converted index color data to
-            RGB data.
+            palette: A 256 color palette to use for converted index color data to
+                RGB data.
+
+        Returns:
+            An Image object.
         """
 
         if index > len(self.skins):
