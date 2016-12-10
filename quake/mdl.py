@@ -859,8 +859,10 @@ class Mdl(object):
 
         if frame.type is MdlFrameType.SINGLE:
             mesh.vertices = [(v.x, v.y, v.z) for v in frame.vertices]
+            mesh.normals = [vertex_normals[v.light_normal_index] for v in frame.vertices]
         else:
             mesh.vertices = [(v.x, v.y, v.z) for v in frame.frames[subframe].vertices]
+            mesh.normals = [vertex_normals[v.light_normal_index] for v in frame.frames[subframe].vertices]
 
         triangles = self.triangles[:]
 
@@ -884,6 +886,9 @@ class Mdl(object):
                     duplicated_vertex = mesh.vertices[vertex]
                     mesh.vertices.append(duplicated_vertex)
                     duplicated_vertex_index = len(mesh.vertices) - 1
+
+                    duplicated_normal = mesh.normals[vertex]
+                    mesh.normals.append(duplicated_normal)
 
                     updated_triangle = list(triangles[tri_index].vertices)
                     updated_triangle[vert_index] = duplicated_vertex_index
