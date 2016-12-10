@@ -4,18 +4,18 @@ from pyglet.image import ImageData
 
 from camera import FirstPersonCamera as Camera
 
-from quake.formats.pakfile import PakFile
-from quake.formats.mdlfile import Mdl
+from quake.pak import PakFile
+from quake.mdl import Mdl
 
 with PakFile('/Users/joshua/Games/Quake/id1/PAK0.PAK') as pak_file:
-    with pak_file.open('progs/player.mdl') as mdl:
+    pak_file.extractall('C:/Users/joshua/Desktop/out')
+
+    with pak_file.open('progs/shambler.mdl') as mdl:
         mdl_file = Mdl.open(mdl)
         mdl_file.close()
 
 mesh = mdl_file.mesh()
 image = mdl_file.image()
-
-print(mdl_file.number_of_skins)
 
 data = image.pixels
 rawData = (GLubyte * len(data))(*data)

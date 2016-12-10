@@ -226,6 +226,7 @@ class PakFile(object):
     """
 
     fp = None
+    _windows_illegal_name_trans_table = None
 
     def __init__(self, file, mode='r'):
         if mode not in ('r',):
