@@ -85,15 +85,20 @@ class PakInfo(object):
 
 
 class _SharedFile:
-    def __init__(self, file, position, close, lock):
+    def __init__(self, file, position, size, close, lock):
         self._file = file
         self._position = position
+        self._end = position + size
         self._close = close
         self._lock = lock
 
     def read(self, n=-1):
         with self._lock:
             self._file.seek(self._position)
+
+            if n < 0 or n > self._end:
+                n = self._end - self._position
+
             data = self._file.read(n)
             self._position = self._file.tell()
             return data
@@ -172,7 +177,7 @@ class PakExtFile(io.BufferedIOBase):
         return buffer
 
     def _read_internal(self, n):
-        """Read up to n compressed bytes with at most one read() system call"""
+        """Read up to n bytes with at most one read() system call"""
 
         if self._eof or n <= 0:
             return b''
@@ -205,6 +210,9 @@ class PakExtFile(io.BufferedIOBase):
 
         # Return up to 512 bytes to reduce allocation overhead for tight loops.
         return self._readbuffer[self._offset: self._offset + 512]
+
+    def seek(self, n):
+        self._offset = n
 
     def close(self):
         try:
@@ -332,7 +340,7 @@ class PakFile(object):
             info = self.getinfo(name)
 
         self._file_reference_count += 1
-        shared_file = _SharedFile(self.fp, info.file_offset, self._fpclose, self._lock)
+        shared_file = _SharedFile(self.fp, info.file_offset, info.file_size, self._fpclose, self._lock)
         try:
             return PakExtFile(shared_file, mode, info, True)
         except:
