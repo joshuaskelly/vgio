@@ -6,21 +6,23 @@ from camera import FirstPersonCamera as Camera
 
 from quake.pak import PakFile
 from quake.mdl import Mdl
+from quake.lmp import Lmp
 
 with PakFile('/Users/joshua/Games/Quake/id1/PAK0.PAK') as pak_file:
-    pak_file.extractall('C:/Users/joshua/Desktop/out')
+    for filename in [f for f in pak_file.namelist() if '.lmp' in f]:
+        with pak_file.open(filename) as lmp_file:
+            lmp = Lmp.open(lmp_file)
+            lmp.close()
 
-    with pak_file.open('progs/shambler.mdl') as mdl:
-        mdl_file = Mdl.open(mdl)
-        mdl_file.close()
+        image = lmp.image()
 
-mesh = mdl_file.mesh()
-image = mdl_file.image()
+        data = image.pixels
+        rawData = (GLubyte * len(data))(*data)
+        image = ImageData(image.width, image.height, image.format, rawData)
 
-data = image.pixels
-rawData = (GLubyte * len(data))(*data)
-image = ImageData(image.width, image.height, image.format, rawData)
+        image.save('/Users/joshua/Desktop/gfx/%s.png' % filename.split('/')[-1].split('.')[0])
 
+quit()
 
 def lerp(a, b, step):
     return a + step * (b - a)
