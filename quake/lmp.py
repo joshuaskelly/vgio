@@ -139,9 +139,9 @@ class Lmp(object):
             list of 256 RGB tuples. This is used to map color indexes to 
             actual RGB triples.
 
-        3. Colormap - The colormap lump has the colormap attribute whic is a
-            list of 16384 color indexes. It is used for mapping colors to 
-            different values for lighting.
+        3. Colormap - The colormap lump has the colormap attribute which is a
+            list of 16384 color indexes. It functions as a 256 x 64 table for 
+            mapping colors to different values for lighting.
     
     Example:
         l = Lmp.open(file)
