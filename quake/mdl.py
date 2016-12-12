@@ -603,7 +603,7 @@ class Image(object):
     def __init__(self):
         self.width = 0
         self.height = 0
-        self.format = 'RGB'
+        self.format = 'RGBA'
         self.pixels = None
 
 
@@ -611,8 +611,7 @@ class Mdl(object):
     """Class for working with Mdl files
 
     Example:
-        m = MdlFile()
-        m.open(file)
+        m = Mdl.open(file)
 
     Attributes:
         identifier: The magic number of the model, must be b'IDPO'
@@ -712,7 +711,6 @@ class Mdl(object):
             raise ValueError("invalid mode: '%s'" % mode)
 
         mdl = Mdl()
-
         mdl.mode = mode
 
         if isinstance(file, str):
@@ -723,7 +721,7 @@ class Mdl(object):
 
         elif not hasattr(file, 'read'):
             raise RuntimeError(
-                "MdlFile requires 'file' to be a path, a file-like object, or bytes")
+                "Mdl.open() requires 'file' to be a path, a file-like object, or bytes")
 
         mdl.fp = file
 
@@ -838,7 +836,9 @@ class Mdl(object):
         return mdl
 
     def close(self):
-        self.fp.close()
+        file_object = self.fp
+        self.fp = None
+        file_object.close()
 
     def mesh(self, frame=0, subframe=0):
         """Returns a Mesh object
@@ -919,11 +919,9 @@ class Mdl(object):
         image = Image()
         image.width = self.skin_width
         image.height = self.skin_height
-        image.format = 'RGBA'
         image.pixels = self.skins[index].skin
 
         p = []
-
         for row in reversed(range(image.height)):
             p += image.pixels[row * image.width:(row + 1) * image.width]
 
@@ -931,7 +929,7 @@ class Mdl(object):
 
         for i in p:
             d += palette[i]
-            d += [255]
+            d += [255] if i is not 255 else [0]
 
         image.pixels = d
 
