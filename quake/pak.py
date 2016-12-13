@@ -88,6 +88,7 @@ class _SharedFile:
     def __init__(self, file, position, size, close, lock):
         self._file = file
         self._position = position
+        self._start = position
         self._end = position + size
         self._close = close
         self._lock = lock
@@ -108,6 +109,11 @@ class _SharedFile:
             file_object = self._file
             self._file = None
             self._close(file_object)
+
+    def seek(self, n):
+        n = min(self._start + n, self._end)
+        self._file.seek(n)
+        self._position = self._file.tell()
 
 
 class PakExtFile(io.BufferedIOBase):
@@ -212,7 +218,9 @@ class PakExtFile(io.BufferedIOBase):
         return self._readbuffer[self._offset: self._offset + 512]
 
     def seek(self, n):
-        self._offset = n
+        self._file_object.seek(n)
+        self._readbuffer = b''
+        self._offset = 0
 
     def close(self):
         try:
