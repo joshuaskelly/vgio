@@ -1,20 +1,16 @@
-import math
-
 import pyglet
 from pyglet.gl import *
-from pyglet.window import key
 
-from doom.formats import wad as wadfile
 from doom.core.wad import Wad
 
 from camera import FirstPersonCamera as Camera
 
-wad = Wad('C:\\Users\\Joshua\\Desktop\\DOOM2.WAD')
+wad = Wad('/Users/joshua/Games/Doom II/DOOM2.WAD')
 doom_map = wad.map('MAP01')
 
 class Mesh:
     def __init__(self, vertices, triangles):
-        self.vertices =vertices
+        self.vertices = vertices
         self.triangles = triangles
 
 class Model:
@@ -68,10 +64,9 @@ class Window(pyglet.window.Window):
         self.set_minimum_size(320, 240)
         self.__camera_view_enabled = False
 
-        verts = [(v.x, 0, v.y) for v in doom_map.vertexes]
-        lines = [(l.vertex_1.index, l.vertex_2.index) for l in doom_map.linedefs]
+        mesh = doom_map.mesh()
 
-        self.model = Polygon(verts, lines)
+        self.model = Model(mesh)
         self.grid = Grid()
 
         pyglet.clock.schedule(self.update)
