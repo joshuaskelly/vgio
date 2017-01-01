@@ -267,7 +267,10 @@ class Map(object):
                             (start + 0, start + 3, start + 2))
 
                 edges.append(e)
-                next_edge[e[0]] = e
+                if e[0] not in next_edge.keys():
+                    next_edge[e[0]] = e
+                else:
+                    assert False, 'Duplicate edge in sector: %i' % self.sectors.index(sector)
 
             polygons = []
             while len(edges) > 0:
@@ -283,8 +286,19 @@ class Map(object):
                     if (current_edge in edges):
                         edges.remove(current_edge)
                     else:
-                        print(current_edge)
-                    current_edge = next_edge[current_edge[1]]
+                        assert False, 'Unable to find current edge in list of working edges'
+
+                    end_vertex = current_edge[1]
+                    if end_vertex in next_edge.keys():
+                        current_edge = next_edge[current_edge[1]]
+                    else:
+                        # Strangely, some sectors are not fully closed
+                        #if len(edges) is 0:
+                        e = (end_vertex, polygon[0][0])
+                        polygon.append(e)
+                        current_edge = start_edge
+                        #else:
+                        #    assert False, 'Attempting to close sector, but not all edges have been used'
 
                 polygons.append(polygon)
 
@@ -340,17 +354,7 @@ class _earcut:
 
     @staticmethod
     def earcut(data, holeIndices=None, dim=None):
-        unflatten_when_done = False
-
-        if isinstance(data[0], list) or isinstance(data[0], tuple):
-            info = _earcut.flatten(data)
-            dim = info['dimensions']
-            data = info['vertices']
-            holeIndices = info['holes']
-            unflatten_when_done = True
-
-        else:
-            dim = dim or 2
+        dim = dim or 2
 
         hasHoles = holeIndices and len(holeIndices)
         outerLen =  holeIndices[0] * dim if hasHoles else len(data)
@@ -393,9 +397,6 @@ class _earcut:
 
         _earcut.earcutLinked(outerNode, triangles, dim, minX, minY, size)
 
-        if unflatten_when_done:
-            return _earcut.unflatten(triangles)
-
         return triangles
 
 
@@ -422,7 +423,7 @@ class _earcut:
 
     # eliminate colinear or duplicate points
     @staticmethod
-    def filterPoints(start, end):
+    def filterPoints(start, end=None):
         if not start:
             return start
         if not end:
@@ -815,8 +816,8 @@ class _earcut:
     @staticmethod
     def zOrder(x, y, minX, minY, size):
         # coords are transformed into non-negative 15-bit integer range
-        x = 32767 * (x - minX) / size
-        y = 32767 * (y - minY) / size
+        x = 32767 * (x - minX) // size
+        y = 32767 * (y - minY) // size
 
         x = (x | (x << 8)) & 0x00FF00FF
         x = (x | (x << 4)) & 0x0F0F0F0F

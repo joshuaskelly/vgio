@@ -2,11 +2,12 @@ import pyglet
 from pyglet.gl import *
 
 from doom.core.wad import Wad
+from doom.core.map import _earcut as earcut
 
 from camera import FirstPersonCamera as Camera
 
 wad = Wad('/Users/joshua/Games/Doom II/DOOM2.WAD')
-doom_map = wad.map('MAP01')
+doom_map = wad.map('MAP14')
 
 class Mesh:
     def __init__(self, vertices, triangles):
@@ -63,6 +64,7 @@ class Window(pyglet.window.Window):
         super().__init__(*args, **kwargs)
         self.set_minimum_size(320, 240)
         self.__camera_view_enabled = False
+
 
         mesh = doom_map.mesh()
 
