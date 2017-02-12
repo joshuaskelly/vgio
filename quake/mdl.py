@@ -87,7 +87,7 @@ _FRAMEGROUP_FRAMES = 4
 
 def _check_mdlfile(fp):
     fp.seek(0)
-    data = fp.read(header_size)
+    data = fp.read(struct.calcsize('<4s'))
 
     return data == header_magic_number
 
