@@ -4,7 +4,6 @@ Supported games:
     - QUAKE
 """
 
-import enum
 import io
 import struct
 
