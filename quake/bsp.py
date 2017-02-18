@@ -11,8 +11,10 @@ __all__ = ['BadBspFile', 'is_bspfile', 'BspPlane', 'BspMiptexture',
            'BspVertex', 'BspNode', 'BspTextureInfo', 'BspFace', 'BspClipNode',
            'BspLeaf', 'BspEdge', 'BspModel', 'Bsp']
 
+
 class BadBspFile(Exception):
     pass
+
 
 # The bsp header structure
 header_format = '<31l'
@@ -80,9 +82,11 @@ _VERTEX_X = 0
 _VERTEX_Y = 1
 _VERTEX_Z = 2
 
+
 # Visibility structure
 def _calculate_visibility_format(size):
     return '<%dB' % size
+
 
 visibility_format = None
 visibility_size = None
@@ -124,9 +128,11 @@ _FACE_TEXTURE_INFO = 4
 _FACE_STYLES = 5
 _FACE_LIGHT_OFFSET = 9
 
+
 # Lighting structure
 def _calculate_lighting_format(size):
     return '<%dB' % size
+
 
 lighting_format = None
 lighting_size = None
@@ -152,9 +158,11 @@ _LEAF_FIRST_MARK_SURFACE = 8
 _LEAF_NUMBER_OF_MARKED_SURFACES = 9
 _LEAF_AMBIENT_LEVEL = 10
 
+
 # Mark Surface structure
 def _calculate_mark_surface_format(size):
     return '<%dB' % size
+
 
 mark_surface_format = None
 mark_surface_size = None
@@ -163,9 +171,11 @@ mark_surface_size = None
 edge_format = '<2H'
 edge_size = struct.calcsize(edge_format)
 
+
 # Surf Edge structure
 def _calculate_surf_edge_format(size):
     return '<%dh' % (size // 2)
+
 
 surf_edge_format = None
 surf_edge_size = None
@@ -276,7 +286,8 @@ class BspMiptexture(object):
     )
 
     def __init__(self, miptexture_struct):
-        self.name = miptexture_struct[_MIPTEXTURE_NAME].split(b'\00')[0].decode('ascii')
+        self.name = miptexture_struct[_MIPTEXTURE_NAME].split(b'\00')[0]\
+                                                       .decode('ascii')
         self.width = miptexture_struct[_MIPTEXTURE_WIDTH]
         self.height = miptexture_struct[_MIPTEXTURE_HEIGHT]
         self.offsets = miptexture_struct[_MIPTEXTURE_OFFSETS:]
@@ -684,7 +695,8 @@ class Bsp(object):
 
         elif not hasattr(file, 'read'):
             raise RuntimeError(
-                "Bsp.open() requires 'file' to be a path, a file-like object, or bytes")
+                "Bsp.open() requires 'file' to be a path, a file-like object, "
+                "or bytes")
 
         bsp.fp = file
 
@@ -728,7 +740,8 @@ class Bsp(object):
             file.seek(offset)
 
             miptexture_data = file.read(miptexture_size)
-            miptexture_struct = struct.unpack(miptexture_format, miptexture_data)
+            miptexture_struct = struct.unpack(miptexture_format,
+                                              miptexture_data)
 
             miptexture = BspMiptexture(miptexture_struct)
 
@@ -783,7 +796,8 @@ class Bsp(object):
         file.seek(texture_infos_offset)
         for _ in range(number_of_texture_infos):
             texture_info_data = file.read(texture_info_size)
-            texture_info_struct = struct.unpack(texture_info_format, texture_info_data)
+            texture_info_struct = struct.unpack(texture_info_format,
+                                                texture_info_data)
 
             bsp.texture_infos.append(BspTextureInfo(texture_info_struct))
 
@@ -839,7 +853,8 @@ class Bsp(object):
 
         file.seek(mark_surfaces_offset)
         mark_surfaces_data = file.read(mark_surfaces_size)
-        bsp.mark_surfaces = struct.unpack(mark_surfaces_format, mark_surfaces_data)
+        bsp.mark_surfaces = struct.unpack(mark_surfaces_format,
+                                          mark_surfaces_data)
 
         # Edges
         edges_offset = bsp_struct[_HEADER_EDGES_OFFSET]
