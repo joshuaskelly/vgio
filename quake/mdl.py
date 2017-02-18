@@ -67,12 +67,14 @@ _TRIVERTEX_Y = 1
 _TRIVERTEX_Z = 2
 _TRIVERTEX_LIGHT_NORMAL_INDEX = 3
 
+# Frame structure
 def _calculate_frame_format(numverts):
     return '<4B4B16s%iB' % (numverts * 4)
 
 frame_format = None
 frame_size = None
 
+# Indexes for Frame structure
 _FRAME_MIN = 0
 _FRAME_MAX = 4
 _FRAME_NAME = 8
@@ -532,7 +534,6 @@ class MdlFrameGroup(object):
         self.frames = [MdlFrame(f) for f in framegroup_struct[_FRAMEGROUP_FRAMES]]
 
 
-
 class SyncType(enum.Enum):
     SYNC = 0
     RAND = 1
@@ -622,8 +623,9 @@ class Mdl(object):
             the frame vertices are packed into a (0, 0, 0) to (255, 255, 255)
             local space.
 
-        origin: The offset of the model. Used to correctly position the model
-            as the frame vertices are packed into a (0, 0, 0) to
+        origin: The offset of the model. Used to correctly position the model.
+
+            Note: The frame vertices are packed into a (0, 0, 0) to
             (255, 255, 255) local space.
 
         bounding_radius: The bounding radius of the model.
