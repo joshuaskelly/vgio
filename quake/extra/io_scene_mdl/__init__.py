@@ -1,5 +1,5 @@
 bl_info = {
-    "name": "Quake .MDL format",
+    "name": "Quake MDL format",
     "author": "Joshua Skelton",
     "version": (0, 0, 1),
     "blender": (2, 77, 0),
