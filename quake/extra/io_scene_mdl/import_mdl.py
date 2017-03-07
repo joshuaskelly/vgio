@@ -3,11 +3,12 @@ import bmesh
 
 from .quake.mdl import Mdl, is_mdlfile
 
+
 def load(operator, context, filepath):
 
     if not is_mdlfile(filepath):
         # TODO: Error out
-        return { 'FINISHED' }
+        return {'FINISHED'}
 
     mdl = Mdl.open(filepath)
     mdl.close()
@@ -67,4 +68,4 @@ def load(operator, context, filepath):
 
     bpy.context.scene.objects.link(ob)
 
-    return { 'FINISHED' }
+    return {'FINISHED'}
