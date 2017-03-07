@@ -14,10 +14,6 @@ def load(operator, context, filepath):
     bsp.close()
 
     # Create materials
-    for i in range(len(bsp.miptextures)):
-        pass
-
-    materials = []
     images = bsp.images()
     for i, image in enumerate(images):
         if image is None:
@@ -57,8 +53,7 @@ def load(operator, context, filepath):
             tex_slot.texture_coords = 'UV'
 
     # Create meshes
-    for i in range(len(bsp.models)):
-        mesh = bsp.mesh(i)
+    for i, mesh in enumerate(bsp.meshes()):
         me = bpy.data.meshes.new("model %d" % i)
         bm = bmesh.new()
 
