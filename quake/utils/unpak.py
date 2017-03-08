@@ -25,7 +25,7 @@ parser.add_argument('-l', '--list', action='store_true', help='list files')
 parser.add_argument('-d', metavar='xdir', default=os.getcwd(), dest='dest', action=ResolvePathAction, help='extract files into xdir')
 parser.add_argument('-q', dest='quiet', action='store_true', help='quiet mode')
 
-args = parser.parse_args(['--help'])
+args = parser.parse_args()
 
 if not pak.is_pakfile(args.file):
     print('{0}: cannot find or open {1}'.format(parser.prog, args.file), file=sys.stderr)
