@@ -1,4 +1,4 @@
-"""Command line utility for extracting files from WAD files
+"""Command line utility for extracting image files from WAD files
 
 Supported Games:
     - QUAKE
@@ -13,6 +13,7 @@ from PIL import Image
 
 from quake.lmp import Lmp, default_palette
 from quake.wad import WadFile, is_wadfile
+
 
 class ResolvePathAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
