@@ -7,10 +7,12 @@ Supported Games:
 import array
 import argparse
 import os
+import struct
 import sys
 
 from PIL import Image
 
+from quake.bsp import BspMiptexture, miptexture_format, miptexture_size
 from quake.lmp import Lmp, default_palette
 from quake.wad import WadFile, is_wadfile
 
@@ -60,21 +62,41 @@ with WadFile(args.file) as wad_file:
         # Pictures
         if item.type == 66:
             with wad_file.open(filename) as lmp_file:
-                lmp_file = Lmp.open(lmp_file)
-                size = lmp_file.width, lmp_file.height
-                data = array.array('B', lmp_file.pixels)
+                lmp = Lmp.open(lmp_file)
+                size = lmp_file.width, lmp.height
+                data = array.array('B', lmp.pixels)
 
         # Special cases
         elif item.type == 68:
             # Console characters
             if item.file_size == 128 * 128:
                 size = 128, 128
-            else:
-                print(' failed to determine size of resource: %s' % item.filename, file=sys.stderr)
-                continue
 
-            with wad_file.open(filename) as lmp:
-                data = lmp.read(item.file_size)
+                with wad_file.open(filename) as lmp:
+                    data = lmp.read(item.file_size)
+
+            else:
+                # Miptextures
+                try:
+                    with wad_file.open(filename) as mip_file:
+                        mip_data = mip_file.read(miptexture_size)
+                        mip_struct = struct.unpack(miptexture_format, mip_data)
+
+                        mip = BspMiptexture(mip_struct)
+
+                        # Calculate miptexture size using the simplified form
+                        # of the geometric series where r = 1/4 and n = 4
+                        pixels_size = mip.width * mip.height * 85 // 64
+                        pixels_format = '<%dB' % pixels_size
+                        pixels_data = struct.unpack(pixels_format, mip_file.read(pixels_size))
+
+                        mip.pixels = pixels_data
+                        data = mip.pixels[:mip.width * mip.height]
+                        data = array.array('B', data)
+                        size = mip.width, mip.height
+                except:
+                    print(' failed to determine size of resource: %s' % item.filename, file=sys.stderr)
+                    continue
 
         try:
             # Convert to image file
