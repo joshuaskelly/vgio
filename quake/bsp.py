@@ -339,8 +339,9 @@ class BspMiptexture(object):
             four (this is the number of mipmap levels).
 
         pixels: A tuple of unstructured pixel data represented as integers. A
-            palette must be used to obtain RGB data. Note: this is the pixel
-            data for all four mip levels.
+            palette must be used to obtain RGB data.
+
+            Note: this is the pixel data for all four mip levels.
             The size of this tuple is:
 
             miptexture.width * miptexture.height * 85 / 64
