@@ -22,9 +22,18 @@ class ResolvePathAction(argparse.Action):
         fullpath = os.path.expanduser(values)
         setattr(namespace, self.dest, fullpath)
 
-parser = argparse.ArgumentParser(prog='unwad',
-                                 description='Default action is to convert files to png format and extract to xdir.',
-                                 epilog='example: unwad gfx.wad -d {0} => extract all files to {0}'.format(os.path.expanduser('./extracted')))
+
+class Parser(argparse.ArgumentParser):
+    """Simple wrapper class to provide help on error"""
+    def error(self, message):
+        sys.stderr.write('error: %s\n' % message)
+        self.print_help()
+        sys.exit(1)
+
+
+parser = Parser(prog='unwad',
+                description='Default action is to convert files to png format and extract to xdir.',
+                epilog='example: unwad gfx.wad -d {0} => extract all files to {0}'.format(os.path.expanduser('./extracted')))
 
 parser.add_argument('file', metavar='file.wad', action=ResolvePathAction)
 parser.add_argument('-l', '--list', action='store_true', help='list files')
@@ -36,14 +45,17 @@ args = parser.parse_args()
 
 if not is_wadfile(args.file):
     print('{0}: cannot find or open {1}'.format(parser.prog, args.file), file=sys.stderr)
-    quit(1)
+    sys.exit(1)
 
 if args.list:
     with WadFile(args.file) as wad_file:
         for filename in sorted(wad_file.namelist()):
             print(filename)
 
-        quit(0)
+        sys.exit(0)
+
+if not os.path.exists(args.dest):
+    os.makedirs(args.dest)
 
 with WadFile(args.file) as wad_file:
     # Flatten out palette
@@ -95,7 +107,7 @@ with WadFile(args.file) as wad_file:
                         data = array.array('B', data)
                         size = mip.width, mip.height
                 except:
-                    print(' failed to determine size of resource: %s' % item.filename, file=sys.stderr)
+                    print(' failed to extract resource: %s' % item.filename, file=sys.stderr)
                     continue
 
         try:
@@ -116,3 +128,5 @@ with WadFile(args.file) as wad_file:
                     print(' extracting: %s' % fullpath)
         except:
             print('{0}: error: {1}'.format(parser.prog, sys.exc_info()[0]), file=sys.stderr)
+
+sys.exit(0)
