@@ -9,6 +9,7 @@ import argparse
 import os
 import struct
 import sys
+from tabulate import tabulate
 
 from PIL import Image
 
@@ -49,8 +50,29 @@ if not is_wadfile(args.file):
 
 if args.list:
     with WadFile(args.file) as wad_file:
-        for filename in sorted(wad_file.namelist()):
-            print(filename)
+        info_list = sorted(wad_file.infolist(), key=lambda i: i.filename)
+
+        lump_types = {64: 'LUMP',
+                      65: 'QTEX',
+                      66: 'QPIC',
+                      67: 'SOUND',
+                      68: 'MIPTEX'}
+
+        headers = ['Length', 'Type', 'Name']
+        table = [[i.file_size, lump_types[i.type], i.filename] for i in info_list]
+        length = sum([i.file_size for i in info_list])
+        count = len(info_list)
+        table.append([length, '', '%d file%s' % (count, 's' if count > 1 else '')])
+
+        separator = []
+        for i in range(len(headers)):
+            t = max(len(str(length)), len(headers[i]) + 2)
+            separator.append('-' * t)
+
+        table.insert(-1, separator)
+
+        print('Archive: %s' % os.path.basename(args.file))
+        print(tabulate(table, headers=headers))
 
         sys.exit(0)
 
