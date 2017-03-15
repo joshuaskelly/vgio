@@ -85,6 +85,8 @@ with WadFile(args.file) as wad_file:
     for p in default_palette:
         palette += p
 
+    print('Archive: %s' % os.path.basename(args.file))
+
     for item in wad_file.infolist():
         filename = item.filename
         fullpath = os.path.join(args.dest, filename)
