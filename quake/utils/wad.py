@@ -50,7 +50,7 @@ args = parser.parse_args()
 if not args.list:
     parser.error('the following arguments are required: list')
 
-dir = os.path.dirname(args.file)
+dir = os.path.dirname(args.file) or '.'
 if not os.path.exists(dir):
     os.makedirs(dir)
 
