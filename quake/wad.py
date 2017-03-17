@@ -7,6 +7,7 @@ Supported Games:
 import io
 import os
 import shutil
+import stat
 import struct
 
 try:
@@ -77,15 +78,15 @@ def is_wadfile(filename):
 CMP_NONE = 0
 CMP_LZSS = 1
 
-TYP_NONE = 0
-TYP_LABEL = 1
+TYPE_NONE = 0
+TYPE_LABEL = 1
 
-TYP_LUMPY = 64
-TYP_PALETTE = 64
-TYP_QTEX = 65
-TYP_QPIC = 66
-TYP_SOUND = 67
-TYP_MIPTEX = 68
+TYPE_LUMP = 64
+TYPE_PALETTE = 64
+TYPE_QTEX = 65
+TYPE_QPIC = 66
+TYPE_SOUND = 67
+TYPE_MIPTEX = 68
 
 
 class WadInfo(object):
@@ -100,13 +101,40 @@ class WadInfo(object):
         'type'
     )
 
-    def __init__(self, filename, file_offset, file_size):
+    def __init__(self, filename, file_offset=0, file_size=0):
         self.filename = filename
         self.file_offset = file_offset
         self.file_size = file_size
         self.compression = CMP_NONE
         self.disk_size = file_size
-        self.type = TYP_NONE
+        self.type = TYPE_NONE
+
+    @classmethod
+    def from_file(cls, filename):
+        st = os.stat(filename)
+        isdir = stat.S_ISDIR(st.st_mode)
+        arcname = os.path.normpath(os.path.splitdrive(filename)[1])[-16:]
+
+        while arcname[0] in (os.sep, os.altsep):
+            arcname = arcname[1:]
+
+        if isdir:
+            # TODO: Better exception
+            raise
+
+        info = cls(arcname)
+        info.type = TYPE_LUMP
+        info.file_size = st.st_size
+        info.disk_size = st.st_size
+        # TODO: Maybe add a archive name prop? Pointing to the on disk file is
+        # useful in certain scenarios
+        info.filename = os.path.basename(arcname)[-16:]
+
+        return info
+
+
+    def is_dir(self):
+        return self.filename[-1] == '/'
 
 
 class _SharedFile:
@@ -255,6 +283,34 @@ class WadExtFile(io.BufferedIOBase):
             super().close()
 
 
+class _WadWriteFile(io.BufferedIOBase):
+    def __init__(self, wf, wad_info):
+        self._wad_info = wad_info
+        self._wad_file = wf
+        self._file_size = 0
+
+    @property
+    def _fileobj(self):
+        return self._wad_file.fp
+
+    def writable(self):
+        return True
+
+    def write(self, data):
+        nbytes = len(data)
+        self._file_size += nbytes
+        self._fileobj.write(data)
+        return nbytes
+
+    def close(self):
+        super().close()
+
+        self._wad_file.start_of_directory = self._fileobj.tell()
+        self._wad_file._writing = False
+        self._wad_file.file_list.append(self._wad_info)
+        self._wad_file.NameToInfo[self._wad_info.filename] = self._wad_info
+
+
 class WadFile(object):
     """Class with methods to open, read, close, and list wad files.
 
@@ -270,8 +326,8 @@ class WadFile(object):
     _windows_illegal_name_trans_table = None
 
     def __init__(self, file, mode='r'):
-        if mode not in ('r',):
-            raise RuntimeError("WadFile requires mode 'r'")
+        if mode not in ('r', 'w', 'a'):
+            raise RuntimeError("WadFile requires mode 'r', 'w', or 'a'")
 
         self.NameToInfo = {}
         self.file_list = []
@@ -280,16 +336,48 @@ class WadFile(object):
         self._file_reference_count = 1
         self._lock = threading.RLock()
 
+        filemode = {'r': 'rb', 'w': 'w+b', 'a': 'r+b'}[mode]
+
         if isinstance(file, str):
             self.filename = file
-            self.fp = io.open(file, 'rb')
+            self.fp = io.open(file, filemode)
             self._file_passed = 0
         else:
             self.fp = file
             self.filename = getattr(file, 'name', None)
             self._file_passed = 1
 
-        self._load_archive_content()
+        self._lock = threading.RLock()
+        self._writing = False
+
+        try:
+            if mode == 'r':
+                self._read_archive_content()
+
+            elif mode == 'w':
+                self._did_modify = True
+                data = struct.pack(header_struct,
+                                   b'WAD2',
+                                   0,
+                                   header_size)
+                self.fp.write(data)
+                self.start_of_data= self.fp.tell()
+
+            elif mode == 'a':
+                try:
+                    self._read_archive_content()
+                    self.fp.seek(self.start_of_directory)
+                except BadWadFile:
+                    # Don't support appending to non-wad file
+                    raise
+            else:
+                raise ValueError("Mode must be 'r', 'w', 'x', or 'a'")
+
+        except:
+            fp = self.fp
+            self.fp = None
+            self._fpclose(fp)
+            raise
 
     def __enter__(self):
         return self
@@ -297,7 +385,7 @@ class WadFile(object):
     def __exit__(self, type, value, traceback):
         self.close()
 
-    def _load_archive_content(self):
+    def _read_archive_content(self):
         """Read in the directory information for the wad file."""
 
         fp = self.fp
@@ -310,10 +398,10 @@ class WadFile(object):
         if header[_HEADER_SIGNATURE] != header_magic_number:
             raise BadWadFile('Bad magic number: %r' % header[_HEADER_SIGNATURE])
 
-        start_of_directory = header[_HEADER_DIRECTORY_OFFSET]
+        self.start_of_directory = header[_HEADER_DIRECTORY_OFFSET]
         size_of_directory = header[_HEADER_LUMP_COUNT] * local_file_size
 
-        fp.seek(start_of_directory)
+        fp.seek(self.start_of_directory)
         data = fp.read(size_of_directory)
         fp = io.BytesIO(data)
 
@@ -339,6 +427,28 @@ class WadFile(object):
             self.NameToInfo[info.filename] = info
 
             total_bytes_read += local_file_size
+
+    def _write_directory(self):
+        for info in self.file_list:
+            data = struct.pack(local_file_struct,
+                               info.file_offset,
+                               info.disk_size,
+                               info.file_size,
+                               info.type,
+                               info.compression,
+                               0,
+                               0,
+                               info.filename.encode('ascii'))
+
+            self.fp.write(data)
+
+        count = len(self.file_list)
+
+        header_data = struct.pack(header_struct, b'WAD2', count, self.start_of_directory)
+
+        self.fp.seek(0)
+        self.fp.write(header_data)
+        self.fp.flush()
 
     def namelist(self):
         """Return a list of file names in the wad file."""
@@ -370,13 +480,21 @@ class WadFile(object):
     def open(self, name, mode='r'):
         """Return a file-like object for 'name'."""
 
+        if mode not in ('r', 'w'):
+            raise ValueError("open() requires mode 'r' or 'w'")
+
         if not self.fp:
             raise RuntimeError('Attempt to read WAD archive that was already closed')
 
         if isinstance(name, WadInfo):
             info = name
+        elif mode == 'w':
+            info = WadInfo.from_file(name)
         else:
             info = self.getinfo(name)
+
+        if mode == 'w':
+            return self._open_to_write(info)
 
         self._file_reference_count += 1
         shared_file = _SharedFile(self.fp, info.file_offset, info.file_size, self._fpclose, self._lock)
@@ -385,6 +503,16 @@ class WadFile(object):
         except:
             shared_file.close()
             raise
+
+    def _open_to_write(self, wad_info):
+        if self._writing:
+            raise ValueError("Can't write to the WAD file while there is "
+                             "another write handle open on it. Close the first"
+                             " handle before opening another.")
+
+        self._did_modify = True
+        self._writing = True
+        return _WadWriteFile(self, wad_info)
 
     def extract(self, member, path=None):
         """Extract a member from the wad file to the current working directory
@@ -483,15 +611,57 @@ class WadFile(object):
 
         return target_path
 
+    def write(self, filename):
+        if not self.fp:
+            raise ValueError('Attempting to write to WAD archive that was'
+                             ' already closed')
+        if self._writing:
+            raise ValueError("Can't write to WAD archive while an open writing"
+                             " handle exists")
+
+        info = WadInfo.from_file(filename)
+        info.file_offset = self.fp.tell()
+
+        if info.is_dir():
+            pass
+        else:
+            with open(filename, 'rb') as src, self.open(info, 'w') as dest:
+                shutil.copyfileobj(src, dest, 8*1024)
+
+    def write(self, wad_info, file):
+        if not self.fp:
+            raise ValueError('Attempting to write to WAD archive that was'
+                             ' already closed')
+        if self._writing:
+            raise ValueError("Can't write to WAD archive while an open writing"
+                             " handle exists")
+
+        wad_info.file_offset = self.fp.tell()
+
+        with file as src, self.open(wad_info, 'w') as dest:
+            shutil.copyfileobj(src, dest, 8*1024)
+
     def close(self):
         """Close the file."""
 
         if self.fp is None:
             return
 
-        fp = self.fp
-        self.fp = None
-        fp.close()
+        if self._writing:
+            raise ValueError("Can't close WAD file while there is an open"
+                             "writing handle on it. Close the writing handle"
+                             "before closing the wad.")
+
+        try:
+            if self.mode in ('w', 'x', 'a') and self._did_modify:
+                with self._lock:
+                    self.fp.seek(self.start_of_directory)
+                    self._write_directory()
+
+        finally:
+            fp = self.fp
+            self.fp = None
+            fp.close()
 
     def _fpclose(self, fp):
         assert self._file_reference_count > 0
