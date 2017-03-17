@@ -341,7 +341,10 @@ class BspMiptexture(object):
         pixels: A tuple of unstructured pixel data represented as integers. A
             palette must be used to obtain RGB data.
 
-            Note: this is the pixel data for all four mip levels.
+            Note: this is the pixel data for all four mip levels. The size is
+            calculated using the simplified form of the geometric series where
+            r = 1/4 and n = 4.
+
             The size of this tuple is:
 
             miptexture.width * miptexture.height * 85 / 64
@@ -355,13 +358,38 @@ class BspMiptexture(object):
         'pixels'
     )
 
-    def __init__(self, miptexture_struct):
-        self.name = miptexture_struct[_MIPTEXTURE_NAME].split(b'\00')[0]\
-                                                       .decode('ascii')
-        self.width = miptexture_struct[_MIPTEXTURE_WIDTH]
-        self.height = miptexture_struct[_MIPTEXTURE_HEIGHT]
-        self.offsets = miptexture_struct[_MIPTEXTURE_OFFSETS:]
-        self.pixels = None
+    @classmethod
+    def write(cls, file, miptexture):
+        miptexture_data = struct.pack(miptexture_format,
+                                      miptexture.name.encode('ascii'),
+                                      miptexture.width,
+                                      miptexture.height,
+                                      *miptexture.offsets)
+
+        pixels_size = miptexture.width * miptexture.height * 85 // 64
+        pixels_format = '<%dB' % pixels_size
+        pixels_data = struct.pack(pixels_format, *miptexture.pixels)
+
+        file.write(miptexture_data)
+        file.write(pixels_data)
+
+    @classmethod
+    def read(cls, file):
+        miptexture_data = file.read(miptexture_size)
+        miptexture_struct = struct.unpack(miptexture_format, miptexture_data)
+        miptexture = BspMiptexture()
+        miptexture.name = miptexture_struct[_MIPTEXTURE_NAME].split(b'\00')[0].decode('ascii')
+        miptexture.width = miptexture_struct[_MIPTEXTURE_WIDTH]
+        miptexture.height = miptexture_struct[_MIPTEXTURE_HEIGHT]
+        miptexture.offsets = miptexture_struct[_MIPTEXTURE_OFFSETS:]
+
+        pixels_size = miptexture.width * miptexture.height * 85 // 64
+        pixels_format = '<%dB' % pixels_size
+        pixels_data = struct.unpack(pixels_format, file.read(pixels_size))
+
+        miptexture.pixels = pixels_data
+
+        return miptexture
 
 
 class BspVertex(object):
@@ -875,20 +903,7 @@ class Bsp(object):
             offset = miptextures_offset + miptexture_offsets[miptexture_id]
             file.seek(offset)
 
-            miptexture_data = file.read(miptexture_size)
-            miptexture_struct = struct.unpack(miptexture_format,
-                                              miptexture_data)
-
-            miptexture = BspMiptexture(miptexture_struct)
-
-            # Calculate miptexture size using the simplified form of the
-            # geometric series where r = 1/4 and n = 4
-            pixels_size = miptexture.width * miptexture.height * 85 // 64
-            pixels_format = '<%dB' % pixels_size
-            pixels_data = struct.unpack(pixels_format, file.read(pixels_size))
-
-            miptexture.pixels = pixels_data
-
+            miptexture = BspMiptexture.read(file)
             bsp.miptextures.append(miptexture)
 
         # Vertexes
