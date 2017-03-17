@@ -7,13 +7,11 @@ Supported Games:
 import array
 import argparse
 import os
-import struct
 import sys
 from tabulate import tabulate
 
 from PIL import Image
 
-sys.path.append('/Users/joshua/Repositories/game-tools/')
 from quake.bsp import BspMiptexture
 from quake.lmp import Lmp, default_palette
 from quake.wad import WadFile, is_wadfile

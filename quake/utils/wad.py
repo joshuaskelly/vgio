@@ -12,7 +12,6 @@ import sys
 
 from PIL import Image
 
-sys.path.append('/Users/joshua/Repositories/game-tools/')
 from quake.bsp import BspMiptexture, default_palette
 from quake.wad import WadFile, WadInfo, TYPE_MIPTEX, CMP_NONE
 
