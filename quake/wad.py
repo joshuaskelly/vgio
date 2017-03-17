@@ -333,6 +333,7 @@ class WadFile(object):
         self.file_list = []
         self.mode = mode
 
+        self._did_modify = False
         self._file_reference_count = 1
         self._lock = threading.RLock()
 
@@ -628,7 +629,7 @@ class WadFile(object):
             with open(filename, 'rb') as src, self.open(info, 'w') as dest:
                 shutil.copyfileobj(src, dest, 8*1024)
 
-    def write(self, wad_info, file):
+    def write_info(self, wad_info, file):
         if not self.fp:
             raise ValueError('Attempting to write to WAD archive that was'
                              ' already closed')

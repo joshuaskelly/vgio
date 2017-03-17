@@ -67,16 +67,23 @@ with WadFile(args.file, filemode) as wad_file:
     for p in default_palette:
         palette += p
 
+    # Create palette image for Image.quantize()
+    palette_image = Image.frombytes('P', (16, 16), bytes(palette))
+    palette_image.putpalette(palette)
+
     # Process input files
     for file in args.list:
         if args.type == 'LUMP':
+            if not args.quiet:
+                print('  adding: %s' % file)
+
             wad_file.write(file)
         elif args.type == 'QPIC':
             pass
         else:
             try:
-                img = Image.open(file)
-                img.convert('P', palette=palette)
+                img = Image.open(file).convert(mode='RGB')
+                img = img.quantize(palette=palette_image)
 
                 name = os.path.basename(file).split('.')[0]
 
@@ -106,12 +113,12 @@ with WadFile(args.file, filemode) as wad_file:
                 info.type = TYPE_MIPTEX
 
                 if not args.quiet:
-                    print('adding: %s' % name)
+                    print('  adding: %s' % name)
 
-                wad_file.write(info, buff)
+                wad_file.write_info(info, buff)
 
             except:
-                print('{0}: error: {1}'.format(parser.prog, sys.exc_info()[0]), file=sys.stderr)
+                print('{0}: error: {1}'.format(parser.prog, sys.exc_info()[1]), file=sys.stderr)
 
 sys.exit(0)
 

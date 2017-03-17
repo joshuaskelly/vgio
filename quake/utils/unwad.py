@@ -140,6 +140,6 @@ with WadFile(args.file) as wad_file:
                 if not args.quiet:
                     print(' extracting: %s' % fullpath)
         except:
-            print('{0}: error: {1}'.format(parser.prog, sys.exc_info()[0]), file=sys.stderr)
+            print('{0}: error: {1}'.format(parser.prog, sys.exc_info()[1]), file=sys.stderr)
 
 sys.exit(0)
