@@ -13,7 +13,8 @@ from tabulate import tabulate
 
 from PIL import Image
 
-from quake.bsp import BspMiptexture, miptexture_format, miptexture_size
+sys.path.append('/Users/joshua/Repositories/game-tools/')
+from quake.bsp import BspMiptexture
 from quake.lmp import Lmp, default_palette
 from quake.wad import WadFile, is_wadfile
 
@@ -80,12 +81,13 @@ if not os.path.exists(args.dest):
     os.makedirs(args.dest)
 
 with WadFile(args.file) as wad_file:
+    if not args.quiet:
+        print('Archive: %s' % os.path.basename(args.file))
+
     # Flatten out palette
     palette = []
     for p in default_palette:
         palette += p
-
-    print('Archive: %s' % os.path.basename(args.file))
 
     for item in wad_file.infolist():
         filename = item.filename
@@ -115,18 +117,7 @@ with WadFile(args.file) as wad_file:
                 # Miptextures
                 try:
                     with wad_file.open(filename) as mip_file:
-                        mip_data = mip_file.read(miptexture_size)
-                        mip_struct = struct.unpack(miptexture_format, mip_data)
-
-                        mip = BspMiptexture(mip_struct)
-
-                        # Calculate miptexture size using the simplified form
-                        # of the geometric series where r = 1/4 and n = 4
-                        pixels_size = mip.width * mip.height * 85 // 64
-                        pixels_format = '<%dB' % pixels_size
-                        pixels_data = struct.unpack(pixels_format, mip_file.read(pixels_size))
-
-                        mip.pixels = pixels_data
+                        mip = BspMiptexture.read(mip_file)
                         data = mip.pixels[:mip.width * mip.height]
                         data = array.array('B', data)
                         size = mip.width, mip.height
