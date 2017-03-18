@@ -313,10 +313,30 @@ class BspPlane(object):
         'type'
     )
 
-    def __init__(self, plane_struct):
-        self.normal = plane_struct[_PLANE_NORMAL:_PLANE_DISTANCE]
-        self.distance = plane_struct[_PLANE_DISTANCE]
-        self.type = plane_struct[_PLANE_TYPE]
+    def __init__(self):
+        self.normal = None
+        self.distance = None
+        self.type = None
+
+    @classmethod
+    def write(cls, file, plane):
+        plane_data = struct.pack(plane_format,
+                                 *plane.normal,
+                                 plane.distance,
+                                 plane.type)
+
+        file.write(plane_data)
+
+    @classmethod
+    def read(cls, file):
+        plane = BspPlane()
+        plane_data = file.read(plane_size)
+        plane_struct = struct.unpack(plane_format, plane_data)
+        plane.normal = plane_struct[_PLANE_NORMAL:_PLANE_DISTANCE]
+        plane.distance = plane_struct[_PLANE_DISTANCE]
+        plane.type = plane_struct[_PLANE_TYPE]
+
+        return plane
 
 
 class BspMiptexture(object):
@@ -358,6 +378,13 @@ class BspMiptexture(object):
         'pixels'
     )
 
+    def __init__(self):
+        self.name = None
+        self.width = None
+        self.height = None
+        self.offsets = None
+        self.pixels = None
+
     @classmethod
     def write(cls, file, miptexture):
         miptexture_data = struct.pack(miptexture_format,
@@ -375,9 +402,9 @@ class BspMiptexture(object):
 
     @classmethod
     def read(cls, file):
+        miptexture = BspMiptexture()
         miptexture_data = file.read(miptexture_size)
         miptexture_struct = struct.unpack(miptexture_format, miptexture_data)
-        miptexture = BspMiptexture()
         miptexture.name = miptexture_struct[_MIPTEXTURE_NAME].split(b'\00')[0].decode('ascii')
         miptexture.width = miptexture_struct[_MIPTEXTURE_WIDTH]
         miptexture.height = miptexture_struct[_MIPTEXTURE_HEIGHT]
@@ -411,10 +438,10 @@ class BspVertex(object):
         'z'
     )
 
-    def __init__(self, vertex_struct):
-        self.x = vertex_struct[_VERTEX_X]
-        self.y = vertex_struct[_VERTEX_Y]
-        self.z = vertex_struct[_VERTEX_Z]
+    def __init__(self):
+        self.x = None
+        self.y = None
+        self.z = None
 
     def __getitem__(self, item):
         if type(item) is int:
@@ -425,6 +452,27 @@ class BspVertex(object):
             stop = item.stop or 3
 
             return [self.x, self.y, self.z][start:stop]
+
+    @classmethod
+    def write(cls, file, vertex):
+        vertex_data = struct.pack(vertex_format,
+                                  vertex.x,
+                                  vertex.y,
+                                  vertex.z)
+
+        file.write(vertex_data)
+
+    @classmethod
+    def read(cls, file):
+        vertex = BspVertex()
+        vertex_data = file.read(vertex_size)
+        vertex_struct = struct.unpack(vertex_format, vertex_data)
+
+        vertex.x = vertex_struct[_VERTEX_X]
+        vertex.y = vertex_struct[_VERTEX_Y]
+        vertex.z = vertex_struct[_VERTEX_Z]
+
+        return vertex
 
 
 class BspNode(object):
@@ -465,13 +513,40 @@ class BspNode(object):
         'number_of_faces'
     )
 
-    def __init__(self, node_struct):
-        self.plane_number = node_struct[_NODE_PLANE_NUMBER]
-        self.children = node_struct[_NODE_CHILDREN:_NODE_BOUNDING_BOX_MIN]
-        self.bounding_box_min = node_struct[_NODE_BOUNDING_BOX_MIN:_NODE_BOUNDING_BOX_MAX]
-        self.bounding_box_max = node_struct[_NODE_BOUNDING_BOX_MAX:_NODE_FIRST_FACE]
-        self.first_face = node_struct[_NODE_FIRST_FACE]
-        self.number_of_faces = node_struct[_NODE_NUMBER_OF_FACES]
+    def __init__(self):
+        self.plane_number = None
+        self.children = None
+        self.bounding_box_min = None
+        self.bounding_box_max = None
+        self.first_face = None
+        self.number_of_faces = None
+
+    @classmethod
+    def write(cls, file, node):
+        node_data = struct.pack(node_format,
+                                node.plane_number,
+                                *node.children,
+                                *node.bounding_box_min,
+                                *node.bounding_box_max,
+                                node.first_face,
+                                node.number_of_faces)
+
+        file.write(node_data)
+
+    @classmethod
+    def read(cls, file):
+        node = BspNode()
+        node_data = file.read(node_size)
+        node_struct = struct.unpack(node_format, node_data)
+
+        node.plane_number = node_struct[_NODE_PLANE_NUMBER]
+        node.children = node_struct[_NODE_CHILDREN:_NODE_BOUNDING_BOX_MIN]
+        node.bounding_box_min = node_struct[_NODE_BOUNDING_BOX_MIN:_NODE_BOUNDING_BOX_MAX]
+        node.bounding_box_max = node_struct[_NODE_BOUNDING_BOX_MAX:_NODE_FIRST_FACE]
+        node.first_face = node_struct[_NODE_FIRST_FACE]
+        node.number_of_faces = node_struct[_NODE_NUMBER_OF_FACES]
+
+        return node
 
 
 class BspTextureInfo(object):
@@ -500,13 +575,39 @@ class BspTextureInfo(object):
         'flags'
     )
 
-    def __init__(self, texture_info_struct):
-        self.s = texture_info_struct[_TEXTURE_INFO_S:_TEXTURE_INFO_S_OFFSET]
-        self.s_offset = texture_info_struct[_TEXTURE_INFO_S_OFFSET]
-        self.t = texture_info_struct[_TEXTURE_INFO_T:_TEXTURE_INFO_T_OFFSET]
-        self.t_offset = texture_info_struct[_TEXTURE_INFO_T_OFFSET]
-        self.miptexture_number = texture_info_struct[_TEXTURE_INFO_MIPTEXTURE_NUMBER]
-        self.flags = texture_info_struct[_TEXTURE_INFO_FLAGS]
+    def __init__(self):
+        self.s = None
+        self.s_offset = None
+        self.t = None
+        self.t_offset = None
+        self.miptexture_number = None
+        self.flags = None
+
+    @classmethod
+    def write(cls, file, texture_info):
+        texture_info_data = struct.pack(texture_info_format,
+                                        *texture_info.s,
+                                        texture_info.s_offset,
+                                        *texture_info.t,
+                                        texture_info.t_offset,
+                                        texture_info.miptexture_number,
+                                        texture_info.flags)
+        file.write(texture_info_data)
+
+    @classmethod
+    def read(cls, file):
+        texture_info = BspTextureInfo()
+        texture_info_data = file.read(texture_info_size)
+        texture_info_struct = struct.unpack(texture_info_format, texture_info_data)
+
+        texture_info.s = texture_info_struct[_TEXTURE_INFO_S:_TEXTURE_INFO_S_OFFSET]
+        texture_info.s_offset = texture_info_struct[_TEXTURE_INFO_S_OFFSET]
+        texture_info.t = texture_info_struct[_TEXTURE_INFO_T:_TEXTURE_INFO_T_OFFSET]
+        texture_info.t_offset = texture_info_struct[_TEXTURE_INFO_T_OFFSET]
+        texture_info.miptexture_number = texture_info_struct[_TEXTURE_INFO_MIPTEXTURE_NUMBER]
+        texture_info.flags = texture_info_struct[_TEXTURE_INFO_FLAGS]
+
+        return texture_info
 
 
 class BspFace(object):
@@ -541,14 +642,43 @@ class BspFace(object):
         'light_offset'
     )
 
-    def __init__(self, face_struct):
-        self.plane_number = face_struct[_FACE_PLANE_NUMBER]
-        self.side = face_struct[_FACE_SIDE]
-        self.first_edge = face_struct[_FACE_FIRST_EDGE]
-        self.number_of_edges = face_struct[_FACE_NUMBER_OF_EDGES]
-        self.texture_info = face_struct[_FACE_TEXTURE_INFO]
-        self.styles = face_struct[_FACE_STYLES:_FACE_LIGHT_OFFSET]
-        self.light_offset = face_struct[_FACE_LIGHT_OFFSET]
+    def __init__(self):
+        self.plane_number = None
+        self.side = None
+        self.first_edge = None
+        self.number_of_edges = None
+        self.texture_info = None
+        self.styles = None
+        self.light_offset = None
+
+    @classmethod
+    def write(cls, file, plane):
+        face_data = struct.pack(face_format,
+                                plane.plane_number,
+                                plane.side,
+                                plane.first_edge,
+                                plane.number_of_edges,
+                                plane.texture_info,
+                                *plane.styles,
+                                plane.light_offset)
+
+        file.write(face_data)
+
+    @classmethod
+    def read(cls, file):
+        face = BspFace()
+        face_data = file.read(face_size)
+        face_struct = struct.unpack(face_format, face_data)
+
+        face.plane_number = face_struct[_FACE_PLANE_NUMBER]
+        face.side = face_struct[_FACE_SIDE]
+        face.first_edge = face_struct[_FACE_FIRST_EDGE]
+        face.number_of_edges = face_struct[_FACE_NUMBER_OF_EDGES]
+        face.texture_info = face_struct[_FACE_TEXTURE_INFO]
+        face.styles = face_struct[_FACE_STYLES:_FACE_LIGHT_OFFSET]
+        face.light_offset = face_struct[_FACE_LIGHT_OFFSET]
+
+        return face
 
 
 class BspClipNode(object):
@@ -568,9 +698,28 @@ class BspClipNode(object):
         'children'
     )
 
-    def __init__(self, clip_node_struct):
-        self.plane_number = clip_node_struct[_CLIP_NODE_PLANE_NUMBER]
-        self.children = clip_node_struct[_CLIP_NODE_CHILDREN:]
+    def __init__(self):
+        self.plane_number = None
+        self.children = None
+
+    @classmethod
+    def write(cls, file, clip_node):
+        clip_node_data = struct.pack(clip_node_format,
+                                     clip_node.plane_number,
+                                     *clip_node.children)
+
+        file.write(clip_node_data)
+
+    @classmethod
+    def read(cls, file):
+        clip_node = BspClipNode()
+        clip_node_data = file.read(clip_node_size)
+        clip_node_struct = struct.unpack(clip_node_format, clip_node_data)
+
+        clip_node.plane_number = clip_node_struct[_CLIP_NODE_PLANE_NUMBER]
+        clip_node.children = clip_node_struct[_CLIP_NODE_CHILDREN:]
+
+        return clip_node
 
 
 CONTENTS_EMPTY = -1
@@ -620,14 +769,43 @@ class BspLeaf(object):
         'ambient_level'
     )
 
-    def __init__(self, leaf_struct):
-        self.contents = leaf_struct[_LEAF_CONTENTS]
-        self.visibilitiy_offset = leaf_struct[_LEAF_VISIBILITIY_OFFSET]
-        self.bounding_box_min = leaf_struct[_LEAF_BOUNDING_BOX_MIN:_LEAF_BOUNDING_BOX_MAX]
-        self.bounding_box_max = leaf_struct[_LEAF_BOUNDING_BOX_MAX:_LEAF_FIRST_MARK_SURFACE]
-        self.first_mark_surface = leaf_struct[_LEAF_FIRST_MARK_SURFACE]
-        self.number_of_marked_surfaces = leaf_struct[_LEAF_NUMBER_OF_MARKED_SURFACES]
-        self.ambient_level = leaf_struct[_LEAF_AMBIENT_LEVEL:]
+    def __init__(self):
+        self.contents = None
+        self.visibilitiy_offset = None
+        self.bounding_box_min = None
+        self.bounding_box_max = None
+        self.first_mark_surface = None
+        self.number_of_marked_surfaces = None
+        self.ambient_level = None
+
+    @classmethod
+    def write(cls, file, bsp_leaf):
+        bsp_leaf_data = struct.pack(leaf_format,
+                                    bsp_leaf.contents,
+                                    bsp_leaf.visibilitiy_offset,
+                                    *bsp_leaf.bounding_box_min,
+                                    *bsp_leaf.bounding_box_max,
+                                    bsp_leaf.first_mark_surface,
+                                    bsp_leaf.number_of_marked_surfaces,
+                                    *bsp_leaf.ambient_level)
+
+        file.write(bsp_leaf_data)
+
+    @classmethod
+    def read(cls, file):
+        bsp_leaf = BspLeaf()
+        leaf_data = file.read(leaf_size)
+        leaf_struct = struct.unpack(leaf_format, leaf_data)
+
+        bsp_leaf.contents = leaf_struct[_LEAF_CONTENTS]
+        bsp_leaf.visibilitiy_offset = leaf_struct[_LEAF_VISIBILITIY_OFFSET]
+        bsp_leaf.bounding_box_min = leaf_struct[_LEAF_BOUNDING_BOX_MIN:_LEAF_BOUNDING_BOX_MAX]
+        bsp_leaf.bounding_box_max = leaf_struct[_LEAF_BOUNDING_BOX_MAX:_LEAF_FIRST_MARK_SURFACE]
+        bsp_leaf.first_mark_surface = leaf_struct[_LEAF_FIRST_MARK_SURFACE]
+        bsp_leaf.number_of_marked_surfaces = leaf_struct[_LEAF_NUMBER_OF_MARKED_SURFACES]
+        bsp_leaf.ambient_level = leaf_struct[_LEAF_AMBIENT_LEVEL:]
+
+        return bsp_leaf
 
 
 class BspEdge(object):
@@ -642,14 +820,31 @@ class BspEdge(object):
         'vertexes'
     )
 
-    def __init__(self, edge_struct):
-        self.vertexes = edge_struct[:]
+    def __init__(self):
+        self.vertexes = None
 
     def __getitem__(self, item):
         if item > 1:
             raise IndexError('list index of out of range')
 
         return self.vertexes[item]
+
+    @classmethod
+    def write(cls, file, edge):
+        edge_data = struct.pack(edge_format,
+                                *edge.vertexes)
+
+        file.write(edge_data)
+
+    @classmethod
+    def read(cls, file):
+        edge = BspEdge()
+        edge_data = file.read(edge_size)
+        edge_struct = struct.unpack(edge_format, edge_data)
+
+        edge.vertexes = edge_struct[:]
+
+        return edge
 
 
 class BspModel(object):
@@ -664,7 +859,7 @@ class BspModel(object):
 
         origin: The origin of the model.
 
-        head_node: A four-tuple of
+        head_node: A four-tuple of indexes. Corresponds to number of map hulls.
 
         visleafs: The number of leaves in the bsp tree?
 
@@ -685,14 +880,43 @@ class BspModel(object):
         'number_of_faces'
     )
 
-    def __init__(self, model_struct):
-        self.bounding_box_min = model_struct[_MODEL_BOUNDING_BOX_MIN:_MODEL_BOUNDING_BOX_MAX]
-        self.bounding_box_max = model_struct[_MODEL_BOUNDING_BOX_MAX:_MODEL_ORIGIN]
-        self.origin = model_struct[_MODEL_ORIGIN:_MODEL_HEAD_NODE]
-        self.head_node = model_struct[_MODEL_HEAD_NODE:_MODEL_VISLEAFS]
-        self.visleafs = model_struct[_MODEL_VISLEAFS]
-        self.first_face = model_struct[_MODEL_FIRST_FACE]
-        self.number_of_faces = model_struct[_MODEL_NUMBER_OF_FACES]
+    def __init__(self):
+        self.bounding_box_min = None
+        self.bounding_box_max = None
+        self.origin = None
+        self.head_node = None
+        self.visleafs = None
+        self.first_face = None
+        self.number_of_faces = None
+
+    @classmethod
+    def write(cls, file, model):
+        model_data = struct.pack(model_format,
+                                 *model.bounding_box_min,
+                                 *model.bounding_box_max,
+                                 *model.origin,
+                                 *model.head_node,
+                                 model.visleafs,
+                                 model.first_face,
+                                 model.number_of_faces)
+
+        file.write(model_data)
+
+    @classmethod
+    def read(cls, file):
+        model = BspModel()
+        model_data = file.read(model_size)
+        model_struct = struct.unpack(model_format, model_data)
+
+        model.bounding_box_min = model_struct[_MODEL_BOUNDING_BOX_MIN:_MODEL_BOUNDING_BOX_MAX]
+        model.bounding_box_max = model_struct[_MODEL_BOUNDING_BOX_MAX:_MODEL_ORIGIN]
+        model.origin = model_struct[_MODEL_ORIGIN:_MODEL_HEAD_NODE]
+        model.head_node = model_struct[_MODEL_HEAD_NODE:_MODEL_VISLEAFS]
+        model.visleafs = model_struct[_MODEL_VISLEAFS]
+        model.first_face = model_struct[_MODEL_FIRST_FACE]
+        model.number_of_faces = model_struct[_MODEL_NUMBER_OF_FACES]
+
+        return model
 
 
 class Mesh(object):
@@ -880,10 +1104,8 @@ class Bsp(object):
 
         file.seek(planes_offset)
         for _ in range(number_of_planes):
-            plane_data = file.read(plane_size)
-            plane_struct = struct.unpack(plane_format, plane_data)
-
-            bsp.planes.append(BspPlane(plane_struct))
+            plane = BspPlane.read(file)
+            bsp.planes.append(plane)
 
         # Miptextures
         miptextures_offset = bsp_struct[_HEADER_MIPTEXTURES_OFFSET]
@@ -903,8 +1125,7 @@ class Bsp(object):
             offset = miptextures_offset + miptexture_offsets[miptexture_id]
             file.seek(offset)
 
-            miptexture = BspMiptexture.read(file)
-            bsp.miptextures.append(miptexture)
+            bsp.miptextures.append(BspMiptexture.read(file))
 
         # Vertexes
         vertexes_offset = bsp_struct[_HEADER_VERTEXES_OFFSET]
@@ -913,10 +1134,7 @@ class Bsp(object):
 
         file.seek(vertexes_offset)
         for _ in range(number_of_vertexes):
-            vertex_data = file.read(vertex_size)
-            vertex_struct = struct.unpack(vertex_format, vertex_data)
-
-            bsp.vertexes.append(BspVertex(vertex_struct))
+            bsp.vertexes.append(BspVertex.read(file))
 
         # Visibilities
         visibilities_offset = bsp_struct[_HEADER_VISIBILITIES_OFFSET]
@@ -934,10 +1152,7 @@ class Bsp(object):
 
         file.seek(nodes_offset)
         for _ in range(number_of_nodes):
-            node_data = file.read(node_size)
-            node_struct = struct.unpack(node_format, node_data)
-
-            bsp.nodes.append(BspNode(node_struct))
+            bsp.nodes.append(BspNode.read(file))
 
         # Texture Infos
         texture_infos_offset = bsp_struct[_HEADER_TEXTURE_INFOS_OFFSET]
@@ -946,11 +1161,7 @@ class Bsp(object):
 
         file.seek(texture_infos_offset)
         for _ in range(number_of_texture_infos):
-            texture_info_data = file.read(texture_info_size)
-            texture_info_struct = struct.unpack(texture_info_format,
-                                                texture_info_data)
-
-            bsp.texture_infos.append(BspTextureInfo(texture_info_struct))
+            bsp.texture_infos.append(BspTextureInfo.read(file))
 
         # Faces
         faces_offset = bsp_struct[_HEADER_FACES_OFFSET]
@@ -959,10 +1170,7 @@ class Bsp(object):
 
         file.seek(faces_offset)
         for _ in range(number_of_faces):
-            face_data = file.read(face_size)
-            face_struct = struct.unpack(face_format, face_data)
-
-            bsp.faces.append(BspFace(face_struct))
+            bsp.faces.append(BspFace.read(file))
 
         # Lighting
         lighting_offset = bsp_struct[_HEADER_LIGHTING_OFFSET]
@@ -980,10 +1188,7 @@ class Bsp(object):
 
         file.seek(clip_nodes_offset)
         for _ in range(number_of_clip_nodes):
-            clip_node_data = file.read(clip_node_size)
-            clip_node_struct = struct.unpack(clip_node_format, clip_node_data)
-
-            bsp.clip_nodes.append(BspClipNode(clip_node_struct))
+            bsp.clip_nodes.append(BspClipNode.read(file))
 
         # Leafs
         leafs_offset = bsp_struct[_HEADER_LEAFS_OFFSET]
@@ -992,10 +1197,7 @@ class Bsp(object):
 
         file.seek(leafs_offset)
         for _ in range(number_of_leafs):
-            leaf_data = file.read(leaf_size)
-            leaf_struct = struct.unpack(leaf_format, leaf_data)
-
-            bsp.leafs.append(BspLeaf(leaf_struct))
+            bsp.leafs.append(BspLeaf.read(file))
 
         # Mark Surfaces
         mark_surfaces_offset = bsp_struct[_HEADER_MARK_SURFACES_OFFSET]
@@ -1014,10 +1216,7 @@ class Bsp(object):
 
         file.seek(edges_offset)
         for _ in range(number_of_edges):
-            edge_data = file.read(edge_size)
-            edge_struct = struct.unpack(edge_format, edge_data)
-
-            bsp.edges.append(BspEdge(edge_struct))
+            bsp.edges.append(BspEdge.read(file))
 
         # Surf Edges
         surf_edges_offset = bsp_struct[_HEADER_SURF_EDGES_OFFSET]
@@ -1035,10 +1234,7 @@ class Bsp(object):
 
         file.seek(models_offset)
         for _ in range(number_of_models):
-            model_data = file.read(model_size)
-            model_struct = struct.unpack(model_format, model_data)
-
-            bsp.models.append(BspModel(model_struct))
+            bsp.models.append(BspModel.read(file))
 
         return bsp
 
