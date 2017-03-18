@@ -119,22 +119,15 @@ class WadInfo(object):
             arcname = arcname[1:]
 
         if isdir:
-            # TODO: Better exception
-            raise
+            raise RuntimeError('WadFile expects a file, got a directory')
 
         info = cls(arcname)
         info.type = TYPE_LUMP
         info.file_size = st.st_size
         info.disk_size = st.st_size
-        # TODO: Maybe add a archive name prop? Pointing to the on disk file is
-        # useful in certain scenarios
         info.filename = os.path.basename(arcname)[-16:]
 
         return info
-
-
-    def is_dir(self):
-        return self.filename[-1] == '/'
 
 
 class _SharedFile:
@@ -623,8 +616,8 @@ class WadFile(object):
         info = WadInfo.from_file(filename)
         info.file_offset = self.fp.tell()
 
-        if info.is_dir():
-            pass
+        if info[-1] == '/':
+            raise RuntimeError('WadFile expects a file, got a directory')
         else:
             with open(filename, 'rb') as src, self.open(info, 'w') as dest:
                 shutil.copyfileobj(src, dest, 8*1024)
