@@ -36,6 +36,7 @@ parser = Parser(prog='bsp2wad',
                 epilog='example: bsp2wad {0} => creates the wad file {1}'.format('e1m1.bsp', 'e1m1.wad'))
 
 parser.add_argument('file', metavar='file.bsp', action=ResolvePathAction, help='wad file to ')
+parser.add_argument('-d', metavar='file.wad', default=os.getcwd(), dest='dest', action=ResolvePathAction, help='extract textures from file.bsp into file.wad')
 parser.add_argument('-q', dest='quiet', action='store_true', help='quiet mode')
 
 args = parser.parse_args()
@@ -48,11 +49,19 @@ if not bsp.is_bspfile(args.file):
     sys.exit(1)
 
 bsp_file = bsp.Bsp.open(args.file)
-wad_path = os.path.dirname(args.file)
-wad_name = os.path.basename(args.file).split('.')[0] + '.wad'
-fullpath = os.path.join(wad_path, wad_name)
 
-with wad.WadFile(fullpath, mode='w') as wad_file:
+if not args.dest:
+    wad_path = os.path.dirname(args.file)
+    wad_name = os.path.basename(args.file).split('.')[0] + '.wad'
+    args.dest = os.path.join(wad_path, wad_name)
+
+if not os.path.exists(os.path.dirname(args.dest)):
+    os.makedirs(os.path.dirname(args.dest))
+
+with wad.WadFile(args.dest, mode='w') as wad_file:
+    if not args.quiet:
+        print('Archive: %s' % os.path.basename(args.file))
+
     for miptex in bsp_file.miptextures:
         buff = io.BytesIO()
         bsp.Miptexture.write(buff, miptex)
