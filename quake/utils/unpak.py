@@ -9,7 +9,6 @@ import os
 import sys
 
 from quake import pak
-from quake.pak import PakFile
 
 
 class ResolvePathAction(argparse.Action):
@@ -42,13 +41,13 @@ if not pak.is_pakfile(args.file):
     sys.exit(1)
 
 if args.list:
-    with PakFile(args.file) as pak_file:
+    with pak.PakFile(args.file) as pak_file:
         for filename in sorted(pak_file.namelist()):
             print(filename)
 
         sys.exit(0)
 
-with PakFile(args.file) as pak_file:
+with pak.PakFile(args.file) as pak_file:
     info_list = pak_file.infolist()
     for item in sorted(info_list, key=lambda i: i.filename):
         filename = item.filename

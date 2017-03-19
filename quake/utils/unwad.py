@@ -12,9 +12,7 @@ from tabulate import tabulate
 
 from PIL import Image
 
-from quake.bsp import BspMiptexture
-from quake.lmp import Lmp, default_palette
-from quake.wad import WadFile, is_wadfile
+from quake import bsp, lmp, wad
 
 
 class ResolvePathAction(argparse.Action):
@@ -43,15 +41,17 @@ parser.add_argument('-f', dest='format', default='png', choices=['bmp','gif','pn
 
 args = parser.parse_args()
 
-if not is_wadfile(args.file):
+if not wad.is_wadfile(args.file):
     print('{0}: cannot find or open {1}'.format(parser.prog, args.file), file=sys.stderr)
     sys.exit(1)
 
 if args.list:
-    with WadFile(args.file) as wad_file:
+    with wad.WadFile(args.file) as wad_file:
         info_list = sorted(wad_file.infolist(), key=lambda i: i.filename)
 
-        lump_types = {64: 'LUMP',
+        lump_types = {0: 'NONE',
+                      1: 'LABEL',
+                      64: 'LUMP',
                       65: 'QTEX',
                       66: 'QPIC',
                       67: 'SOUND',
@@ -78,13 +78,13 @@ if args.list:
 if not os.path.exists(args.dest):
     os.makedirs(args.dest)
 
-with WadFile(args.file) as wad_file:
+with wad.WadFile(args.file) as wad_file:
     if not args.quiet:
         print('Archive: %s' % os.path.basename(args.file))
 
     # Flatten out palette
     palette = []
-    for p in default_palette:
+    for p in lmp.default_palette:
         palette += p
 
     for item in wad_file.infolist():
@@ -98,7 +98,7 @@ with WadFile(args.file) as wad_file:
         # Pictures
         if item.type == 66:
             with wad_file.open(filename) as lmp_file:
-                lmp = Lmp.open(lmp_file)
+                lmp = lmp.Lmp.open(lmp_file)
                 size = lmp_file.width, lmp.height
                 data = array.array('B', lmp.pixels)
 
@@ -115,7 +115,7 @@ with WadFile(args.file) as wad_file:
                 # Miptextures
                 try:
                     with wad_file.open(filename) as mip_file:
-                        mip = BspMiptexture.read(mip_file)
+                        mip = bsp.Miptexture.read(mip_file)
                         data = mip.pixels[:mip.width * mip.height]
                         data = array.array('B', data)
                         size = mip.width, mip.height

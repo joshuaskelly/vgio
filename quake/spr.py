@@ -136,7 +136,7 @@ default_palette = (
 )
 
 
-class SprSpriteFrame(object):
+class SpriteFrame(object):
     """Class for representing a single sprite frame
 
     Attributes:
@@ -167,7 +167,7 @@ class SprSpriteFrame(object):
         self.pixels = []
 
 
-class SprSpriteGroup(object):
+class SpriteGroup(object):
     """Class for representing a sprite group
 
     Attributes:
@@ -334,7 +334,7 @@ class Spr(object):
             data = file.read(sprite_frame_size)
             data = struct.unpack(sprite_frame_format, data)
 
-            frame = SprSpriteFrame(data)
+            frame = SpriteFrame(data)
             pixels_count = frame.width * frame.height
             pixels_format = '<%iB' % pixels_count
             pixels_size = struct.calcsize(pixels_format)
@@ -356,7 +356,7 @@ class Spr(object):
                 intervals_size = struct.calcsize(intervals_format)
                 intervals = struct.unpack(intervals_format, file.read(intervals_size))
 
-                group = SprSpriteGroup()
+                group = SpriteGroup()
                 group.number_of_frames = number_of_frames
                 group.intervals = intervals
                 group.frames = [load_sprite_frame() for _ in range(number_of_frames)]

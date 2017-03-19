@@ -7,9 +7,9 @@ Supported games:
 import io
 import struct
 
-__all__ = ['BadBspFile', 'is_bspfile', 'BspPlane', 'BspMiptexture',
-           'BspVertex', 'BspNode', 'BspTextureInfo', 'BspFace', 'BspClipNode',
-           'BspLeaf', 'BspEdge', 'BspModel', 'Bsp']
+__all__ = ['BadBspFile', 'is_bspfile', 'Plane', 'Miptexture',
+           'Vertex', 'Node', 'TextureInfo', 'Face', 'ClipNode',
+           'Leaf', 'Edge', 'Model', 'Bsp']
 
 
 class BadBspFile(Exception):
@@ -290,7 +290,7 @@ default_palette = (
 )
 
 
-class BspPlane(object):
+class Plane(object):
     """Class for representing a bsp plane
 
     Attributes:
@@ -329,7 +329,7 @@ class BspPlane(object):
 
     @classmethod
     def read(cls, file):
-        plane = BspPlane()
+        plane = Plane()
         plane_data = file.read(plane_size)
         plane_struct = struct.unpack(plane_format, plane_data)
         plane.normal = plane_struct[_PLANE_NORMAL:_PLANE_DISTANCE]
@@ -339,8 +339,8 @@ class BspPlane(object):
         return plane
 
 
-class BspMiptexture(object):
-    """Class for representing a bsp miptexture
+class Miptexture(object):
+    """Class for representing a miptexture
 
     A miptexture is an indexed image mip map embedded within the map. Maps
     usually have many miptextures, and the miptexture lump is treated like a
@@ -402,7 +402,7 @@ class BspMiptexture(object):
 
     @classmethod
     def read(cls, file):
-        miptexture = BspMiptexture()
+        miptexture = Miptexture()
         miptexture_data = file.read(miptexture_size)
         miptexture_struct = struct.unpack(miptexture_format, miptexture_data)
         miptexture.name = miptexture_struct[_MIPTEXTURE_NAME].split(b'\00')[0].decode('ascii')
@@ -419,10 +419,10 @@ class BspMiptexture(object):
         return miptexture
 
 
-class BspVertex(object):
-    """Class for representing a bsp vertex
+class Vertex(object):
+    """Class for representing a vertex
 
-    A BspVertex is an XYZ triple.
+    A Vertex is an XYZ triple.
 
     Attributes:
         x: The x-coordinate
@@ -464,7 +464,7 @@ class BspVertex(object):
 
     @classmethod
     def read(cls, file):
-        vertex = BspVertex()
+        vertex = Vertex()
         vertex_data = file.read(vertex_size)
         vertex_struct = struct.unpack(vertex_format, vertex_data)
 
@@ -475,11 +475,11 @@ class BspVertex(object):
         return vertex
 
 
-class BspNode(object):
-    """Class for representing a bsp node
+class Node(object):
+    """Class for representing a node
 
-    A BspNode is a data structure used to compose a bsp tree data structure. A
-    child may be a BspNode or a BspLeaf.
+    A Node is a data structure used to compose a bsp tree data structure. A
+    child may be a Node or a Leaf.
 
     Attributes:
         plane_number: The number of the plane that partitions the node.
@@ -501,7 +501,7 @@ class BspNode(object):
 
         number_of_faces: The number of faces contained in the node. These
             are stored in consecutive order in Bsp.mark_surfaces starting at
-            BspNode.first_face.
+            Node.first_face.
     """
 
     __slots__ = (
@@ -535,7 +535,7 @@ class BspNode(object):
 
     @classmethod
     def read(cls, file):
-        node = BspNode()
+        node = Node()
         node_data = file.read(node_size)
         node_struct = struct.unpack(node_format, node_data)
 
@@ -549,8 +549,8 @@ class BspNode(object):
         return node
 
 
-class BspTextureInfo(object):
-    """Class for representing a bsp texture info
+class TextureInfo(object):
+    """Class for representing a texture info
 
     Attributes:
         s: The s vector in texture space represented as an XYZ three-tuple.
@@ -596,7 +596,7 @@ class BspTextureInfo(object):
 
     @classmethod
     def read(cls, file):
-        texture_info = BspTextureInfo()
+        texture_info = TextureInfo()
         texture_info_data = file.read(texture_info_size)
         texture_info_struct = struct.unpack(texture_info_format, texture_info_data)
 
@@ -610,8 +610,8 @@ class BspTextureInfo(object):
         return texture_info
 
 
-class BspFace(object):
-    """Class for representing a bsp face
+class Face(object):
+    """Class for representing a face
 
     Attributes:
         plane_number: The plane in which the face lies.
@@ -623,7 +623,7 @@ class BspFace(object):
 
         number_of_edges: The number of edges contained within the face. These
             are stored in consecutive order in Bsp.surf_edges starting at
-            BspFace.first_edge.
+            Face.first_edge.
 
         texture_info: The number of the texture info for this face.
 
@@ -666,7 +666,7 @@ class BspFace(object):
 
     @classmethod
     def read(cls, file):
-        face = BspFace()
+        face = Face()
         face_data = file.read(face_size)
         face_struct = struct.unpack(face_format, face_data)
 
@@ -681,8 +681,8 @@ class BspFace(object):
         return face
 
 
-class BspClipNode(object):
-    """Class for representing a bsp clip node
+class ClipNode(object):
+    """Class for representing a clip node
 
     Attributes:
         plane_number: The number of the plane that partitions the node.
@@ -712,7 +712,7 @@ class BspClipNode(object):
 
     @classmethod
     def read(cls, file):
-        clip_node = BspClipNode()
+        clip_node = ClipNode()
         clip_node_data = file.read(clip_node_size)
         clip_node_struct = struct.unpack(clip_node_format, clip_node_data)
 
@@ -735,8 +735,8 @@ AMBIENT_SLIME = 2
 AMBIENT_LAVA = 3
 
 
-class BspLeaf(object):
-    """Class for representing a bsp leaf
+class Leaf(object):
+    """Class for representing a leaf
 
     Attributes:
         contents: The content of the leaf. Affect the player's view.
@@ -753,7 +753,7 @@ class BspLeaf(object):
 
         number_of_marked_surfaces: The number of surfaces contained within the
             leaf. These are stored in consecutive order in Bsp.mark_surfaces
-            starting at BspLeaf.first_mark_surface.
+            starting at Leaf.first_mark_surface.
 
         ambient_level: A four-tuple that represent the volume of the four
             ambient sounds.
@@ -779,37 +779,37 @@ class BspLeaf(object):
         self.ambient_level = None
 
     @classmethod
-    def write(cls, file, bsp_leaf):
-        bsp_leaf_data = struct.pack(leaf_format,
-                                    bsp_leaf.contents,
-                                    bsp_leaf.visibilitiy_offset,
-                                    *bsp_leaf.bounding_box_min,
-                                    *bsp_leaf.bounding_box_max,
-                                    bsp_leaf.first_mark_surface,
-                                    bsp_leaf.number_of_marked_surfaces,
-                                    *bsp_leaf.ambient_level)
+    def write(cls, file, leaf):
+        leaf_data = struct.pack(leaf_format,
+                                    leaf.contents,
+                                    leaf.visibilitiy_offset,
+                                    *leaf.bounding_box_min,
+                                    *leaf.bounding_box_max,
+                                    leaf.first_mark_surface,
+                                    leaf.number_of_marked_surfaces,
+                                    *leaf.ambient_level)
 
-        file.write(bsp_leaf_data)
+        file.write(leaf_data)
 
     @classmethod
     def read(cls, file):
-        bsp_leaf = BspLeaf()
+        leaf = Leaf()
         leaf_data = file.read(leaf_size)
         leaf_struct = struct.unpack(leaf_format, leaf_data)
 
-        bsp_leaf.contents = leaf_struct[_LEAF_CONTENTS]
-        bsp_leaf.visibilitiy_offset = leaf_struct[_LEAF_VISIBILITIY_OFFSET]
-        bsp_leaf.bounding_box_min = leaf_struct[_LEAF_BOUNDING_BOX_MIN:_LEAF_BOUNDING_BOX_MAX]
-        bsp_leaf.bounding_box_max = leaf_struct[_LEAF_BOUNDING_BOX_MAX:_LEAF_FIRST_MARK_SURFACE]
-        bsp_leaf.first_mark_surface = leaf_struct[_LEAF_FIRST_MARK_SURFACE]
-        bsp_leaf.number_of_marked_surfaces = leaf_struct[_LEAF_NUMBER_OF_MARKED_SURFACES]
-        bsp_leaf.ambient_level = leaf_struct[_LEAF_AMBIENT_LEVEL:]
+        leaf.contents = leaf_struct[_LEAF_CONTENTS]
+        leaf.visibilitiy_offset = leaf_struct[_LEAF_VISIBILITIY_OFFSET]
+        leaf.bounding_box_min = leaf_struct[_LEAF_BOUNDING_BOX_MIN:_LEAF_BOUNDING_BOX_MAX]
+        leaf.bounding_box_max = leaf_struct[_LEAF_BOUNDING_BOX_MAX:_LEAF_FIRST_MARK_SURFACE]
+        leaf.first_mark_surface = leaf_struct[_LEAF_FIRST_MARK_SURFACE]
+        leaf.number_of_marked_surfaces = leaf_struct[_LEAF_NUMBER_OF_MARKED_SURFACES]
+        leaf.ambient_level = leaf_struct[_LEAF_AMBIENT_LEVEL:]
 
-        return bsp_leaf
+        return leaf
 
 
-class BspEdge(object):
-    """Class for representing a bsp edge
+class Edge(object):
+    """Class for representing a edge
 
     Attributes:
         vertexes: A two-tuple of vertexes that form the edge. Vertex 0 is the
@@ -838,7 +838,7 @@ class BspEdge(object):
 
     @classmethod
     def read(cls, file):
-        edge = BspEdge()
+        edge = Edge()
         edge_data = file.read(edge_size)
         edge_struct = struct.unpack(edge_format, edge_data)
 
@@ -847,8 +847,8 @@ class BspEdge(object):
         return edge
 
 
-class BspModel(object):
-    """Class for representing a bsp model
+class Model(object):
+    """Class for representing a model
 
     Attributes:
         bounding_box_min: The minimum coordinate of the bounding box containing
@@ -867,7 +867,7 @@ class BspModel(object):
 
         number_of_faces: The number of faces contained in the node. These
             are stored in consecutive order in Bsp.mark_surfaces starting at
-            BspModel.first_face.
+            Model.first_face.
     """
 
     __slots__ = (
@@ -904,7 +904,7 @@ class BspModel(object):
 
     @classmethod
     def read(cls, file):
-        model = BspModel()
+        model = Model()
         model_data = file.read(model_size)
         model_struct = struct.unpack(model_format, model_data)
 
@@ -993,35 +993,35 @@ class Bsp(object):
 
         entities: A string containing the entity definitions.
 
-        planes: A list of BspPlanes used by the bsp tree data structure.
+        planes: A list of Planes used by the bsp tree data structure.
 
-        miptextures: A list of BspMiptextures.
+        miptextures: A list of Miptextures.
 
-        vertexes: A list of BspVertexes.
+        vertexes: A list of Vertexes.
 
         visibilities: A list of ints representing visibility data.
 
-        nodes: A list of BspNodes used by the bsp tree data structure.
+        nodes: A list of Nodes used by the bsp tree data structure.
 
-        texture_infos: A list of BspTextureInfo objects.
+        texture_infos: A list of TextureInfo objects.
 
-        faces: A list of BspFaces.
+        faces: A list of Faces.
 
         lighting: A list of ints representing lighting data.
 
-        clip_nodes: A list of BspClipNodes used by the bsp tree data structure.
+        clip_nodes: A list of ClipNodes used by the bsp tree data structure.
 
-        leafs: A list of BspLeafs used by the bsp tree data structure.
+        leafs: A list of Leafs used by the bsp tree data structure.
 
         mark_surfaces: A list of ints representing lists of consecutive faces
-            used by the BspNode objects.
+            used by the Node objects.
 
-        edges: A list of BspEdges.
+        edges: A list of Edges.
 
         surf_edges: A list of ints representing  list of consecutive edges used
-            by the BspFace objects.
+            by the Face objects.
 
-        models: A list of BspModels.
+        models: A list of Models.
 
             Note: The first model is the entire level.
 
@@ -1104,7 +1104,7 @@ class Bsp(object):
 
         file.seek(planes_offset)
         for _ in range(number_of_planes):
-            plane = BspPlane.read(file)
+            plane = Plane.read(file)
             bsp.planes.append(plane)
 
         # Miptextures
@@ -1125,7 +1125,7 @@ class Bsp(object):
             offset = miptextures_offset + miptexture_offsets[miptexture_id]
             file.seek(offset)
 
-            bsp.miptextures.append(BspMiptexture.read(file))
+            bsp.miptextures.append(Miptexture.read(file))
 
         # Vertexes
         vertexes_offset = bsp_struct[_HEADER_VERTEXES_OFFSET]
@@ -1134,7 +1134,7 @@ class Bsp(object):
 
         file.seek(vertexes_offset)
         for _ in range(number_of_vertexes):
-            bsp.vertexes.append(BspVertex.read(file))
+            bsp.vertexes.append(Vertex.read(file))
 
         # Visibilities
         visibilities_offset = bsp_struct[_HEADER_VISIBILITIES_OFFSET]
@@ -1152,7 +1152,7 @@ class Bsp(object):
 
         file.seek(nodes_offset)
         for _ in range(number_of_nodes):
-            bsp.nodes.append(BspNode.read(file))
+            bsp.nodes.append(Node.read(file))
 
         # Texture Infos
         texture_infos_offset = bsp_struct[_HEADER_TEXTURE_INFOS_OFFSET]
@@ -1161,7 +1161,7 @@ class Bsp(object):
 
         file.seek(texture_infos_offset)
         for _ in range(number_of_texture_infos):
-            bsp.texture_infos.append(BspTextureInfo.read(file))
+            bsp.texture_infos.append(TextureInfo.read(file))
 
         # Faces
         faces_offset = bsp_struct[_HEADER_FACES_OFFSET]
@@ -1170,7 +1170,7 @@ class Bsp(object):
 
         file.seek(faces_offset)
         for _ in range(number_of_faces):
-            bsp.faces.append(BspFace.read(file))
+            bsp.faces.append(Face.read(file))
 
         # Lighting
         lighting_offset = bsp_struct[_HEADER_LIGHTING_OFFSET]
@@ -1188,7 +1188,7 @@ class Bsp(object):
 
         file.seek(clip_nodes_offset)
         for _ in range(number_of_clip_nodes):
-            bsp.clip_nodes.append(BspClipNode.read(file))
+            bsp.clip_nodes.append(ClipNode.read(file))
 
         # Leafs
         leafs_offset = bsp_struct[_HEADER_LEAFS_OFFSET]
@@ -1197,7 +1197,7 @@ class Bsp(object):
 
         file.seek(leafs_offset)
         for _ in range(number_of_leafs):
-            bsp.leafs.append(BspLeaf.read(file))
+            bsp.leafs.append(Leaf.read(file))
 
         # Mark Surfaces
         mark_surfaces_offset = bsp_struct[_HEADER_MARK_SURFACES_OFFSET]
@@ -1216,7 +1216,7 @@ class Bsp(object):
 
         file.seek(edges_offset)
         for _ in range(number_of_edges):
-            bsp.edges.append(BspEdge.read(file))
+            bsp.edges.append(Edge.read(file))
 
         # Surf Edges
         surf_edges_offset = bsp_struct[_HEADER_SURF_EDGES_OFFSET]
@@ -1234,7 +1234,7 @@ class Bsp(object):
 
         file.seek(models_offset)
         for _ in range(number_of_models):
-            bsp.models.append(BspModel.read(file))
+            bsp.models.append(Model.read(file))
 
         return bsp
 
@@ -1301,7 +1301,7 @@ class Bsp(object):
                 if v1 != verts[0]:
                     verts.append(v1)
 
-            # Convert BspVertexes to three-tuples and reverse their order
+            # Convert Vertexes to three-tuples and reverse their order
             verts = [tuple(self.vertexes[i][:]) for i in reversed(verts)]
 
             # Convert ST coordinate space to UV coordinate space

@@ -8,9 +8,9 @@ import enum
 import io
 import struct
 
-__all__ = ['BadMdlFile', 'is_mdlfile', 'BadMdlFile', 'MdlSkin', 'MdlSkinGroup',
-           'MdlStVertex', 'MdlTriangle', 'MdlTriVertex', 'MdlFrame',
-           'MdlFrameGroup', 'Mesh', 'Image', 'Mdl']
+__all__ = ['BadMdlFile', 'is_mdlfile', 'BadMdlFile', 'Skin', 'SkinGroup',
+           'StVertex', 'Triangle', 'TriVertex', 'Frame',
+           'FrameGroup', 'Mesh', 'Image', 'Mdl']
 
 
 class BadMdlFile(Exception):
@@ -265,21 +265,21 @@ vertex_normals = (
     (-0.587785, -0.425325, -0.688191), (-0.688191, -0.587785, -0.425325),
 )
 
-class MdlSkinType(enum.Enum):
+class SkinType(enum.Enum):
     SINGLE = 0
     GROUP = 1
 
 
-class MdlSkin(object):
-    """Class for representing an mdl skin
+class Skin(object):
+    """Class for representing a skin
 
     A skin is an indexed image embedded within the model. Models may contain
     more than one skin, and there may be as many skins as are there are
     separate parts in the model.
 
     Attributes:
-        type: The MdlSkinType for the skin. For an MdlSkin object the type must
-            be MdlSkinType.SINGLE
+        type: The SkinType for the skin. For a Skin object the type must
+            be SkinType.SINGLE
 
         skin: A tuple of unstructured indexed pixel data represented as
             integers. A palette must be used to obtain RGB data.
@@ -294,20 +294,20 @@ class MdlSkin(object):
     )
 
     def __init__(self, skin_struct):
-        self.type = MdlSkinType.SINGLE
+        self.type = SkinType.SINGLE
         self.skin = skin_struct[1:]
 
 
-class MdlSkinGroup(object):
-    """Class for representing an mdl skin group
+class SkinGroup(object):
+    """Class for representing a skin group
 
     A skin group is a sequence of indexed images embedded within the model.
 
     Attributes:
-        type: The MdlSkinType for the skin group. For an MdlSkinGroup the type
-            must be MdlSkinType.GROUP
+        type: The SkinType for the skin group. For a SkinGroup the type
+            must be SkinType.GROUP
 
-        number_of_skins: The number of skins contain within this MdlSkinGroup.
+        number_of_skins: The number of skins contain within this SkinGroup.
 
         intervals: The time intervals between skin.
 
@@ -326,23 +326,23 @@ class MdlSkinGroup(object):
     )
 
     def __init__(self, skingroup_struct):
-        self.type = MdlSkinType.GROUP
+        self.type = SkinType.GROUP
         self.number_of_skins = skingroup_struct[1]
         self.intervals = skingroup_struct[2:self.number_of_skins + 2]
         self.skins = skingroup_struct[self.number_of_skins + 2:]
 
 
-class MdlStVertex(object):
-    """Class for representing an mdl st vertex
+class StVertex(object):
+    """Class for representing an st vertex
 
-    MdlStVertices are basically UV coordinates with the following caveat:
+    StVertices are basically UV coordinates with the following caveat:
 
     Note:
-        If an MdlStVertex lies on a seam and belongs to a back facing triangle,
+        If an StVertex lies on a seam and belongs to a back facing triangle,
         the s-component must be incremented by half of the skin width.
 
     Attributes:
-        on_seam: Indicates if the MdlStVertex is on a skin boundary. The value
+        on_seam: Indicates if the StVertex is on a skin boundary. The value
             will be 0 if not on the seam and 0x20 if it does lie on the seam.
 
         s: The x-coordinate on the skin.
@@ -368,8 +368,8 @@ class MdlStVertex(object):
         return self.s if item == 0 else self.t
 
 
-class MdlTriangle(object):
-    """Class for representing an mdl triangle
+class Triangle(object):
+    """Class for representing a triangle
 
     Note:
         The triangle winding direction is clockwise.
@@ -396,10 +396,10 @@ class MdlTriangle(object):
         return self.vertices[item]
 
 
-class MdlTriVertex(object):
-    """Class for representing an mdl trivertex
+class TriVertex(object):
+    """Class for representing a trivertex
 
-    An MdlTriVertex is a set of XYZ coordinates and a light normal index.
+    A TriVertex is a set of XYZ coordinates and a light normal index.
 
     Note:
         The XYZ coordinates are packed into a (0, 0, 0) to (255, 255, 255)
@@ -448,24 +448,24 @@ class MdlTriVertex(object):
             return self.z
 
 
-class MdlFrameType(enum.Enum):
+class FrameType(enum.Enum):
     SINGLE = 0
     GROUP = 1
 
 
-class MdlFrame(object):
-    """Class for representing an mdl frame
+class Frame(object):
+    """Class for representing a frame
 
-    An MdlFrame is a set of vertices that represent the state of the model at
+    A Frame is a set of vertices that represent the state of the model at
     a single frame of animation.
 
     Note:
-        The MdlTriVertices that describe the bounding box do not use their
+        The TriVertices that describe the bounding box do not use their
         light_normal_index attribute.
 
     Attributes:
-        type: The MdlFrameType of the frame. For an MdlFrame object the type
-            must be MdlFrameType.SINGLE
+        type: The FrameType of the frame. For a Frame object the type
+            must be FrameType.SINGLE
 
         bounding_box_min: The minimum coordinate of the bounding box containing
             the vertices in this frame.
@@ -475,7 +475,7 @@ class MdlFrame(object):
 
         name: The name of the frame.
 
-        vertices: A list of MdlTriVertex objects.
+        vertices: A list of TriVertex objects.
     """
 
     __slots__ = (
@@ -487,21 +487,21 @@ class MdlFrame(object):
     )
 
     def __init__(self, frame_struct):
-        self.type = MdlFrameType.SINGLE
-        self.bounding_box_min = MdlTriVertex(frame_struct[_FRAME_MIN:_FRAME_MAX])
-        self.bounding_box_max = MdlTriVertex(frame_struct[_FRAME_MAX:_FRAME_NAME])
+        self.type = FrameType.SINGLE
+        self.bounding_box_min = TriVertex(frame_struct[_FRAME_MIN:_FRAME_MAX])
+        self.bounding_box_max = TriVertex(frame_struct[_FRAME_MAX:_FRAME_NAME])
         self.name = frame_struct[_FRAME_NAME].split(b'\00')[0].decode('ascii')
 
         vs = frame_struct[_FRAME_VERTS:]
-        self.vertices = [MdlTriVertex((vs[i], vs[i + 1], vs[i + 2], vs[i + 3])) for i in range(0, len(vs), 4)]
+        self.vertices = [TriVertex((vs[i], vs[i + 1], vs[i + 2], vs[i + 3])) for i in range(0, len(vs), 4)]
 
 
-class MdlFrameGroup(object):
-    """Class for representing an mdl frame group
+class FrameGroup(object):
+    """Class for representing a frame group
 
     Attributes:
-        type: The MdlFrameType of the frame group. For an MdlFrame object the
-            type must be MdlFrameType.GROUP
+        type: The FrameType of the frame group. For a Frame object the
+            type must be FrameType.GROUP
 
         bounding_box_min: The minimum coordinate of the bounding box containing
             the vertices of all frames in this group.
@@ -513,7 +513,7 @@ class MdlFrameGroup(object):
 
         intervals: A sequence of timings for each frame.
 
-        frames: A list of MdlFrame objects.
+        frames: A list of Frame objects.
     """
 
     __slots__ = (
@@ -526,12 +526,12 @@ class MdlFrameGroup(object):
     )
 
     def __init__(self, framegroup_struct):
-        self.type = MdlFrameType.GROUP
+        self.type = FrameType.GROUP
         self.number_of_frames = framegroup_struct[_FRAMEGROUP_NUMBER_OF_FRAMES]
-        self.bounding_box_min = MdlTriVertex(framegroup_struct[_FRAMEGROUP_MIN])
-        self.bounding_box_max = MdlTriVertex(framegroup_struct[_FRAMEGROUP_MAX])
+        self.bounding_box_min = TriVertex(framegroup_struct[_FRAMEGROUP_MIN])
+        self.bounding_box_max = TriVertex(framegroup_struct[_FRAMEGROUP_MAX])
         self.intervals = framegroup_struct[_FRAMEGROUP_INTERVALS]
-        self.frames = [MdlFrame(f) for f in framegroup_struct[_FRAMEGROUP_FRAMES]]
+        self.frames = [Frame(f) for f in framegroup_struct[_FRAMEGROUP_FRAMES]]
 
 
 class SyncType(enum.Enum):
@@ -645,24 +645,24 @@ class Mdl(object):
         number_of_frames: The number of frames for the model.
 
         synctype: The synchronization type for the model. It is either
-            MdlSyncType.SYNC or MdlSyncType.RAND.
+            SyncType.SYNC or SyncType.RAND.
 
         flags: A bit field of entity effects.
 
         size: The average size of the triangles.
 
 
-        skins: The list of MdlSkin or MdlSkinGroup objects. Use the type
+        skins: The list of Skin or SkinGroup objects. Use the type
             attribute to identify the object. The type is either
-            MdlSkinType.SINGLE or MdlSkinType.GROUP.
+            SkinType.SINGLE or SkinType.GROUP.
 
-        st_vertices: The list of MdlStVertex objects.
+        st_vertices: The list of StVertex objects.
 
-        triangles: The list of MdlTriangle objects.
+        triangles: The list of Triangle objects.
 
-        frames: The list of MdlFrame or MdlFrameGroup objects. Use the type
+        frames: The list of Frame or FrameGroup objects. Use the type
             attribute to identify the object. The type is either
-            MdlFrameType.SINGLE or MdlFrameType.GROUP.
+            FrameType.SINGLE or FrameType.GROUP.
 
 
         fp: The file-like object to read data from.
@@ -769,7 +769,7 @@ class Mdl(object):
                 data = struct.unpack(skin_format, data)
                 skin_struct = (group,) + data
 
-                mdl.skins.append(MdlSkin(skin_struct))
+                mdl.skins.append(Skin(skin_struct))
 
             else:
                 number_of_pictures = file.read(4)
@@ -782,19 +782,19 @@ class Mdl(object):
                 data = struct.unpack(skingroup_format, data)
                 skingroup_struct = (group, number_of_pictures) + data
 
-                mdl.skins.append(MdlSkinGroup(skingroup_struct))
+                mdl.skins.append(SkinGroup(skingroup_struct))
 
         for _ in range(mdl.number_of_vertices):
             data = file.read(st_vertex_size)
             data = struct.unpack(st_vertex_format, data)
 
-            mdl.st_vertices.append(MdlStVertex(data))
+            mdl.st_vertices.append(StVertex(data))
 
         for _ in range(mdl.number_of_triangles):
             data = file.read(triangle_size)
             data = struct.unpack(triangle_format, data)
 
-            mdl.triangles.append(MdlTriangle(data))
+            mdl.triangles.append(Triangle(data))
 
         frame_format = _calculate_frame_format(mdl.number_of_vertices)
         frame_size = struct.calcsize(frame_format)
@@ -802,13 +802,13 @@ class Mdl(object):
         for _ in range(mdl.number_of_frames):
             frame_type = file.read(4)
             frame_type = struct.unpack('<l', frame_type)[0]
-            frame_type = MdlFrameType(frame_type)
+            frame_type = FrameType(frame_type)
 
-            if frame_type is MdlFrameType.SINGLE:
+            if frame_type is FrameType.SINGLE:
                 data = file.read(frame_size)
                 data = struct.unpack(frame_format, data)
 
-                mdl.frames.append(MdlFrame(data))
+                mdl.frames.append(Frame(data))
 
             else:
                 number_of_frames = file.read(4)
@@ -833,7 +833,7 @@ class Mdl(object):
 
                 framegroup_struct = number_of_frames, min, max, intervals, frame_structs
 
-                mdl.frames.append(MdlFrameGroup(framegroup_struct))
+                mdl.frames.append(FrameGroup(framegroup_struct))
 
         return mdl
 
@@ -859,7 +859,7 @@ class Mdl(object):
 
         frame = self.frames[frame]
 
-        if frame.type is MdlFrameType.SINGLE:
+        if frame.type is FrameType.SINGLE:
             mesh.vertices = [(v.x, v.y, v.z) for v in frame.vertices]
             mesh.normals = [vertex_normals[v.light_normal_index] for v in frame.vertices]
         else:

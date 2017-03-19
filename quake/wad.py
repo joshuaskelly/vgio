@@ -647,7 +647,7 @@ class WadFile(object):
                              "before closing the wad.")
 
         try:
-            if self.mode in ('w', 'x', 'a') and self._did_modify:
+            if self.mode in ('w', 'x', 'a') and self._did_modify and hasattr(self, 'start_of_directory'):
                 with self._lock:
                     self.fp.seek(self.start_of_directory)
                     self._write_directory()

@@ -12,8 +12,7 @@ import sys
 
 from PIL import Image
 
-from quake.bsp import BspMiptexture, default_palette
-from quake.wad import WadFile, WadInfo, TYPE_MIPTEX, CMP_NONE
+from quake import bsp, wad
 
 
 class ResolvePathAction(argparse.Action):
@@ -58,13 +57,13 @@ filemode = 'a'
 if not os.path.isfile(args.file):
     filemode = 'w'
 
-with WadFile(args.file, filemode) as wad_file:
+with wad.WadFile(args.file, filemode) as wad_file:
     if not args.quiet:
         print('Archive: %s' % os.path.basename(args.file))
 
     # Flatten out palette
     palette = []
-    for p in default_palette:
+    for p in bsp.default_palette:
         palette += p
 
     # Create palette image for Image.quantize()
@@ -87,7 +86,7 @@ with WadFile(args.file, filemode) as wad_file:
 
                 name = os.path.basename(file).split('.')[0]
 
-                mip = BspMiptexture()
+                mip = bsp.Miptexture()
                 mip.name = name
                 mip.width = img.width
                 mip.height = img.height
@@ -103,14 +102,14 @@ with WadFile(args.file, filemode) as wad_file:
                         mip.offsets += [mip.offsets[-1] + len(data)]
 
                 buff = io.BytesIO()
-                BspMiptexture.write(buff, mip)
+                bsp.Miptexture.write(buff, mip)
                 buff.seek(0)
 
-                info = WadInfo(name)
+                info = wad.WadInfo(name)
                 info.file_size = 40 + len(mip.pixels)
                 info.disk_size = info.file_size
-                info.compression = CMP_NONE
-                info.type = TYPE_MIPTEX
+                info.compression = wad.CMP_NONE
+                info.type = wad.TYPE_MIPTEX
 
                 if not args.quiet:
                     print('  adding: %s' % name)
