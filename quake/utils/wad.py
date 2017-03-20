@@ -39,10 +39,25 @@ parser = Parser(prog='wad',
                             'use stdin.',
                 epilog='example: wad {0} {1} => adds {1} to {0}'.format('tex.wad', 'image.png'))
 
-parser.add_argument('file', metavar='file.wad', action=ResolvePathAction, help='wad file to ')
-parser.add_argument('list', nargs='*', action=ResolvePathAction, default=[t.strip('\n') for t in sys.stdin] if not sys.stdin.isatty() else None)
-parser.add_argument('-t', dest='type', default='MIPTEX', choices=['LUMP', 'QPIC', 'MIPTEX'])
-parser.add_argument('-q', dest='quiet', action='store_true', help='quiet mode')
+parser.add_argument('file',
+                    metavar='file.wad',
+                    action=ResolvePathAction,
+                    help='wad file to ')
+
+parser.add_argument('list',
+                    nargs='*',
+                    action=ResolvePathAction,
+                    default=[t.strip('\n') for t in sys.stdin] if not sys.stdin.isatty() else None)
+
+parser.add_argument('-t',
+                    dest='type',
+                    default='MIPTEX',
+                    choices=['LUMP', 'QPIC', 'MIPTEX'])
+
+parser.add_argument('-q',
+                    dest='quiet',
+                    action='store_true',
+                    help='quiet mode')
 
 args = parser.parse_args()
 

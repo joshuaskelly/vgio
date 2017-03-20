@@ -32,12 +32,25 @@ class Parser(argparse.ArgumentParser):
 
 parser = Parser(prog='bsp2wad',
                 description='Default action is to create a wad archive from '
-                            'miptextures extracted from the file.',
+                            'miptextures extracted from the given bsp file.',
                 epilog='example: bsp2wad {0} => creates the wad file {1}'.format('e1m1.bsp', 'e1m1.wad'))
 
-parser.add_argument('file', metavar='file.bsp', action=ResolvePathAction, help='wad file to ')
-parser.add_argument('-d', metavar='file.wad', default=os.getcwd(), dest='dest', action=ResolvePathAction, help='extract textures from file.bsp into file.wad')
-parser.add_argument('-q', dest='quiet', action='store_true', help='quiet mode')
+parser.add_argument('file',
+                    metavar='file.bsp',
+                    action=ResolvePathAction,
+                    help='bsp file to extract from')
+
+parser.add_argument('-d',
+                    metavar='file.wad',
+                    dest='dest',
+                    default=os.getcwd(),
+                    action=ResolvePathAction,
+                    help='wad file to create')
+
+parser.add_argument('-q',
+                    dest='quiet',
+                    action='store_true',
+                    help='quiet mode')
 
 args = parser.parse_args()
 

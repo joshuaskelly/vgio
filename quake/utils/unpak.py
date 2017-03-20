@@ -29,10 +29,25 @@ parser = Parser(prog='unpak',
                 description='Default action is to extract files to xdir.',
                 epilog='example: unpak PAK0.PAK -d {0} => extract all files to {0}'.format(os.path.expanduser('./extracted')))
 
-parser.add_argument('file', metavar='file.pak', action=ResolvePathAction)
-parser.add_argument('-l', '--list', action='store_true', help='list files')
-parser.add_argument('-d', metavar='xdir', default=os.getcwd(), dest='dest', action=ResolvePathAction, help='extract files into xdir')
-parser.add_argument('-q', dest='quiet', action='store_true', help='quiet mode')
+parser.add_argument('file',
+                    metavar='file.pak',
+                    action=ResolvePathAction)
+
+parser.add_argument('-l', '--list',
+                    action='store_true',
+                    help='list files')
+
+parser.add_argument('-d',
+                    metavar='xdir',
+                    dest='dest',
+                    default=os.getcwd(),
+                    action=ResolvePathAction,
+                    help='extract files into xdir')
+
+parser.add_argument('-q',
+                    dest='quiet',
+                    action='store_true',
+                    help='quiet mode')
 
 args = parser.parse_args()
 
