@@ -295,8 +295,10 @@ class TestBspReadWrite(unittest.TestCase):
         with bsp.Bsp.open('./test_data/test.bsp', 'r') as bsp_file:
             self.assertFalse(bsp_file.fp.closed, 'File should be open')
             self.assertEqual(bsp_file.mode, 'r', 'File mode should be \'r\'')
+            fp = bsp_file.fp
 
-        self.assertIsNone(bsp_file.fp, 'File should be closed')
+        self.assertTrue(fp.closed, 'File should be closed')
+        self.assertIsNone(bsp_file.fp, 'File pointer should be cleaned up')
 
 if __name__ == '__main__':
     unittest.main()
