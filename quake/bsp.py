@@ -1036,7 +1036,7 @@ class Bsp(object):
         self._did_modify = False
 
         self.version = header_version
-        self.entities = ""
+        self.entities = b""
         self.planes = []
         self.miptextures = []
         self.vertexes = []
@@ -1066,11 +1066,13 @@ class Bsp(object):
             file-like object.
         """
 
-        if mode not in ['r']:
+        if mode not in ('r', 'w', 'a'):
             raise ValueError("invalid mode: '%s'" % mode)
 
+        filemode = {'r': 'rb', 'w': 'w+b', 'a': 'r+b'}[mode]
+
         if isinstance(file, str):
-            file = io.open(file, 'rb')
+            file = io.open(file, filemode)
 
         elif isinstance(file, bytes):
             file = io.BytesIO(file)
@@ -1080,7 +1082,24 @@ class Bsp(object):
                 "Bsp.open() requires 'file' to be a path, a file-like object, "
                 "or bytes")
 
-        return Bsp._read_file(file, mode)
+        if mode == 'r':
+            bsp = Bsp._read_file(file, mode)
+
+            return bsp
+
+        elif mode == 'w':
+            bsp = Bsp()
+            bsp.fp = file
+            bsp.mode = 'w'
+            bsp._did_modify = True
+
+            return bsp
+
+        elif mode == 'a':
+            bsp = Bsp._read_file(file, mode)
+            bsp._did_modify = True
+
+            return bsp
 
     @classmethod
     def _read_file(cls, file, mode):
@@ -1379,6 +1398,7 @@ class Bsp(object):
             Model.write(file, model)
 
         models_size = file.tell() - models_offset
+        end_of_file = file.tell()
 
         # Write header info
         file.seek(0)
@@ -1416,9 +1436,41 @@ class Bsp(object):
                                   models_size)
 
         file.write(header_data)
-        file.seek(0, 2)
+        file.seek(end_of_file)
+
+    def save(self, file):
+        should_close = False
+
+        if isinstance(file, str):
+            file = io.open(file, 'r+b')
+            should_close = True
+
+        elif isinstance(file, bytes):
+            file = io.BytesIO(file)
+            should_close = True
+
+        elif not hasattr(file, 'write'):
+            raise RuntimeError(
+                "Bsp.open() requires 'file' to be a path, a file-like object, "
+                "or bytes")
+
+        Bsp._write_file(file, self)
+
+        if should_close:
+            file.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.close()
 
     def close(self):
+        if self.mode in ('w', 'a') and self._did_modify:
+            self.fp.seek(0)
+            Bsp._write_file(self.fp, self)
+            self.fp.truncate()
+
         file_object = self.fp
         self.fp = None
         file_object.close()

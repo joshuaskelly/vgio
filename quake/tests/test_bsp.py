@@ -196,8 +196,9 @@ class TestBspReadWrite(unittest.TestCase):
 
     def test_bsp(self):
         b0 = bsp.Bsp.open('./test_data/test.bsp')
+        b0.close()
 
-        bsp.Bsp._write_file(self.buff, b0)
+        b0.save(self.buff)
         self.buff.seek(0)
 
         b1 = bsp.Bsp.open(self.buff)
@@ -290,6 +291,12 @@ class TestBspReadWrite(unittest.TestCase):
             self.assertEqual(m0.first_face, m1.first_face, 'First faces should be equal')
             self.assertEqual(m0.number_of_faces, m1.number_of_faces, 'Number of faces should be equal')
 
+    def test_context_manager(self):
+        with bsp.Bsp.open('./test_data/test.bsp', 'r') as bsp_file:
+            self.assertFalse(bsp_file.fp.closed, 'File should be open')
+            self.assertEqual(bsp_file.mode, 'r', 'File mode should be \'r\'')
+
+        self.assertIsNone(bsp_file.fp, 'File should be closed')
 
 if __name__ == '__main__':
     unittest.main()
