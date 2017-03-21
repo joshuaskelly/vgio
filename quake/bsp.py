@@ -1033,6 +1033,7 @@ class Bsp(object):
     def __init__(self):
         self.fp = None
         self.mode = None
+        self._did_modify = False
 
         self.version = header_version
         self.entities = ""
@@ -1051,8 +1052,8 @@ class Bsp(object):
         self.surf_edges = []
         self.models = []
 
-    @staticmethod
-    def open(file, mode='r'):
+    @classmethod
+    def open(cls, file, mode='r'):
         """Returns a Bsp object
 
         Args:
@@ -1068,9 +1069,6 @@ class Bsp(object):
         if mode not in ['r']:
             raise ValueError("invalid mode: '%s'" % mode)
 
-        bsp = Bsp()
-        bsp.mode = mode
-
         if isinstance(file, str):
             file = io.open(file, 'rb')
 
@@ -1082,6 +1080,12 @@ class Bsp(object):
                 "Bsp.open() requires 'file' to be a path, a file-like object, "
                 "or bytes")
 
+        return Bsp._read_file(file, mode)
+
+    @classmethod
+    def _read_file(cls, file, mode):
+        bsp = Bsp()
+        bsp.mode = mode
         bsp.fp = file
 
         # Header
@@ -1237,6 +1241,182 @@ class Bsp(object):
             bsp.models.append(Model.read(file))
 
         return bsp
+
+    @classmethod
+    def _write_file(cls, file, bsp):
+        # Stub out header info
+        header_data = struct.pack(header_format,
+                                  bsp.version,
+                                  *([0]*30))
+
+        file.write(header_data)
+
+        # Entities
+        entities_offset = file.tell()
+        file.write(bsp.entities)
+        entities_size = file.tell() - entities_offset
+
+        # Planes
+        planes_offset = file.tell()
+
+        for plane in bsp.planes:
+            Plane.write(file, plane)
+
+        planes_size = file.tell() - planes_offset
+
+        # Miptextures
+        miptextures_offset = file.tell()
+
+        # Miptexture directory
+        number_of_miptextures = len(bsp.miptextures)
+        file.write(struct.pack('<i', number_of_miptextures))
+        offset_format = '<%di' % number_of_miptextures
+
+        # Stub out directory info
+        miptexture_offsets = [0] * number_of_miptextures
+        file.write(struct.pack(offset_format, *miptexture_offsets))
+
+        for i, miptex in enumerate(bsp.miptextures):
+            if not miptex:
+                miptexture_offsets[i] = -1
+                continue
+
+            miptexture_offsets[i] = file.tell() - miptextures_offset
+            Miptexture.write(file, miptex)
+
+        # Write directory info
+        vertexes_offset = file.tell()
+        file.seek(miptextures_offset + 4)
+        file.write(struct.pack(offset_format, *miptexture_offsets))
+        file.seek(vertexes_offset)
+
+        miptextures_size = file.tell() - miptextures_offset
+
+        # Vertexes
+        for vertex in bsp.vertexes:
+            Vertex.write(file, vertex)
+
+        vertexes_size = file.tell() - vertexes_offset
+
+        # Visibilities
+        visibilities_offset = file.tell()
+        visibilities_format = _calculate_visibility_format(len(bsp.visibilities))
+        file.write(struct.pack(visibilities_format, *bsp.visibilities))
+        visibilities_size = file.tell() - visibilities_offset
+
+        # Nodes
+        nodes_offset = file.tell()
+
+        for node in bsp.nodes:
+            Node.write(file, node)
+
+        nodes_size = file.tell() - nodes_offset
+
+        # Texture Infos
+        texture_infos_offset = file.tell()
+
+        for tex_info in bsp.texture_infos:
+            TextureInfo.write(file, tex_info)
+
+        texture_infos_size = file.tell() - texture_infos_offset
+
+        # Faces
+        faces_offset = file.tell()
+
+        for face in bsp.faces:
+            Face.write(file, face)
+
+        faces_size = file.tell() - faces_offset
+
+        # Lighting
+        lighting_offset = file.tell()
+        lighting_format = _calculate_lighting_format(len(bsp.lighting))
+        file.write(struct.pack(lighting_format, *bsp.lighting))
+        lighting_size = file.tell() - lighting_offset
+
+        # Clip Nodes
+        clip_nodes_offset = file.tell()
+
+        for clip_node in bsp.clip_nodes:
+            ClipNode.write(file, clip_node)
+
+        clip_nodes_size = file.tell() - clip_nodes_offset
+
+        # Leafs
+        leafs_offset = file.tell()
+
+        for leaf in bsp.leafs:
+            Leaf.write(file, leaf)
+
+        leafs_size = file.tell() - leafs_offset
+
+        # Mark Surfaces
+        mark_surfaces_offset = file.tell()
+        mark_surface_format = _calculate_mark_surface_format(len(bsp.mark_surfaces))
+        file.write(struct.pack(mark_surface_format, *bsp.mark_surfaces))
+        mark_surfaces_size = file.tell() - mark_surfaces_offset
+
+        # Edges
+        edges_offset = file.tell()
+
+        for edge in bsp.edges:
+            Edge.write(file, edge)
+
+        edges_size = file.tell() - edges_offset
+
+        # Surf Edges
+        surf_edges_offset = file.tell()
+
+        number_of_surf_edges = len(bsp.surf_edges)
+        surf_edge_format = _calculate_surf_edge_format(number_of_surf_edges * 4)
+        file.write(struct.pack(surf_edge_format, *bsp.surf_edges))
+        surf_edges_size = file.tell() - surf_edges_offset
+
+        # Models
+        models_offset = file.tell()
+
+        for model in bsp.models:
+            Model.write(file, model)
+
+        models_size = file.tell() - models_offset
+
+        # Write header info
+        file.seek(0)
+        header_data = struct.pack(header_format,
+                                  bsp.version,
+                                  entities_offset,
+                                  entities_size,
+                                  planes_offset,
+                                  planes_size,
+                                  miptextures_offset,
+                                  miptextures_size,
+                                  vertexes_offset,
+                                  vertexes_size,
+                                  visibilities_offset,
+                                  visibilities_size,
+                                  nodes_offset,
+                                  nodes_size,
+                                  texture_infos_offset,
+                                  texture_infos_size,
+                                  faces_offset,
+                                  faces_size,
+                                  lighting_offset,
+                                  lighting_size,
+                                  clip_nodes_offset,
+                                  clip_nodes_size,
+                                  leafs_offset,
+                                  leafs_size,
+                                  mark_surfaces_offset,
+                                  mark_surfaces_size,
+                                  edges_offset,
+                                  edges_size,
+                                  surf_edges_offset,
+                                  surf_edges_size,
+                                  models_offset,
+                                  models_size)
+
+        file.write(header_data)
+        file.seek(0, 2)
 
     def close(self):
         file_object = self.fp

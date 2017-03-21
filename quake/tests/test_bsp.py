@@ -194,6 +194,102 @@ class TestBspReadWrite(unittest.TestCase):
         self.assertEqual(m0.first_face, m1.first_face, 'First faces should be equal')
         self.assertEqual(m0.number_of_faces, m1.number_of_faces, 'Number of faces should be equal')
 
+    def test_bsp(self):
+        b0 = bsp.Bsp.open('./test_data/test.bsp')
+
+        bsp.Bsp._write_file(self.buff, b0)
+        self.buff.seek(0)
+
+        b1 = bsp.Bsp.open(self.buff)
+
+        self.assertEqual(b0.version, b1.version, 'Versions should be equal')
+        self.assertEqual(b0.entities, b1.entities, 'Entities should be equal')
+
+        for i, pair in enumerate(zip(b0.planes, b1.planes)):
+            p0, p1 = pair
+            self.assertAlmostEqual(p0.normal, p1.normal, significant_digits,'Normal vectors should be equal')
+            self.assertAlmostEqual(p0.distance, p1.distance, significant_digits, 'Distances should be equal')
+            self.assertEqual(p0.type, p1.type, 'Types should equal')
+
+        for i, pair in enumerate(zip(b0.miptextures, b1.miptextures)):
+            m0, m1 = pair
+            self.assertEqual(m0.name, m1.name, 'Names should be equal')
+            self.assertEqual(m0.width, m1.width, 'Widths should be equal')
+            self.assertEqual(m0.height, m1.height, 'Heights should be equal')
+            self.assertEqual(m0.offsets, m1.offsets, 'Offsets should be equal')
+            self.assertEqual(m0.pixels, m1.pixels, 'Pixel data should be equal')
+
+        for i, pair in enumerate(zip(b0.vertexes, b1.vertexes)):
+            v0, v1 = pair
+            self.assertAlmostEqual(v0.x, v1.x, significant_digits, 'X coordinates should be equal')
+            self.assertAlmostEqual(v0.y, v1.y, significant_digits, 'Y coordinates should be equal')
+            self.assertAlmostEqual(v0.z, v1.z, significant_digits, 'Z coordinates should be equal')
+
+        self.assertEqual(b0.visibilities, b1.visibilities, 'Visibilities should be equal')
+
+        for i, pair in enumerate(zip(b0.nodes, b1.nodes)):
+            n0, n1 = pair
+            self.assertEqual(n0.plane_number, n1.plane_number, 'Plane numbers should be equal')
+            self.assertEqual(n0.children, n1.children, 'Children should be equal')
+            self.assertEqual(n0.bounding_box_min, n1.bounding_box_min, 'Bounding box minimums should be equal')
+            self.assertEqual(n0.bounding_box_max, n1.bounding_box_max, 'Bounding box maximums should be equal')
+            self.assertEqual(n0.first_face, n1.first_face, 'First faces should be equal')
+            self.assertEqual(n0.number_of_faces, n1.number_of_faces, 'Number of faces should be equal')
+
+        for i, pair in enumerate(zip(b0.texture_infos, b1.texture_infos)):
+            t0, t1 = pair
+            self.assertAlmostEqual(t0.s, t1.s, significant_digits, 's vectors should be equal')
+            self.assertAlmostEqual(t0.s_offset, t1.s_offset, significant_digits, 's offsets should be equal')
+            self.assertAlmostEqual(t0.t, t1.t, significant_digits, 't vectors should be equal')
+            self.assertAlmostEqual(t0.t_offset, t1.t_offset, significant_digits, 't offsets should be equal')
+            self.assertEqual(t0.miptexture_number, t1.miptexture_number, 'Miptexture numbers should be equal')
+            self.assertEqual(t0.flags, t1.flags, 'Flags should be equal')
+
+        for i, pair in enumerate(zip(b0.faces, b1.faces)):
+            f0, f1 = pair
+            self.assertEqual(f0.plane_number, f1.plane_number, 'Plane numbers should be equal')
+            self.assertEqual(f0.side, f1.side, 'Sides should be equal')
+            self.assertEqual(f0.first_edge, f1.first_edge, 'First edges should be equal')
+            self.assertEqual(f0.number_of_edges, f1.number_of_edges, 'Number of edges should be equal')
+            self.assertEqual(f0.texture_info, f1.texture_info, 'Texture infos should be equal')
+            self.assertEqual(f0.styles, f1.styles, 'Styles should be equal')
+            self.assertEqual(f0.light_offset, f1.light_offset, 'Light offset should be equal')
+
+        self.assertEqual(b0.lighting, b1.lighting, 'Lighting should be equal')
+
+        for i, pair in enumerate(zip(b0.clip_nodes, b1.clip_nodes)):
+            c0, c1 = pair
+            self.assertEqual(c0.plane_number, c1.plane_number, 'Plane numbers should equal')
+            self.assertEqual(c0.children, c1.children, 'Children should equal')
+
+        for i, pair in enumerate(zip(b0.leafs, b1.leafs)):
+            l0, l1 = pair
+            self.assertEqual(l0.contents, l1.contents, 'contents should be equal')
+            self.assertEqual(l0.visibilitiy_offset, l1.visibilitiy_offset, 'visibilitiy_offset should be equal')
+            self.assertEqual(l0.bounding_box_min, l1.bounding_box_min, 'bounding_box_min should be equal')
+            self.assertEqual(l0.bounding_box_max, l1.bounding_box_max, 'bounding_box_max should be equal')
+            self.assertEqual(l0.first_mark_surface, l1.first_mark_surface, 'first_mark_surface should be equal')
+            self.assertEqual(l0.number_of_marked_surfaces, l1.number_of_marked_surfaces, 'number_of_marked_surfaces should be equal')
+            self.assertEqual(l0.ambient_level, l1.ambient_level, 'ambient_level should be equal')
+
+        self.assertEqual(b0.mark_surfaces, b1.mark_surfaces, 'Mark_surfaces should be equal')
+
+        for i, pair in enumerate(zip(b0.edges, b1.edges)):
+            e0, e1 = pair
+            self.assertEqual(e0.vertexes, e1.vertexes, 'Vertexes should equal')
+
+        self.assertEqual(b0.surf_edges, b1.surf_edges, 'Surf edges should be equal')
+
+        for i, pair in enumerate(zip(b0.models, b1.models)):
+            m0, m1 = pair
+            self.assertEqual(m0.bounding_box_min, m1.bounding_box_min, 'Bounding box minimums should be equal')
+            self.assertEqual(m0.bounding_box_max, m1.bounding_box_max, 'Bounding box maximums should be equal')
+            self.assertEqual(m0.origin, m1.origin, 'Origins should be equal')
+            self.assertEqual(m0.head_node, m1.head_node, 'Head nodes should be equal')
+            self.assertEqual(m0.visleafs, m1.visleafs, 'Visleafs should be equal')
+            self.assertEqual(m0.first_face, m1.first_face, 'First faces should be equal')
+            self.assertEqual(m0.number_of_faces, m1.number_of_faces, 'Number of faces should be equal')
+
 
 if __name__ == '__main__':
     unittest.main()
