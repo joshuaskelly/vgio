@@ -1084,7 +1084,6 @@ class Bsp(object):
 
         if mode == 'r':
             bsp = Bsp._read_file(file, mode)
-            bsp.close()
 
             return bsp
 
