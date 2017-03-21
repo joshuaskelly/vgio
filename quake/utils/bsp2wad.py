@@ -63,13 +63,14 @@ if not bsp.is_bspfile(args.file):
 
 bsp_file = bsp.Bsp.open(args.file)
 
-if not args.dest:
+if args.dest == os.getcwd():
     wad_path = os.path.dirname(args.file)
     wad_name = os.path.basename(args.file).split('.')[0] + '.wad'
     args.dest = os.path.join(wad_path, wad_name)
 
-if not os.path.exists(os.path.dirname(args.dest)):
-    os.makedirs(os.path.dirname(args.dest))
+dir = os.path.dirname(args.dest) or '.'
+if not os.path.exists(dir):
+    os.makedirs(dir)
 
 with wad.WadFile(args.dest, mode='w') as wad_file:
     if not args.quiet:
