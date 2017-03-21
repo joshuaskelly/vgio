@@ -292,10 +292,11 @@ class TestBspReadWrite(unittest.TestCase):
             self.assertEqual(m0.number_of_faces, m1.number_of_faces, 'Number of faces should be equal')
 
     def test_context_manager(self):
-        with bsp.Bsp.open('./test_data/test.bsp', 'r') as bsp_file:
+        with bsp.Bsp.open('./test_data/test.bsp', 'a') as bsp_file:
             self.assertFalse(bsp_file.fp.closed, 'File should be open')
-            self.assertEqual(bsp_file.mode, 'r', 'File mode should be \'r\'')
+            self.assertEqual(bsp_file.mode, 'a', 'File mode should be \'r\'')
             fp = bsp_file.fp
+            bsp_file._did_modify = False
 
         self.assertTrue(fp.closed, 'File should be closed')
         self.assertIsNone(bsp_file.fp, 'File pointer should be cleaned up')

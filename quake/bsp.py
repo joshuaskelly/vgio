@@ -1084,6 +1084,7 @@ class Bsp(object):
 
         if mode == 'r':
             bsp = Bsp._read_file(file, mode)
+            bsp.close()
 
             return bsp
 
@@ -1466,14 +1467,15 @@ class Bsp(object):
         self.close()
 
     def close(self):
-        if self.mode in ('w', 'a') and self._did_modify:
-            self.fp.seek(0)
-            Bsp._write_file(self.fp, self)
-            self.fp.truncate()
+        if self.fp:
+            if self.mode in ('w', 'a') and self._did_modify:
+                self.fp.seek(0)
+                Bsp._write_file(self.fp, self)
+                self.fp.truncate()
 
-        file_object = self.fp
-        self.fp = None
-        file_object.close()
+            file_object = self.fp
+            self.fp = None
+            file_object.close()
 
     def mesh(self, model=0):
         """Returns a Mesh object
