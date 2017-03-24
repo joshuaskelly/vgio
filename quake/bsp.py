@@ -1064,6 +1064,11 @@ class Bsp(object):
         Returns:
             An Bsp object constructed from the information read from the
             file-like object.
+
+        Raises:
+            ValueError: If an invalid file mode is given.
+
+            RuntimeError: If the file argument is not a file-like object.
         """
 
         if mode not in ('r', 'w', 'a'):
@@ -1444,6 +1449,9 @@ class Bsp(object):
 
             Args:
                 file: Either the path to the file, or a file-like object, or bytes.
+
+            Raises:
+                RuntimeError: If the file argument is not a file-like object.
         """
 
         should_close = False
