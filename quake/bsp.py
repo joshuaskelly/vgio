@@ -1440,6 +1440,12 @@ class Bsp(object):
         file.seek(end_of_file)
 
     def save(self, file):
+        """Writes Bsp data to file
+
+            Args:
+                file: Either the path to the file, or a file-like object, or bytes.
+        """
+
         should_close = False
 
         if isinstance(file, str):
@@ -1467,6 +1473,10 @@ class Bsp(object):
         self.close()
 
     def close(self):
+        """Closes the file pointer if possible. If mode is 'w' or 'a', the file
+        will be written to.
+        """
+
         if self.fp:
             if self.mode in ('w', 'a') and self._did_modify:
                 self.fp.seek(0)

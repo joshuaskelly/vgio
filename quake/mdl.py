@@ -4,7 +4,6 @@ Supported games:
     - QUAKE
 """
 
-import enum
 import io
 import struct
 
@@ -1008,6 +1007,12 @@ class Mdl(object):
                 FrameGroup.write(file, frame, mdl.number_of_vertices)
 
     def save(self, file):
+        """Writes Mdl data to file
+
+        Args:
+            file: Either the path to the file, or a file-like object, or bytes.
+        """
+
         should_close = False
 
         if isinstance(file, str):
@@ -1035,6 +1040,10 @@ class Mdl(object):
         self.close()
 
     def close(self):
+        """Closes the file pointer if possible. If mode is 'w' or 'a', the file
+        will be written to.
+        """
+
         if self.fp:
             if self.mode in ('w', 'a') and self._did_modify:
                 self.fp.seek(0)
