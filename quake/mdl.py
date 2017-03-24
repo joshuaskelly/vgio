@@ -850,6 +850,13 @@ class Mdl(object):
         Returns:
             An Mdl object constructed from the information read from the
             file-like object.
+
+        Raises:
+            ValueError: If an invalid file mode is given.
+
+            RuntimeError: If the file argument is not a file-like object.
+
+            BadMdlFile: If the file opened is not recognized as an Mdl file.
         """
 
         if mode not in ('r', 'w', 'a'):
@@ -960,6 +967,9 @@ class Mdl(object):
 
     @classmethod
     def _write_file(cls, file, mdl):
+        # Validate mdl data
+        mdl.validate()
+
         # Header
         header_data = struct.pack(header_format,
                                   mdl.identifier,
@@ -1006,11 +1016,59 @@ class Mdl(object):
                 file.write(struct.pack('<l', GROUP))
                 FrameGroup.write(file, frame, mdl.number_of_vertices)
 
+    def validate(self):
+        """Verifies correctness of Mdl data.
+
+        Raises:
+            BadMdlFile: If a discrepancy is found.
+        """
+
+        if self.identifier != header_magic_number:
+            raise BadMdlFile('Bad magic number: %r' % self.identifier)
+
+        if self.version != header_version:
+            raise BadMdlFile('Bad version number: %r' % self.version)
+
+        if self.number_of_triangles != len(self.triangles):
+            raise BadMdlFile('Incorrect number of triangles. Expected: %r Actual: %r' % (self.number_of_triangles, len(self.triangles)))
+
+        for triangle in self.triangles:
+            for vertex in triangle.vertices:
+                if vertex < 0 or vertex > self.number_of_vertices:
+                    raise BadMdlFile('Bad vertex index: %r' % vertex)
+
+        if self.number_of_skins != len(self.skins):
+            raise BadMdlFile('Incorrect number of skins. Expected: %r Actual: %r' % (self.number_of_skins, len(self.skins)))
+
+        for skin in self.skins:
+            if skin.type == SINGLE and len(skin.pixels) != self.skin_width * self.skin_height:
+                raise BadMdlFile('Incorrect number of pixels. Expected: %r Actual: %r' % (self.skin_width * self.skin_height, len(skin.pixels)))
+
+            elif skin.type == GROUP and len(skin.pixels) != self.skin_width * self.skin_height * skin.number_of_skins:
+                raise BadMdlFile('Incorrect number of pixels. Expected: %r Actual: %r' % (self.skin_width * self.skin_height * skin.number_of_skins, len(skin.pixels)))
+
+        if self.number_of_frames != len(self.frames):
+            raise BadMdlFile('Incorrect number of frames. Expected: %r Actual: %r' % (self.number_of_frames, len(self.frames)))
+
+        for frame in self.frames:
+            if frame.type == SINGLE and len(frame.vertices) != self.number_of_vertices:
+                raise BadMdlFile('Incorrect number of vertices. Expected: %r Actual: %r' % (self.number_of_vertices, len(frame.vertices)))
+
+            elif frame.type == GROUP:
+                for sub_frame in frame.frames:
+                    if len(sub_frame.vertices) != self.number_of_vertices:
+                        raise BadMdlFile('Incorrect number of vertices. Expected: %r Actual: %r' % (self.number_of_vertices, len(sub_frame.vertices)))
+
     def save(self, file):
         """Writes Mdl data to file
 
         Args:
             file: Either the path to the file, or a file-like object, or bytes.
+
+        Raises:
+            RuntimeError: If file argument is not a file-like object.
+
+            BadMdlFile: If the internal Mdl data is not invalid.
         """
 
         should_close = False
@@ -1042,6 +1100,9 @@ class Mdl(object):
     def close(self):
         """Closes the file pointer if possible. If mode is 'w' or 'a', the file
         will be written to.
+
+        Raises:
+            BadMdlFile: If the internal Mdl data is not invalid.
         """
 
         if self.fp:
