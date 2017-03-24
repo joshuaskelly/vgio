@@ -438,6 +438,7 @@ class StVertex(object):
 
         return st_vertex
 
+
 class Triangle(object):
     """Class for representing a triangle
 
@@ -483,6 +484,7 @@ class Triangle(object):
         triangle.vertices = triangle_struct[_TRIANGLE_VERTICES:]
 
         return triangle
+
 
 class TriVertex(object):
     """Class for representing a trivertex
