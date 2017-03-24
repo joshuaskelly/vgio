@@ -294,7 +294,7 @@ class TestBspReadWrite(unittest.TestCase):
     def test_context_manager(self):
         with bsp.Bsp.open('./test_data/test.bsp', 'a') as bsp_file:
             self.assertFalse(bsp_file.fp.closed, 'File should be open')
-            self.assertEqual(bsp_file.mode, 'a', 'File mode should be \'r\'')
+            self.assertEqual(bsp_file.mode, 'a', 'File mode should be \'a\'')
             fp = bsp_file.fp
             bsp_file._did_modify = False
 

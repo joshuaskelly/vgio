@@ -1082,11 +1082,11 @@ class Bsp(object):
                 "Bsp.open() requires 'file' to be a path, a file-like object, "
                 "or bytes")
 
+        # Read
         if mode == 'r':
-            bsp = Bsp._read_file(file, mode)
+            return Bsp._read_file(file, mode)
 
-            return bsp
-
+        # Write
         elif mode == 'w':
             bsp = Bsp()
             bsp.fp = file
@@ -1095,7 +1095,8 @@ class Bsp(object):
 
             return bsp
 
-        elif mode == 'a':
+        # Append
+        else:
             bsp = Bsp._read_file(file, mode)
             bsp._did_modify = True
 
