@@ -40,6 +40,20 @@ _HEADER_SYNCTYPE = 18
 _HEADER_FLAGS = 19
 _HEADER_SIZE = 20
 
+# Skin structure
+def _calculate_skin_format(size):
+    width, height = size
+    return '<i%iB' % (width * height)
+
+# Indexes of Skin structure
+_SKIN_TYPE = 0
+_SKIN_PIXELS = 1
+
+# Skin Group structure
+def _calculate_skin_group_format(number_of_pictures, size):
+    width, height = size
+    return '<%if%iB' % (number_of_pictures, width * height * number_of_pictures)
+
 # ST Vertex structure
 st_vertex_format = '<3l'
 st_vertex_size = struct.calcsize(st_vertex_format)
@@ -66,25 +80,6 @@ _TRIVERTEX_X = 0
 _TRIVERTEX_Y = 1
 _TRIVERTEX_Z = 2
 _TRIVERTEX_LIGHT_NORMAL_INDEX = 3
-
-# Frame structure
-def _calculate_frame_format(numverts):
-    return '<4B4B16s%iB' % (numverts * 4)
-
-frame_format = None
-frame_size = None
-
-# Indexes for Frame structure
-_FRAME_MIN = 0
-_FRAME_MAX = 4
-_FRAME_NAME = 8
-_FRAME_VERTS = 9
-
-_FRAMEGROUP_NUMBER_OF_FRAMES = 0
-_FRAMEGROUP_MIN = 1
-_FRAMEGROUP_MAX = 2
-_FRAMEGROUP_INTERVALS = 3
-_FRAMEGROUP_FRAMES = 4
 
 
 def _check_mdlfile(fp):
@@ -265,9 +260,8 @@ vertex_normals = (
     (-0.587785, -0.425325, -0.688191), (-0.688191, -0.587785, -0.425325),
 )
 
-class SkinType(enum.Enum):
-    SINGLE = 0
-    GROUP = 1
+SINGLE = 0
+GROUP = 1
 
 
 class Skin(object):
@@ -279,9 +273,9 @@ class Skin(object):
 
     Attributes:
         type: The SkinType for the skin. For a Skin object the type must
-            be SkinType.SINGLE
+            be SINGLE
 
-        skin: A tuple of unstructured indexed pixel data represented as
+        pixels: A tuple of unstructured indexed pixel data represented as
             integers. A palette must be used to obtain RGB data.
             The size of this tuple is:
 
@@ -290,12 +284,35 @@ class Skin(object):
 
     __slots__ = (
         'type',
-        'skin'
+        'pixels'
     )
 
-    def __init__(self, skin_struct):
-        self.type = SkinType.SINGLE
-        self.skin = skin_struct[1:]
+    def __init__(self):
+        self.type = SINGLE
+        self.pixels = None
+
+    @classmethod
+    def write(cls, file, skin, size):
+        width, height = size
+        skin_format = _calculate_skin_format(size)
+        skin_data = struct.pack(skin_format,
+                                skin.type,
+                                *skin.pixels)
+
+        file.write(skin_data)
+
+    @classmethod
+    def read(cls, file, size):
+        skin = Skin()
+        skin_format = _calculate_skin_format(size)
+        skin_size = struct.calcsize(skin_format)
+        skin_data = file.read(skin_size)
+        skin_struct = struct.unpack(skin_format, skin_data)
+
+        skin.type = skin_struct[_SKIN_TYPE]
+        skin.pixels = skin_struct[_SKIN_PIXELS:]
+
+        return skin
 
 
 class SkinGroup(object):
@@ -305,13 +322,13 @@ class SkinGroup(object):
 
     Attributes:
         type: The SkinType for the skin group. For a SkinGroup the type
-            must be SkinType.GROUP
+            must be GROUP
 
         number_of_skins: The number of skins contain within this SkinGroup.
 
         intervals: The time intervals between skin.
 
-        skins: A tuple of unstructured indexed pixel data represented as
+        pixels: A tuple of unstructured indexed pixel data represented as
             integers. A palette must be used to obtain RGB data.
             This size of this tuple is:
 
@@ -322,20 +339,54 @@ class SkinGroup(object):
         'type',
         'number_of_skins',
         'intervals',
-        'skins'
+        'pixels'
     )
 
-    def __init__(self, skingroup_struct):
-        self.type = SkinType.GROUP
-        self.number_of_skins = skingroup_struct[1]
-        self.intervals = skingroup_struct[2:self.number_of_skins + 2]
-        self.skins = skingroup_struct[self.number_of_skins + 2:]
+    def __init__(self):
+        self.type = GROUP
+        self.number_of_skins = None
+        self.intervals = None
+        self.pixels = None
+
+    @classmethod
+    def write(cls, file, skin_group, size):
+        group = struct.pack('<l', skin_group.type)
+        file.write(group)
+        number_of_skins = struct.pack('<l', skin_group.number_of_skins)
+        file.write(number_of_skins)
+        skin_group_format = _calculate_skin_group_format(skin_group.number_of_skins, size)
+        skin_group_data = struct.pack(skin_group_format,
+                                      *skin_group.intervals,
+                                      *skin_group.pixels)
+
+        file.write(skin_group_data)
+
+
+    @classmethod
+    def read(cls, file, size):
+        skin_group = SkinGroup()
+        group = file.read(4)
+        group = struct.unpack('<l', group)[0]
+        number_of_skins = file.read(4)
+        number_of_skins = struct.unpack('<l', number_of_skins)[0]
+        skin_group_format = _calculate_skin_group_format(number_of_skins, size)
+        skin_group_size = struct.calcsize(skin_group_format)
+        data = file.read(skin_group_size)
+        skin_group_struct = struct.unpack(skin_group_format, data)
+
+        skin_group.type = group
+        skin_group.number_of_skins = number_of_skins
+        skin_group.intervals = skin_group_struct[:number_of_skins]
+        skin_group.pixels = skin_group_struct[number_of_skins:]
+
+        return skin_group
 
 
 class StVertex(object):
     """Class for representing an st vertex
 
-    StVertices are basically UV coordinates with the following caveat:
+    StVertices are similar to UV coordinates but are expressed in terms of
+    surface space and span (0,0) to (texture_width, texture_height).
 
     Note:
         If an StVertex lies on a seam and belongs to a back facing triangle,
@@ -356,10 +407,10 @@ class StVertex(object):
         't'
     )
 
-    def __init__(self, st_vertex_struct):
-        self.on_seam = st_vertex_struct[_ST_VERTEX_ON_SEAM]
-        self.s = st_vertex_struct[_ST_VERTEX_S]
-        self.t = st_vertex_struct[_ST_VERTEX_T]
+    def __init__(self):
+        self.on_seam = None
+        self.s = None
+        self.t = None
 
     def __getitem__(self, item):
         if item > 1:
@@ -367,6 +418,26 @@ class StVertex(object):
 
         return self.s if item == 0 else self.t
 
+    @classmethod
+    def write(cls, file, st_vertex):
+        st_vertex_data = struct.pack(st_vertex_format,
+                                     st_vertex.on_seam,
+                                     st_vertex.s,
+                                     st_vertex.t)
+
+        file.write(st_vertex_data)
+
+    @classmethod
+    def read(cls, file):
+        st_vertex = StVertex()
+        st_vertex_data = file.read(st_vertex_size)
+        st_vertex_struct = struct.unpack(st_vertex_format, st_vertex_data)
+
+        st_vertex.on_seam = st_vertex_struct[_ST_VERTEX_ON_SEAM]
+        st_vertex.s = st_vertex_struct[_ST_VERTEX_S]
+        st_vertex.t = st_vertex_struct[_ST_VERTEX_T]
+
+        return st_vertex
 
 class Triangle(object):
     """Class for representing a triangle
@@ -388,13 +459,31 @@ class Triangle(object):
         'vertices'
     )
 
-    def __init__(self, triangle_struct):
-        self.faces_front = triangle_struct[_TRIANGLE_FACES_FRONT]
-        self.vertices = triangle_struct[_TRIANGLE_VERTICES:]
+    def __init__(self):
+        self.faces_front = None
+        self.vertices = None
 
     def __getitem__(self, item):
         return self.vertices[item]
 
+    @classmethod
+    def write(cls, file, triangle):
+        triangle_data = struct.pack(triangle_format,
+                                    triangle.faces_front,
+                                    *triangle.vertices)
+
+        file.write(triangle_data)
+
+    @classmethod
+    def read(cls, file):
+        triangle = Triangle()
+        triangle_data = file.read(triangle_size)
+        triangle_struct = struct.unpack(triangle_format, triangle_data)
+
+        triangle.faces_front = triangle_struct[_TRIANGLE_FACES_FRONT]
+        triangle.vertices = triangle_struct[_TRIANGLE_VERTICES:]
+
+        return triangle
 
 class TriVertex(object):
     """Class for representing a trivertex
@@ -430,11 +519,11 @@ class TriVertex(object):
         'light_normal_index'
     )
 
-    def __init__(self, trivertex_struct):
-        self.x = trivertex_struct[_TRIVERTEX_X]
-        self.y = trivertex_struct[_TRIVERTEX_Y]
-        self.z = trivertex_struct[_TRIVERTEX_Z]
-        self.light_normal_index = trivertex_struct[_TRIVERTEX_LIGHT_NORMAL_INDEX]
+    def __init__(self):
+        self.x = None
+        self.y = None
+        self.z = None
+        self.light_normal_index = None
 
     def __getitem__(self, item):
         if item > 2:
@@ -447,10 +536,28 @@ class TriVertex(object):
         elif item == 2:
             return self.z
 
+    @classmethod
+    def write(cls, file, tri_vertex):
+        tri_vertex_data = struct.pack(trivertex_format,
+                                      tri_vertex.x,
+                                      tri_vertex.y,
+                                      tri_vertex.z,
+                                      tri_vertex.light_normal_index)
 
-class FrameType(enum.Enum):
-    SINGLE = 0
-    GROUP = 1
+        file.write(tri_vertex_data)
+
+    @classmethod
+    def read(cls, file):
+        tri_vertex = TriVertex()
+        tri_vertex_data = file.read(trivertex_size)
+        tri_vertex_struct = struct.unpack(trivertex_format, tri_vertex_data)
+
+        tri_vertex.x = tri_vertex_struct[_TRIVERTEX_X]
+        tri_vertex.y = tri_vertex_struct[_TRIVERTEX_Y]
+        tri_vertex.z = tri_vertex_struct[_TRIVERTEX_Z]
+        tri_vertex.light_normal_index = tri_vertex_struct[_TRIVERTEX_LIGHT_NORMAL_INDEX]
+
+        return tri_vertex
 
 
 class Frame(object):
@@ -465,7 +572,7 @@ class Frame(object):
 
     Attributes:
         type: The FrameType of the frame. For a Frame object the type
-            must be FrameType.SINGLE
+            must be SINGLE
 
         bounding_box_min: The minimum coordinate of the bounding box containing
             the vertices in this frame.
@@ -486,14 +593,30 @@ class Frame(object):
         'vertices'
     )
 
-    def __init__(self, frame_struct):
-        self.type = FrameType.SINGLE
-        self.bounding_box_min = TriVertex(frame_struct[_FRAME_MIN:_FRAME_MAX])
-        self.bounding_box_max = TriVertex(frame_struct[_FRAME_MAX:_FRAME_NAME])
-        self.name = frame_struct[_FRAME_NAME].split(b'\00')[0].decode('ascii')
+    def __init__(self):
+        self.type = SINGLE
+        self.bounding_box_min = None
+        self.bounding_box_max = None
+        self.name = None
+        self.vertices = None
 
-        vs = frame_struct[_FRAME_VERTS:]
-        self.vertices = [TriVertex((vs[i], vs[i + 1], vs[i + 2], vs[i + 3])) for i in range(0, len(vs), 4)]
+    @classmethod
+    def write(cls, file, frame, number_of_vertices):
+        TriVertex.write(file, frame.bounding_box_min)
+        TriVertex.write(file, frame.bounding_box_max)
+        file.write(struct.pack('<16s', frame.name.encode('ascii')))
+        for vertex in frame.vertices:
+            TriVertex.write(file, vertex)
+
+    @classmethod
+    def read(cls, file, number_of_vertices):
+        frame = Frame()
+        frame.bounding_box_min = TriVertex.read(file)
+        frame.bounding_box_max = TriVertex.read(file)
+        frame.name = struct.unpack('<16s', file.read(struct.calcsize('<16s')))[0].split(b'\00')[0].decode('ascii')
+        frame.vertices = [TriVertex.read(file) for _ in range(number_of_vertices)]
+
+        return frame
 
 
 class FrameGroup(object):
@@ -501,7 +624,7 @@ class FrameGroup(object):
 
     Attributes:
         type: The FrameType of the frame group. For a Frame object the
-            type must be FrameType.GROUP
+            type must be GROUP
 
         bounding_box_min: The minimum coordinate of the bounding box containing
             the vertices of all frames in this group.
@@ -525,19 +648,39 @@ class FrameGroup(object):
         'frames'
     )
 
-    def __init__(self, framegroup_struct):
-        self.type = FrameType.GROUP
-        self.number_of_frames = framegroup_struct[_FRAMEGROUP_NUMBER_OF_FRAMES]
-        self.bounding_box_min = TriVertex(framegroup_struct[_FRAMEGROUP_MIN])
-        self.bounding_box_max = TriVertex(framegroup_struct[_FRAMEGROUP_MAX])
-        self.intervals = framegroup_struct[_FRAMEGROUP_INTERVALS]
-        self.frames = [Frame(f) for f in framegroup_struct[_FRAMEGROUP_FRAMES]]
+    def __init__(self):
+        self.type = GROUP
+        self.number_of_frames = None
+        self.bounding_box_min = None
+        self.bounding_box_max = None
+        self.intervals = None
+        self.frames = None
+
+    @classmethod
+    def write(cls, file, frame_group, number_of_vertices):
+        file.write(struct.pack('<l', frame_group.number_of_frames))
+        TriVertex.write(file, frame_group.bounding_box_min)
+        TriVertex.write(file, frame_group.bounding_box_max)
+        intervals_data = struct.pack('<%if' % frame_group.number_of_frames, *frame_group.intervals)
+        file.write(intervals_data)
+        for frame in frame_group.frames:
+            Frame.write(file, frame, number_of_vertices)
+
+    @classmethod
+    def read(cls, file, number_of_vertices):
+        frame_group = FrameGroup()
+        frame_group.number_of_frames = struct.unpack('<l', file.read(4))[0]
+        frame_group.bounding_box_min = TriVertex.read(file)
+        frame_group.bounding_box_max = TriVertex.read(file)
+        intervals_data = file.read(4 * frame_group.number_of_frames)
+        frame_group.intervals = struct.unpack('<%if' % frame_group.number_of_frames, intervals_data)
+        frame_group.frames = [Frame.read(file, number_of_vertices) for _ in range(frame_group.number_of_frames)]
+
+        return frame_group
 
 
-class SyncType(enum.Enum):
-    SYNC = 0
-    RAND = 1
-
+SYNC = 0
+RAND = 1
 
 ROCKET = 1      # leave a trail
 GRENADE = 2     # leave a trail
@@ -645,7 +788,7 @@ class Mdl(object):
         number_of_frames: The number of frames for the model.
 
         synctype: The synchronization type for the model. It is either
-            SyncType.SYNC or SyncType.RAND.
+            SYNC or RAND.
 
         flags: A bit field of entity effects.
 
@@ -654,7 +797,7 @@ class Mdl(object):
 
         skins: The list of Skin or SkinGroup objects. Use the type
             attribute to identify the object. The type is either
-            SkinType.SINGLE or SkinType.GROUP.
+            SINGLE or GROUP.
 
         st_vertices: The list of StVertex objects.
 
@@ -662,7 +805,7 @@ class Mdl(object):
 
         frames: The list of Frame or FrameGroup objects. Use the type
             attribute to identify the object. The type is either
-            FrameType.SINGLE or FrameType.GROUP.
+            SINGLE or GROUP.
 
 
         fp: The file-like object to read data from.
@@ -673,6 +816,7 @@ class Mdl(object):
     def __init__(self):
         self.fp = None
         self.mode = None
+        self._did_modify = False
 
         self.identifier = header_magic_number
         self.version = header_version
@@ -686,7 +830,7 @@ class Mdl(object):
         self.number_of_vertices = 0
         self.number_of_triangles = 0
         self.number_of_frames = 0
-        self.synctype = 0
+        self.synctype = SYNC
         self.flags = 0
         self.size = 0
 
@@ -709,14 +853,13 @@ class Mdl(object):
             file-like object.
         """
 
-        if mode not in ['r']:
+        if mode not in ('r', 'w', 'a'):
             raise ValueError("invalid mode: '%s'" % mode)
 
-        mdl = Mdl()
-        mdl.mode = mode
+        filemode = {'r': 'rb', 'w': 'w+b', 'a': 'r+b'}[mode]
 
         if isinstance(file, str):
-            file = io.open(file, 'rb')
+            file = io.open(file, filemode)
 
         elif isinstance(file, bytes):
             file = io.BytesIO(file)
@@ -725,8 +868,33 @@ class Mdl(object):
             raise RuntimeError(
                 "Mdl.open() requires 'file' to be a path, a file-like object, or bytes")
 
+        # Read
+        if mode == 'r':
+            return Mdl._read_file(file, mode)
+
+        # Write
+        elif mode == 'w':
+            mdl = Mdl()
+            mdl.fp = file
+            mdl.mode = 'w'
+            mdl._did_modify = True
+
+            return mdl
+
+        # Append
+        else:
+            mdl = Mdl._read_file(file, mode)
+            mdl._did_modify = True
+
+            return mdl
+
+    @classmethod
+    def _read_file(cls, file, mode):
+        mdl = Mdl()
+        mdl.mode = mode
         mdl.fp = file
 
+        # Header
         data = file.read(header_size)
         data = struct.unpack(header_format, data)
 
@@ -757,90 +925,125 @@ class Mdl(object):
         mdl.triangles = []
         mdl.frames = []
 
+        # Skins
         for _ in range(mdl.number_of_skins):
-            group = file.read(4)
-            group = struct.unpack('<l', group)[0]
+            pos = file.tell()
+            group = struct.unpack('<i', file.read(4))[0]
+            file.seek(pos)
 
             if group == 0:
-                skin_format = '<%iB' % (mdl.skin_width * mdl.skin_height)
-                skin_size = struct.calcsize(skin_format)
-
-                data = file.read(skin_size)
-                data = struct.unpack(skin_format, data)
-                skin_struct = (group,) + data
-
-                mdl.skins.append(Skin(skin_struct))
+                skin = Skin.read(file, (mdl.skin_width, mdl.skin_height))
+                mdl.skins.append(skin)
 
             else:
-                number_of_pictures = file.read(4)
-                number_of_pictures = struct.unpack('<l', number_of_pictures)[0]
+                skin_group = SkinGroup.read(file, (mdl.skin_width, mdl.skin_height))
+                mdl.skins.append(skin_group)
 
-                skingroup_format = '<%if%iB' % (number_of_pictures, (mdl.skin_width * mdl.skin_height * number_of_pictures))
-                skingroup_size = struct.calcsize(skingroup_format)
-
-                data = file.read(skingroup_size)
-                data = struct.unpack(skingroup_format, data)
-                skingroup_struct = (group, number_of_pictures) + data
-
-                mdl.skins.append(SkinGroup(skingroup_struct))
-
+        # St Vertexes
         for _ in range(mdl.number_of_vertices):
-            data = file.read(st_vertex_size)
-            data = struct.unpack(st_vertex_format, data)
+            mdl.st_vertices.append(StVertex.read(file))
 
-            mdl.st_vertices.append(StVertex(data))
-
+        # Triangles
         for _ in range(mdl.number_of_triangles):
-            data = file.read(triangle_size)
-            data = struct.unpack(triangle_format, data)
+            mdl.triangles.append(Triangle.read(file))
 
-            mdl.triangles.append(Triangle(data))
-
-        frame_format = _calculate_frame_format(mdl.number_of_vertices)
-        frame_size = struct.calcsize(frame_format)
-
+        # Frames
         for _ in range(mdl.number_of_frames):
-            frame_type = file.read(4)
-            frame_type = struct.unpack('<l', frame_type)[0]
-            frame_type = FrameType(frame_type)
+            frame_type = struct.unpack('<i', file.read(4))[0]
 
-            if frame_type is FrameType.SINGLE:
-                data = file.read(frame_size)
-                data = struct.unpack(frame_format, data)
-
-                mdl.frames.append(Frame(data))
+            if frame_type == SINGLE:
+                mdl.frames.append(Frame.read(file, mdl.number_of_vertices))
 
             else:
-                number_of_frames = file.read(4)
-                number_of_frames = struct.unpack('<l', number_of_frames)[0]
-
-                min = file.read(trivertex_size)
-                min = struct.unpack(trivertex_format, min)
-
-                max = file.read(trivertex_size)
-                max = struct.unpack(trivertex_format, max)
-
-                intervals = file.read(4 * number_of_frames)
-                intervals = struct.unpack('<%if' % number_of_frames, intervals)
-
-                frame_structs = []
-
-                for _ in range(number_of_frames):
-                    data = file.read(frame_size)
-                    data = struct.unpack(frame_format, data)
-
-                    frame_structs.append(data)
-
-                framegroup_struct = number_of_frames, min, max, intervals, frame_structs
-
-                mdl.frames.append(FrameGroup(framegroup_struct))
+                mdl.frames.append(FrameGroup.read(file, mdl.number_of_vertices))
 
         return mdl
 
+    @classmethod
+    def _write_file(cls, file, mdl):
+        # Header
+        header_data = struct.pack(header_format,
+                                  mdl.identifier,
+                                  mdl.version,
+                                  *mdl.scale,
+                                  *mdl.origin,
+                                  mdl.bounding_radius,
+                                  *mdl.eye_position,
+                                  mdl.number_of_skins,
+                                  mdl.skin_width,
+                                  mdl.skin_height,
+                                  mdl.number_of_vertices,
+                                  mdl.number_of_triangles,
+                                  mdl.number_of_frames,
+                                  mdl.synctype,
+                                  mdl.flags,
+                                  mdl.size)
+
+        file.write(header_data)
+
+        # Skins
+        for skin in mdl.skins:
+            if skin.type == SINGLE:
+                Skin.write(file, skin, (mdl.skin_width, mdl.skin_height))
+
+            else:
+                SkinGroup.write(file, skin, (mdl.skin_width, mdl.skin_height))
+
+        # St Vertexes
+        for st_vertex in mdl.st_vertices:
+            StVertex.write(file, st_vertex)
+
+        # Triangles
+        for triangle in mdl.triangles:
+            Triangle.write(file, triangle)
+
+        # Frames
+        for frame in mdl.frames:
+            if frame.type == SINGLE:
+                file.write(struct.pack('<l', SINGLE))
+                Frame.write(file, frame, mdl.number_of_vertices)
+
+            else:
+                file.write(struct.pack('<l', GROUP))
+                FrameGroup.write(file, frame, mdl.number_of_vertices)
+
+    def save(self, file):
+        should_close = False
+
+        if isinstance(file, str):
+            file = io.open(file, 'r+b')
+            should_close = True
+
+        elif isinstance(file, bytes):
+            file = io.BytesIO(file)
+            should_close = True
+
+        elif not hasattr(file, 'write'):
+            raise RuntimeError(
+                "Mdl.open() requires 'file' to be a path, a file-like object, "
+                "or bytes")
+
+        Mdl._write_file(file, self)
+
+        if should_close:
+            file.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.close()
+
     def close(self):
-        file_object = self.fp
-        self.fp = None
-        file_object.close()
+        if self.fp:
+            if self.mode in ('w', 'a') and self._did_modify:
+                self.fp.seek(0)
+                Mdl._write_file(self.fp, self)
+                self.fp.truncate()
+
+            file_object = self.fp
+            self.fp = None
+            file_object.close()
 
     def mesh(self, frame=0, subframe=0):
         """Returns a Mesh object
@@ -859,7 +1062,7 @@ class Mdl(object):
 
         frame = self.frames[frame]
 
-        if frame.type is FrameType.SINGLE:
+        if frame.type == SINGLE:
             mesh.vertices = [(v.x, v.y, v.z) for v in frame.vertices]
             mesh.normals = [vertex_normals[v.light_normal_index] for v in frame.vertices]
         else:
@@ -921,7 +1124,7 @@ class Mdl(object):
         image = Image()
         image.width = self.skin_width
         image.height = self.skin_height
-        image.pixels = self.skins[index].skin
+        image.pixels = self.skins[index].pixels
 
         p = []
         for row in reversed(range(image.height)):
@@ -931,7 +1134,7 @@ class Mdl(object):
 
         for i in p:
             d += palette[i]
-            d += [255] if i is not 255 else [0]
+            d += [255] if i != 255 else [0]
 
         image.pixels = d
 
