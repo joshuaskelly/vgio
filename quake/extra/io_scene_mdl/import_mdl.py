@@ -1,20 +1,20 @@
 import bpy
 import bmesh
 
-from .quake.mdl import Mdl, is_mdlfile
+from .quake import mdl
 
 
 def load(operator, context, filepath):
 
-    if not is_mdlfile(filepath):
+    if not mdl.is_mdlfile(filepath):
         # TODO: Error out
         return {'FINISHED'}
 
-    mdl = Mdl.open(filepath)
-    mdl.close()
+    mdl_file = mdl.Mdl.open(filepath)
+    mdl_file.close()
 
     # Load skin and create a material
-    image = mdl.image()
+    image = mdl_file.image()
     img = bpy.data.images.new('IMG', image.width, image.height)
     pixels = list(map(lambda x: x / 255, image.pixels))
 
@@ -32,12 +32,21 @@ def load(operator, context, filepath):
     tex_slot.texture_coords = 'UV'
 
     # Create mesh data
-    mesh = mdl.mesh(0)
-    me = bpy.data.meshes.new(mdl.frames[0].name)
+    mesh = mdl_file.mesh()
+
+    if hasattr(mdl_file.frames[0], 'name'):
+        name = mdl_file.frames[0].name
+    elif hasattr(mdl_file.frames[0], 'frame') and hasattr(mdl_file.frames[0].frame[0], 'name'):
+        name = mdl_file.frames[0].frame[0].name
+    else:
+        name = '???'
+
+    me = bpy.data.meshes.new(name)
     bm = bmesh.new()
 
-    for vertex in mesh.vertices:
-        bm.verts.new(vertex)
+    for i, vertex in enumerate(mesh.vertices):
+        v0 = bm.verts.new(vertex)
+        v0.normal = mesh.normals[i]
 
     bm.verts.ensure_lookup_table()
     uv_layer = bm.loops.layers.uv.new()
@@ -47,24 +56,48 @@ def load(operator, context, filepath):
         t1 = bm.verts[triangle[1]]
         t2 = bm.verts[triangle[2]]
 
-        face = bm.faces.new((t0, t1, t2))
+        try:
+            face = bm.faces.new((t0, t1, t2))
 
-        face.loops[0][uv_layer].uv = mesh.uvs[triangle[0]]
-        face.loops[1][uv_layer].uv = mesh.uvs[triangle[1]]
-        face.loops[2][uv_layer].uv = mesh.uvs[triangle[2]]
+            face.loops[0][uv_layer].uv = mesh.uvs[triangle[0]]
+            face.loops[1][uv_layer].uv = mesh.uvs[triangle[1]]
+            face.loops[2][uv_layer].uv = mesh.uvs[triangle[2]]
+
+        except:
+            # Ignore triangles that are defined multiple times
+            pass
 
     bm.to_mesh(me)
     bm.free()
 
-    ob = bpy.data.objects.new(mdl.frames[0].name, me)
+    ob = bpy.data.objects.new(name, me)
 
-    ob.scale = mdl.scale
-    ob.location = mdl.origin
+    ob.scale = mdl_file.scale
+    ob.location = mdl_file.origin
 
     for texpoly in me.uv_textures[0].data:
         texpoly.image = img
 
     me.materials.append(mat)
+
+    # Create frames
+    # ob.shape_key_add('Basis')
+
+    for i, frame in enumerate(mdl_file.frames):
+        if frame.type == mdl.SINGLE:
+            ob.shape_key_add(frame.name)
+            bm = bmesh.new()
+            bm.from_mesh(ob.data)
+            bm.verts.ensure_lookup_table()
+            shape_layer = bm.verts.layers.shape[frame.name]
+
+            print(i)
+            mesh = mdl_file.mesh(i)
+
+            for j, vertex in enumerate(mesh.vertices):
+                bm.verts[j][shape_layer] = vertex
+
+            bm.to_mesh(ob.data)
 
     bpy.context.scene.objects.link(ob)
 
