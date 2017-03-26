@@ -179,3 +179,13 @@ class TestBspReadWrite(unittest.TestCase):
 
         self.assertTrue(fp.closed, 'File should be closed')
         self.assertIsNone(mdl_file.fp, 'File pointer should be cleaned up')
+
+    def test_to_mesh(self):
+        m0 = mdl.Mdl.open('/Users/joshua/Desktop/out/progs/spike.mdl')
+        m0.close()
+        me = m0.mesh(0)
+
+        try:
+            m0.validate()
+        except:
+            self.fail('Calling mesh() should not change the underlying data structure')

@@ -1146,11 +1146,14 @@ class Mdl(object):
         mesh.uvs = [None for _ in range(len(mesh.vertices))]
 
         for tri_index, triangle in enumerate(triangles):
-            for vert_index, vertex in enumerate(triangle.vertices):
+            temp_triangle = Triangle()
+            temp_triangle.faces_front = triangle.faces_front
+            temp_triangle.vertices = triangle.vertices
+            for vert_index, vertex in enumerate(temp_triangle.vertices):
                 st_vertex = self.st_vertices[vertex]
                 s, t = st_vertex
 
-                if st_vertex.on_seam and not triangle.faces_front:
+                if st_vertex.on_seam and not temp_triangle.faces_front:
                     s += self.skin_width / 2
 
                 uv_coord = s / self.skin_width, 1 - t / self.skin_height
@@ -1167,13 +1170,13 @@ class Mdl(object):
                     duplicated_normal = mesh.normals[vertex]
                     mesh.normals.append(duplicated_normal)
 
-                    updated_triangle = list(triangles[tri_index].vertices)
-                    updated_triangle[vert_index] = duplicated_vertex_index
-                    triangle.vertices = tuple(updated_triangle)
+                    temp_triangle.vertices = list(temp_triangle.vertices)
+                    temp_triangle.vertices[vert_index] = duplicated_vertex_index
+                    temp_triangle.vertices = tuple(temp_triangle.vertices)
 
                     mesh.uvs.append(uv_coord)
 
-            mesh.triangles.append(tuple(reversed(triangle.vertices)))
+            mesh.triangles.append(tuple(reversed(temp_triangle.vertices)))
 
         return mesh
 
