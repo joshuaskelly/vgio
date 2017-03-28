@@ -1,3 +1,5 @@
+import os
+
 import bpy
 import bmesh
 
@@ -5,7 +7,6 @@ from .quake import mdl
 
 
 def load(operator, context, filepath):
-
     if not mdl.is_mdlfile(filepath):
         # TODO: Error out
         return {'FINISHED'}
@@ -34,12 +35,7 @@ def load(operator, context, filepath):
     # Create mesh data
     mesh = mdl_file.mesh()
 
-    if hasattr(mdl_file.frames[0], 'name'):
-        name = mdl_file.frames[0].name
-    elif hasattr(mdl_file.frames[0], 'frame') and hasattr(mdl_file.frames[0].frame[0], 'name'):
-        name = mdl_file.frames[0].frame[0].name
-    else:
-        name = '???'
+    name = os.path.basename(filepath).split('.')[0]
 
     me = bpy.data.meshes.new(name)
     bm = bmesh.new()
@@ -81,8 +77,6 @@ def load(operator, context, filepath):
     me.materials.append(mat)
 
     # Create frames
-    # ob.shape_key_add('Basis')
-
     for i, frame in enumerate(mdl_file.frames):
         if frame.type == mdl.SINGLE:
             ob.shape_key_add(frame.name)
@@ -91,13 +85,13 @@ def load(operator, context, filepath):
             bm.verts.ensure_lookup_table()
             shape_layer = bm.verts.layers.shape[frame.name]
 
-            print(i)
             mesh = mdl_file.mesh(i)
 
             for j, vertex in enumerate(mesh.vertices):
                 bm.verts[j][shape_layer] = vertex
 
             bm.to_mesh(ob.data)
+            bm.free()
 
     bpy.context.scene.objects.link(ob)
 
