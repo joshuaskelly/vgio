@@ -1052,6 +1052,9 @@ class Mdl(object):
             elif skin.type == GROUP and len(skin.pixels) != self.skin_width * self.skin_height * skin.number_of_skins:
                 raise BadMdlFile('Incorrect number of pixels. Expected: %r Actual: %r' % (self.skin_width * self.skin_height * skin.number_of_skins, len(skin.pixels)))
 
+        if self.number_of_vertices != len(self.st_vertices):
+            raise BadMdlFile('Incorrect number of frames. Expected: %r Actual: %r' % (self.number_of_vertices, len(self.st_vertices)))
+
         if self.number_of_frames != len(self.frames):
             raise BadMdlFile('Incorrect number of frames. Expected: %r Actual: %r' % (self.number_of_frames, len(self.frames)))
 
