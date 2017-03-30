@@ -7,9 +7,9 @@ Supported games:
 import io
 import struct
 
-__all__ = ['BadMdlFile', 'is_mdlfile', 'BadMdlFile', 'Skin', 'SkinGroup',
-           'StVertex', 'Triangle', 'TriVertex', 'Frame',
-           'FrameGroup', 'Mesh', 'Image', 'Mdl']
+__all__ = ['BadMdlFile', 'is_mdlfile', 'BadMdlFile', 'default_palette',
+           'vertex_normals','Skin', 'SkinGroup', 'StVertex', 'Triangle',
+           'TriVertex', 'Frame', 'FrameGroup', 'Mesh', 'Image', 'Mdl']
 
 
 class BadMdlFile(Exception):
@@ -412,10 +412,14 @@ class StVertex(object):
         self.t = None
 
     def __getitem__(self, item):
-        if item > 1:
-            raise IndexError('list index of out of range')
+        if type(item) is int:
+            return [self.s, self.t][item]
 
-        return self.s if item == 0 else self.t
+        elif type(item) is slice:
+            start = item.start or 0
+            stop = item.stop or 2
+
+            return [self.s, self.t][start:stop]
 
     @classmethod
     def write(cls, file, st_vertex):
@@ -527,15 +531,14 @@ class TriVertex(object):
         self.light_normal_index = None
 
     def __getitem__(self, item):
-        if item > 2:
-            raise IndexError('list index of out of range')
+        if type(item) is int:
+            return [self.x, self.y, self.z][item]
 
-        if item == 0:
-            return self.x
-        elif item == 1:
-            return self.y
-        elif item == 2:
-            return self.z
+        elif type(item) is slice:
+            start = item.start or 0
+            stop = item.stop or 3
+
+            return [self.x, self.y, self.z][start:stop]
 
     @classmethod
     def write(cls, file, tri_vertex):
