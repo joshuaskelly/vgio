@@ -181,7 +181,7 @@ class TestBspReadWrite(unittest.TestCase):
         self.assertIsNone(mdl_file.fp, 'File pointer should be cleaned up')
 
     def test_to_mesh(self):
-        m0 = mdl.Mdl.open('/Users/joshua/Desktop/out/progs/spike.mdl')
+        m0 = mdl.Mdl.open('./test_data/test.mdl')
         m0.close()
         me = m0.mesh(0)
 
