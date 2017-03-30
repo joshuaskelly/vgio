@@ -49,15 +49,6 @@ class ImportMDL(bpy.types.Operator, ImportHelper):
     def draw(self, context):
         layout = self.layout
 
-        space = context.space_data
-
-        if space.system_bookmarks:
-            row = layout.row()
-            row.template_list("FILEBROWSER_UL_dir", "system_bookmarks", space,
-                              "system_bookmarks",
-                              space, "system_bookmarks_active",
-                              item_dyntip_propname="path", rows=1, maxrows=10)
-
 
 class ExportMDL(bpy.types.Operator, ExportHelper):
     """Save a Quake MDL File"""
