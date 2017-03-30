@@ -22,6 +22,8 @@ def load(operator, context, filepath):
     ob.location = mdl_file.origin
 
     # Load skin and create a material
+    first_skin = None
+
     for i in range(mdl_file.number_of_skins):
         image = mdl_file.image(i)
         img = bpy.data.images.new('skin%i' % i, image.width, image.height)
@@ -31,6 +33,9 @@ def load(operator, context, filepath):
         img.update()
         img.pack(True)
         img.use_fake_user = True
+
+        if not first_skin:
+            first_skin = img
 
         tex = bpy.data.textures.new('skin%i' % i, 'IMAGE')
         tex.image = img
@@ -90,7 +95,7 @@ def load(operator, context, filepath):
     bm.free()
 
     for texpoly in ob.data.uv_textures[0].data:
-        texpoly.image = bpy.data.images[0]
+        texpoly.image = first_skin
 
     def add_shape_key(frame):
         """Helper function to create a shape key from an mdl.Frame"""
