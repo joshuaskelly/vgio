@@ -411,15 +411,31 @@ class StVertex(object):
         self.s = None
         self.t = None
 
-    def __getitem__(self, item):
-        if type(item) is int:
-            return [self.s, self.t][item]
+    def __getitem__(self, key):
+        if type(key) is int:
+            return [self.s, self.t][key]
 
-        elif type(item) is slice:
-            start = item.start or 0
-            stop = item.stop or 2
+        elif type(key) is slice:
+            start = key.start or 0
+            stop = key.stop or 2
 
             return [self.s, self.t][start:stop]
+
+    def __setitem__(self, key, value):
+        if type(key) is int:
+            if key == 0:
+                self.s = value
+            elif key == 1:
+                self.t = value
+            else:
+                raise
+
+        elif type(key) is slice:
+            start = key.start or 0
+            stop = key.stop or 2
+
+            for i in range(start, stop):
+                self[i] = value[i]
 
     @classmethod
     def write(cls, file, st_vertex):
@@ -464,11 +480,14 @@ class Triangle(object):
     )
 
     def __init__(self):
-        self.faces_front = None
-        self.vertices = None
+        self.faces_front = 0x10
+        self.vertices = []
 
-    def __getitem__(self, item):
-        return self.vertices[item]
+    def __getitem__(self, key):
+        return self.vertices[key]
+
+    def __setitem__(self, key, value):
+        self.vertices[key] = value
 
     @classmethod
     def write(cls, file, triangle):
@@ -530,15 +549,33 @@ class TriVertex(object):
         self.z = None
         self.light_normal_index = None
 
-    def __getitem__(self, item):
-        if type(item) is int:
-            return [self.x, self.y, self.z][item]
+    def __getitem__(self, key):
+        if type(key) is int:
+            return [self.x, self.y, self.z][key]
 
-        elif type(item) is slice:
-            start = item.start or 0
-            stop = item.stop or 3
+        elif type(key) is slice:
+            start = key.start or 0
+            stop = key.stop or 3
 
             return [self.x, self.y, self.z][start:stop]
+
+    def __setitem__(self, key, value):
+        if type(key) is int:
+            if key == 0:
+                self.x = value
+            elif key == 1:
+                self.y = value
+            elif key == 2:
+                self.z = value
+            else:
+                raise
+
+        elif type(key) is slice:
+            start = key.start or 0
+            stop = key.stop or 3
+
+            for i in range(start, stop):
+                self[i] = value[i]
 
     @classmethod
     def write(cls, file, tri_vertex):
@@ -602,7 +639,7 @@ class Frame(object):
         self.bounding_box_min = None
         self.bounding_box_max = None
         self.name = None
-        self.vertices = None
+        self.vertices = []
 
     @classmethod
     def write(cls, file, frame, number_of_vertices):
