@@ -407,7 +407,7 @@ class StVertex(object):
     )
 
     def __init__(self):
-        self.on_seam = None
+        self.on_seam = 0
         self.s = None
         self.t = None
 
