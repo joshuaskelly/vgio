@@ -21,12 +21,25 @@ def save(operator, context, filepath):
         vert.co = world_matrix * vert.co
 
     # Create skins
-    # im = ob.data.materials[0].texture_slots[0].texture.image
+    im = ob.data.materials[0].texture_slots[0].texture.image
+    width, height = im.size[:]
+    pixels = im.pixels
+
+    p = []
+
+    for i in range(0, len(pixels), 4):
+        r = int(pixels[i+0] * 255 + 0.5)
+        g = int(pixels[i+1] * 255 + 0.5)
+        b = int(pixels[i+2] * 255 + 0.5)
+
+        index = nearest((r, g, b))
+        p.append(index)
+
     # TODO: Actually export image data
     skin = mdl.Skin()
-    mdl_file.skin_width = 64
-    mdl_file.skin_height = 32
-    skin.pixels = [0] * mdl_file.skin_width * mdl_file.skin_height
+    mdl_file.skin_width = width
+    mdl_file.skin_height = height
+    skin.pixels = p
     mdl_file.skins.append(skin)
     mdl_file.number_of_skins = 1
 
@@ -127,3 +140,38 @@ def save(operator, context, filepath):
     bm.free()
     mdl_file.close()
     return {'FINISHED'}
+
+
+def dot(lhs, rhs):
+    return lhs[0] * rhs[0] + lhs[1] * rhs[1] + lhs[2] * rhs[2]
+
+
+def sub(lhs, rhs):
+    return lhs[0] - rhs[0], lhs[1] - rhs[1], lhs[2] - rhs[2]
+
+
+def sqr_length(vec):
+    return dot(vec, vec)
+
+_color_map = {}
+
+
+def nearest(v):
+    if v in _color_map:
+        return _color_map[v]
+
+    nearest_dist = 999999
+    nearest_index = -1
+
+    for i, c in enumerate(mdl.default_palette):
+        dist = sqr_length(sub(c, v))
+
+        if dist < nearest_dist:
+            nearest_dist = dist
+            nearest_index = i
+
+        if dist == 0:
+            break
+
+    _color_map[v] = nearest_index
+    return nearest_index
