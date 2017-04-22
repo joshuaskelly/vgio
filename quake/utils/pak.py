@@ -1,4 +1,4 @@
-"""Command line utility for creating and manipulating WAD files
+"""Command line utility for creating and manipulating PAK files
 
 Supported Games:
     - QUAKE
