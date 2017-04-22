@@ -92,8 +92,10 @@ with wad.WadFile(args.file, filemode) as wad_file:
                 print('  adding: %s' % file)
 
             wad_file.write(file)
+
         elif args.type == 'QPIC':
             pass
+
         else:
             try:
                 img = Image.open(file).convert(mode='RGB')

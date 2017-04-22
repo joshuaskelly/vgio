@@ -7,10 +7,12 @@ Supported Games:
 import io
 import os
 import shutil
+import stat
 import struct
 
 try:
     import threading
+
 except ImportError:
     import dummy_threading as threading
 
@@ -78,10 +80,26 @@ class PakInfo(object):
         'file_size'
     )
 
-    def __init__(self, filename, file_offset, file_size):
+    def __init__(self, filename, file_offset=0, file_size=0):
         self.filename = filename
         self.file_offset = file_offset
         self.file_size = file_size
+
+    @classmethod
+    def from_file(cls, filename):
+        st = os.stat(filename)
+        isdir = stat.S_ISDIR(st.st_mode)
+
+        if len(filename) > 56:
+            raise BadPakFile('PakFile filename must be 56 characters or less')
+
+        if isdir:
+            raise RuntimeError('PakFile expects a file, got a directory')
+
+        info = cls(filename)
+        info.file_size = st.st_size
+
+        return info
 
 
 class _SharedFile:
@@ -230,6 +248,35 @@ class PakExtFile(io.BufferedIOBase):
             super().close()
 
 
+class _PakWriteFile(io.BufferedIOBase):
+    def __init__(self, pak_file, pak_info):
+        self._pak_info = pak_info
+        self._pak_file = pak_file
+        self._file_size = 0
+
+    @property
+    def _fileobj(self):
+        return self._pak_file.fp
+
+    def writable(self):
+        return True
+
+    def write(self, data):
+        number_of_bytes = len(data)
+        self._file_size += number_of_bytes
+        self._fileobj.write(data)
+
+        return number_of_bytes
+
+    def close(self):
+        super().close()
+
+        self._pak_file.start_of_directory = self._fileobj.tell()
+        self._pak_file._writing = False
+        self._pak_file.file_list.append(self._pak_info)
+        self._pak_file.NameToInfo[self._pak_info.filename] = self._pak_info
+
+
 class PakFile(object):
     """Class with methods to open, read, close, and list pak files.
 
@@ -245,26 +292,60 @@ class PakFile(object):
     _windows_illegal_name_trans_table = None
 
     def __init__(self, file, mode='r'):
-        if mode not in ('r',):
-            raise RuntimeError("PakFile requires mode 'r'")
+        if mode not in ('r', 'w', 'a'):
+            raise RuntimeError("PakFile requires mode 'r', 'w', or 'a'")
 
         self.NameToInfo = {}
         self.file_list = []
         self.mode = mode
 
+        self._did_modify = False
         self._file_reference_count = 1
         self._lock = threading.RLock()
+        self._writing = False
+
+        filemode = {'r': 'rb', 'w': 'w+b', 'a': 'r+b'}[mode]
 
         if isinstance(file, str):
             self.filename = file
-            self.fp = io.open(file, 'rb')
+            self.fp = io.open(file, filemode)
             self._file_passed = 0
+
         else:
             self.fp = file
             self.filename = getattr(file, 'name', None)
             self._file_passed = 1
 
-        self._load_archive_content()
+        try:
+            if mode == 'r':
+                self._read_archive_content()
+
+            elif mode =='w':
+                self._did_modify = True
+                data = struct.pack(header_struct,
+                                   b'PACK',
+                                   0,
+                                   header_size)
+
+                self.fp.write(data)
+                self.start_of_data = self.fp.tell()
+
+            elif mode == 'a':
+                try:
+                    self._read_archive_content()
+                    self.fp.seek(self.start_of_directory)
+
+                except BadPakFile:
+                    raise
+
+            else:
+                raise ValueError("Mode must be 'r', 'w', 'x', or 'a'")
+
+        except:
+            fp = self.fp
+            self.fp = None
+            self._fpclose(fp)
+            raise
 
     def __enter__(self):
         return self
@@ -272,7 +353,7 @@ class PakFile(object):
     def __exit__(self, type, value, traceback):
         self.close()
 
-    def _load_archive_content(self):
+    def _read_archive_content(self):
         """Read in the directory information for the pak file."""
 
         fp = self.fp
@@ -285,10 +366,10 @@ class PakFile(object):
         if header[_HEADER_SIGNATURE] != header_magic_number:
             raise BadPakFile('Bad magic number: %r' % header[_HEADER_SIGNATURE])
 
-        start_of_directory = header[_HEADER_DIRECTORY_OFFSET]
+        self.start_of_directory = header[_HEADER_DIRECTORY_OFFSET]
         size_of_directory = header[_HEADER_DIRECTORY_SIZE]
 
-        fp.seek(start_of_directory)
+        fp.seek(self.start_of_directory)
         data = fp.read(size_of_directory)
         fp = io.BytesIO(data)
 
@@ -308,6 +389,26 @@ class PakFile(object):
             self.NameToInfo[info.filename] = info
 
             total_bytes_read += local_file_size
+
+    def _write_directory(self):
+        for info in self.file_list:
+            data = struct.pack(local_file_struct,
+                               info.filename.encode('ascii'),
+                               info.file_offset,
+                               info.file_size)
+
+            self.fp.write(data)
+
+        directory_size = len(self.file_list) * local_file_size
+
+        header_data = struct.pack(header_struct,
+                                  b'PACK',
+                                  self.start_of_directory,
+                                  directory_size)
+
+        self.fp.seek(0)
+        self.fp.write(header_data)
+        self.fp.flush()
 
     def namelist(self):
         """Return a list of file names in the pak file."""
@@ -339,21 +440,44 @@ class PakFile(object):
     def open(self, name, mode='r'):
         """Return a file-like object for 'name'."""
 
+        if mode not in ('r', 'w'):
+            raise ValueError("open() requires mode 'r' or 'w'")
+
         if not self.fp:
             raise RuntimeError('Attempt to read PAK archive that was already closed')
 
         if isinstance(name, PakInfo):
             info = name
+
+        elif mode == 'w':
+            info = PakInfo.from_file(name)
+
         else:
             info = self.getinfo(name)
 
+        if mode == 'w':
+            return self._open_to_write(info)
+
         self._file_reference_count += 1
         shared_file = _SharedFile(self.fp, info.file_offset, info.file_size, self._fpclose, self._lock)
+
         try:
             return PakExtFile(shared_file, mode, info, True)
+
         except:
             shared_file.close()
             raise
+
+    def _open_to_write(self, pak_info):
+        if self._writing:
+            raise ValueError("Can't write to the PAK file while there is "
+                             "another write handle open on it. Close the first"
+                             " handle before opening another.")
+
+        self._did_modify = True
+        self._writing = True
+
+        return _PakWriteFile(self, pak_info)
 
     def extract(self, member, path=None):
         """Extract a member from the pak file to the current working directory
@@ -452,15 +576,42 @@ class PakFile(object):
 
         return target_path
 
+    def write(self, filename):
+        if not self.fp:
+            raise ValueError
+
+        if self._writing:
+            raise ValueError
+
+        info = PakInfo.from_file(filename)
+        info.file_offset = self.fp.tell()
+
+        if filename[-1] == '/':
+            raise RuntimeError('PakFile expects a file, got a directory')
+
+        else:
+            with open(filename, 'rb') as src, self.open(info, 'w') as dest:
+                shutil.copyfileobj(src, dest, 8*1024)
+
     def close(self):
         """Close the file."""
 
         if self.fp is None:
             return
 
-        fp = self.fp
-        self.fp = None
-        fp.close()
+        if self._writing:
+            raise ValueError
+
+        try:
+            if self.mode in ('w', 'x', 'a') and self._did_modify and hasattr(self, 'start_of_directory'):
+                with self._lock:
+                    self.fp.seek(self.start_of_directory)
+                    self._write_directory()
+
+        finally:
+            fp = self.fp
+            self.fp = None
+            self._fpclose(fp)
 
     def _fpclose(self, fp):
         assert self._file_reference_count > 0

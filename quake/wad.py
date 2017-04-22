@@ -277,9 +277,9 @@ class WadExtFile(io.BufferedIOBase):
 
 
 class _WadWriteFile(io.BufferedIOBase):
-    def __init__(self, wf, wad_info):
+    def __init__(self, wad_file, wad_info):
         self._wad_info = wad_info
-        self._wad_file = wf
+        self._wad_file = wad_file
         self._file_size = 0
 
     @property
@@ -290,10 +290,11 @@ class _WadWriteFile(io.BufferedIOBase):
         return True
 
     def write(self, data):
-        nbytes = len(data)
-        self._file_size += nbytes
+        number_of_bytes = len(data)
+        self._file_size += number_of_bytes
         self._fileobj.write(data)
-        return nbytes
+
+        return number_of_bytes
 
     def close(self):
         super().close()
@@ -329,6 +330,7 @@ class WadFile(object):
         self._did_modify = False
         self._file_reference_count = 1
         self._lock = threading.RLock()
+        self._writing = False
 
         filemode = {'r': 'rb', 'w': 'w+b', 'a': 'r+b'}[mode]
 
@@ -336,13 +338,11 @@ class WadFile(object):
             self.filename = file
             self.fp = io.open(file, filemode)
             self._file_passed = 0
+
         else:
             self.fp = file
             self.filename = getattr(file, 'name', None)
             self._file_passed = 1
-
-        self._lock = threading.RLock()
-        self._writing = False
 
         try:
             if mode == 'r':
@@ -354,13 +354,15 @@ class WadFile(object):
                                    b'WAD2',
                                    0,
                                    header_size)
+
                 self.fp.write(data)
-                self.start_of_data= self.fp.tell()
+                self.start_of_data = self.fp.tell()
 
             elif mode == 'a':
                 try:
                     self._read_archive_content()
                     self.fp.seek(self.start_of_directory)
+
                 except BadWadFile:
                     # Don't support appending to non-wad file
                     raise
@@ -438,7 +440,10 @@ class WadFile(object):
 
         count = len(self.file_list)
 
-        header_data = struct.pack(header_struct, b'WAD2', count, self.start_of_directory)
+        header_data = struct.pack(header_struct,
+                                  b'WAD2',
+                                  count,
+                                  self.start_of_directory)
 
         self.fp.seek(0)
         self.fp.write(header_data)
@@ -482,8 +487,10 @@ class WadFile(object):
 
         if isinstance(name, WadInfo):
             info = name
+
         elif mode == 'w':
             info = WadInfo.from_file(name)
+
         else:
             info = self.getinfo(name)
 
@@ -492,8 +499,10 @@ class WadFile(object):
 
         self._file_reference_count += 1
         shared_file = _SharedFile(self.fp, info.file_offset, info.file_size, self._fpclose, self._lock)
+
         try:
             return WadExtFile(shared_file, mode, info, True)
+
         except:
             shared_file.close()
             raise
@@ -506,6 +515,7 @@ class WadFile(object):
 
         self._did_modify = True
         self._writing = True
+
         return _WadWriteFile(self, wad_info)
 
     def extract(self, member, path=None):
@@ -616,8 +626,9 @@ class WadFile(object):
         info = WadInfo.from_file(filename)
         info.file_offset = self.fp.tell()
 
-        if info[-1] == '/':
+        if filename[-1] == '/':
             raise RuntimeError('WadFile expects a file, got a directory')
+
         else:
             with open(filename, 'rb') as src, self.open(info, 'w') as dest:
                 shutil.copyfileobj(src, dest, 8*1024)
@@ -655,7 +666,7 @@ class WadFile(object):
         finally:
             fp = self.fp
             self.fp = None
-            fp.close()
+            self._fpclose(fp)
 
     def _fpclose(self, fp):
         assert self._file_reference_count > 0
