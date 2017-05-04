@@ -189,3 +189,6 @@ class TestBspReadWrite(unittest.TestCase):
             m0.validate()
         except:
             self.fail('Calling mesh() should not change the underlying data structure')
+
+if __name__ == '__main__':
+    unittest.main()
