@@ -5,7 +5,6 @@ Supported games:
 """
 
 import re
-import sys
 
 
 __all__ = ['ParseError', 'Entity', 'Brush', 'Plane', 'loads', 'dumps']
