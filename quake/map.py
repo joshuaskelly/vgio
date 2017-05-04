@@ -15,18 +15,59 @@ class ParseError(Exception):
 
 
 class Entity(object):
+    """Class for representing Map Entity data
+
+    Note:
+        Entity properties will be set as attributes.
+
+    Attributes:
+        brushes: A list of Brush objects.
+    """
     def __init__(self):
         self.brushes = []
 
 
 class Brush(object):
+    """Class for representing Brush data
+
+    Attributes:
+        planes: A list of Plane objects
+    """
+
+    __slots__ = (
+        'planes'
+    )
+
     def __init__(self):
         self.planes = []
 
 
 class Plane(object):
+    """Class for representing planes(faces) of a Brush.
+
+    Attributes:
+        points: A triple of XYZ three-tuples representing three non-collinear
+            points contained in the plane.
+
+        texture_name: Name of the bsp.Miptexture
+
+        offset: The texture offset represented as an XY two-tuple.
+
+        rotation: The texture rotation angle in degrees.
+
+        scale: The texture scale represented as an XY two-tuple.
+    """
+
+    __slots__ = (
+        'points',
+        'texture_name',
+        'offset',
+        'rotation',
+        'scale'
+    )
+
     def __init__(self):
-        self.coords = None
+        self.points = None
         self.texture_name = None
         self.offset = None
         self.rotation = None
@@ -34,13 +75,16 @@ class Plane(object):
 
 
 def loads(s):
-    """Deserializes string s into Python objects
+    """Deserializes string s into Entity objects
 
     Args:
         s: A string containing a Map document.
 
     Returns:
         A list of Entity objects.
+
+    Raises:
+        ParseError: If fails to parse given document
     """
 
     class StringLiteral(object):
@@ -80,6 +124,16 @@ def loads(s):
     column = 1
 
     def tokenize(program):
+        """Transforms the given Map document into a sequence of tokens.
+
+        Args:
+            program: A string containing a Map document.
+
+        Yields:
+            The next token in the sequence. After all input has been processed
+            the EndToken object will be yielded.
+        """
+
         nonlocal line, column
         fa = pattern.findall(program)
 
@@ -118,6 +172,20 @@ def loads(s):
         yield EndToken()
 
     def advance(id_or_class=None):
+        """Verifies the current token(if id_or_class is given) and proceeds
+        to the next token.
+
+        Args:
+            id_or_class: A string, a class, or None. If not None, the current
+                token will be compared against the given value.
+
+        Returns:
+            The previous token
+
+        Raises:
+            ParseError: If expected symbol is not found.
+        """
+
         nonlocal token
 
         if id_or_class:
@@ -129,17 +197,37 @@ def loads(s):
         return previous
 
     def expect(id_or_class):
-        nonlocal token
+        """Verifies current token, raises if not equal to the given id_or_class
 
+        Args:
+            id_or_class: The string or class to compare against
+
+        Raises:
+            ParseError: If expected symbol is not found
+        """
+
+        nonlocal token
+        error_message = 'Expected "{0}" got "{1}"'
+
+        # Verify token value
         if isinstance(id_or_class, str):
             if id_or_class and id_or_class != token.id:
-                error('Expected "{0}" got "{1}"'.format(id_or_class, token.id))
+                error(error_message.format(id_or_class, token.id))
 
+        # Verify token class
         else:
             if id_or_class and not isinstance(token, id_or_class):
-                error('Expected "{0}" got "{1}"'.format(id_or_class, token))
+                error(error_message.format(id_or_class, token))
 
     def parse(program):
+        """Main point of entry for parsing Map documents.
+
+        Args:
+            program: A string containing a Map document.
+
+        Returns:
+            A list of Entity objects
+        """
         nonlocal token
         entities = []
 
@@ -149,6 +237,12 @@ def loads(s):
         return entities
 
     def parse_entity():
+        """Creates an Entity object from the token stream.
+
+        Returns:
+            An Entity object
+        """
+
         nonlocal token
 
         e = Entity()
@@ -170,6 +264,12 @@ def loads(s):
         return e
 
     def parse_property():
+        """Creates a key-value pair from the token stream.
+
+        Returns:
+            A key-value pair tuple
+        """
+
         nonlocal token
         key = advance(StringLiteral)
 
@@ -184,6 +284,12 @@ def loads(s):
         return key.id, value.id
 
     def parse_brush():
+        """Creates a Brush object from the token stream.
+
+        Returns:
+            A Brush object.
+        """
+
         nonlocal token
         b = Brush()
         advance('{')
@@ -201,7 +307,7 @@ def loads(s):
             coord_2 = advance(NumericLiteral).id, advance(NumericLiteral).id, advance(NumericLiteral).id
             advance(')')
 
-            p.coords = coord_0, coord_1, coord_2
+            p.points = coord_0, coord_1, coord_2
             p.texture_name = advance(StringLiteral).id
 
             p.offset = advance(NumericLiteral).id, advance(NumericLiteral).id
@@ -215,6 +321,16 @@ def loads(s):
         return b
 
     def error(message):
+        """Raises an exception with the given message. Also provides the
+        row and column information as to where the error occurred.
+
+        Attributes:
+            message: The exception message
+
+        Raises:
+            ParseError
+        """
+
         nonlocal line, column
 
         location = ' line {0}, column {1}'.format(line, column)
@@ -256,7 +372,7 @@ def dumps(entities):
             for plane in brush.planes:
                 assert(isinstance(plane, Plane))
 
-                coords = plane.coords
+                coords = plane.points
                 name = plane.texture_name
                 offset = plane.offset
                 rotation = plane.rotation

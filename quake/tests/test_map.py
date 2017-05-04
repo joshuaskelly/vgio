@@ -25,7 +25,7 @@ class TestMapReadWrite(unittest.TestCase):
         self.assertEqual(len(brush.planes), 6)
 
         first_plane = brush.planes[0]
-        self.assertEqual(first_plane.coords, ((128, 0, 0), (128, 1, 0), (128, 0, 1)))
+        self.assertEqual(first_plane.points, ((128, 0, 0), (128, 1, 0), (128, 0, 1)))
         self.assertEqual(first_plane.texture_name, 'GROUND1_6')
         self.assertEqual(first_plane.offset, (0.0, 0.0))
         self.assertEqual(first_plane.rotation, 0.0)
@@ -73,7 +73,7 @@ class TestMapReadWrite(unittest.TestCase):
         self.assertEqual(len(brush.planes), 6)
 
         first_plane = brush.planes[0]
-        self.assertEqual(first_plane.coords, ((128, 0, 0), (128, 1, 0), (128, 0, 1)))
+        self.assertEqual(first_plane.points, ((128, 0, 0), (128, 1, 0), (128, 0, 1)))
         self.assertEqual(first_plane.texture_name, 'GROUND1_6')
         self.assertEqual(first_plane.offset, (0.0, 0.0))
         self.assertEqual(first_plane.rotation, 0.0)
