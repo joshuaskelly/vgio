@@ -242,7 +242,6 @@ def loads(s):
         """
 
         nonlocal token
-
         e = Entity()
         advance('{')
 
@@ -275,7 +274,7 @@ def loads(s):
             value = token
 
         else:
-            raise
+            error('Unexpected symbol: "{0}"'.format(token.id))
 
         token = next()
 
@@ -330,8 +329,8 @@ def loads(s):
         """
 
         nonlocal line, column
-
         location = ' line {0}, column {1}'.format(line, column)
+
         raise ParseError(message + location)
 
     next = tokenize(s).__next__
