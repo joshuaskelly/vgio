@@ -95,14 +95,16 @@ class TestMapReadWrite(unittest.TestCase):
         with self.assertRaises(map.ParseError) as cm:
             map.loads(map_text)
 
-        message = cm.exception.args[0]
-        pattern = 'Expected "(.*)" got "(.*)" line (\d+), column (\d+)'
-        expected_symbol, actual_symbol, line_number, column_number = re.findall(pattern, message)[0]
+        exception = cm.exception
+        message = exception.args[0]
+        pattern = 'Expected "(.*)" got "(.*)" line \d+, column \d+'
+        expected_symbol, actual_symbol = re.findall(pattern, message)[0]
+        line_number, column_number = exception.location
 
         self.assertEqual(expected_symbol, ')')
         self.assertEqual(actual_symbol, '}')
-        self.assertEqual(line_number, '8')
-        self.assertEqual(column_number, '37')
+        self.assertEqual(line_number, 8)
+        self.assertEqual(column_number, 37)
 
 if __name__ == '__main__':
     unittest.main()

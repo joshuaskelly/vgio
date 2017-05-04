@@ -11,7 +11,9 @@ __all__ = ['ParseError', 'Entity', 'Brush', 'Plane', 'loads', 'dumps']
 
 
 class ParseError(Exception):
-    pass
+    def __init__(self, message, location):
+        super().__init__(message + ' line {0}, column {1}'.format(location[0], location[1]))
+        self.location = location
 
 
 class Entity(object):
@@ -329,9 +331,10 @@ def loads(s):
         """
 
         nonlocal line, column
-        location = ' line {0}, column {1}'.format(line, column)
+        #location = ' line {0}, column {1}'.format(line, column)
+        location = line, column
 
-        raise ParseError(message + location)
+        raise ParseError(message, location)
 
     next = tokenize(s).__next__
     token = next()
