@@ -1,4 +1,5 @@
 import io
+import re
 import unittest
 
 from quake import map
@@ -77,6 +78,31 @@ class TestMapReadWrite(unittest.TestCase):
         self.assertEqual(first_plane.offset, (0.0, 0.0))
         self.assertEqual(first_plane.rotation, 0.0)
         self.assertEqual(first_plane.scale, (1.0, 1.0))
+
+    def test_parse_error(self):
+        map_text = """
+        {
+        {
+        ( 2 0 0 ) ( 2 1 0 ) ( 2 0 1 ) OKAY 0 0 0 1.0 1.0
+        ( 2 0 0 ) ( 2 1 0 ) ( 2 0 1 ) OKAY 0 0 0 1.0 1.0
+        ( 2 0 0 ) ( 2 1 0 ) ( 2 0 1 ) OKAY 0 0 0 1.0 1.0
+        ( 2 0 0 ) ( 2 1 0 ) ( 2 0 1 ) OKAY 0 0 0 1.0 1.0
+        ( 2 0 0 ) ( 2 1 0 ) ( 2 0 1 } OOPS 0 0 0 1.0 1.0
+        }
+        }
+        """
+
+        with self.assertRaises(map.ParseError) as cm:
+            map.loads(map_text)
+
+        message = cm.exception.args[0]
+        pattern = 'Expected "(.*)" got "(.*)" line (\d+), column (\d+)'
+        expected_symbol, actual_symbol, line_number, column_number = re.findall(pattern, message)[0]
+
+        self.assertEqual(expected_symbol, ')')
+        self.assertEqual(actual_symbol, '}')
+        self.assertEqual(line_number, '8')
+        self.assertEqual(column_number, '37')
 
 if __name__ == '__main__':
     unittest.main()

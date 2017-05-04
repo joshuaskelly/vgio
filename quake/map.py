@@ -5,9 +5,14 @@ Supported games:
 """
 
 import re
+import sys
 
 
-__all__ = ['Entity', 'Brush', 'Plane', 'loads', 'dumps']
+__all__ = ['ParseError', 'Entity', 'Brush', 'Plane', 'loads', 'dumps']
+
+
+class ParseError(Exception):
+    pass
 
 
 class Entity(object):
@@ -54,63 +59,101 @@ def loads(s):
     class EndToken(object):
         pass
 
-    pattern = re.compile("""\s*(?:\B([{}\(\)])\B|(\/\/.*)|(?:\"(.+?)\")|(-?\d+\.?\d*)|([\S\w\/\.]+)|(.))""")
+    separator_pattern = '\B([{}\(\)])\B'
+    comment_pattern = '(\/\/.*)'
+    quoted_literal_pattern = '(?:\"(.+?)\")'
+    numeric_literal_pattern = '(-?\d+\.?\d*)'
+    literal_pattern = '([\S\w\/\.]+)'
+    white_space_pattern = '([\s\n])'
+    rest_pattern = '(.)'
+
+    pattern = '|'.join([separator_pattern,
+                        comment_pattern,
+                        quoted_literal_pattern,
+                        numeric_literal_pattern,
+                        literal_pattern,
+                        white_space_pattern,
+                        rest_pattern])
+
+    pattern = re.compile(pattern)
     token = None
+    line = 1
+    column = 1
 
     def tokenize(program):
+        nonlocal line, column
         fa = pattern.findall(program)
 
-        for separator, comment, quoted_literal, numeric_literal, literal, unknown in fa:
+        for separator, comment, quoted_literal, numeric_literal, literal, white_space, rest in fa:
             if quoted_literal:
                 literal = quoted_literal.strip()
 
             if literal:
                 yield StringLiteral(literal)
+                column += len(literal)
+
+                if quoted_literal:
+                    column += 2
 
             elif numeric_literal:
                 yield NumericLiteral(float(numeric_literal))
+                column += len(numeric_literal)
 
             elif separator:
                 yield Symbol(separator)
+                column += len(separator)
 
             elif comment:
-                pass
+                column += len(comment)
 
-            elif unknown:
-                pass
+            elif white_space:
+                if white_space == '\n':
+                    line += 1
+                    column = 1
+                else:
+                    column += len(white_space)
+
+            elif rest:
+                column += len(rest)
 
         yield EndToken()
 
     def advance(id_or_class=None):
         nonlocal token
 
-        if isinstance(id_or_class, str):
-            if id_or_class and id_or_class != token.id:
-                raise SyntaxError("Expected %r" % id_or_class)
-        else:
-            if id_or_class and not isinstance(token, id_or_class):
-                print('Token: %r' % token.id)
-                raise SyntaxError("Expected %r" % id_or_class)
+        if id_or_class:
+            expect(id_or_class)
 
         previous = token
         token = next()
 
         return previous
 
+    def expect(id_or_class):
+        nonlocal token
+
+        if isinstance(id_or_class, str):
+            if id_or_class and id_or_class != token.id:
+                error('Expected "{0}" got "{1}"'.format(id_or_class, token.id))
+
+        else:
+            if id_or_class and not isinstance(token, id_or_class):
+                error('Expected "{0}" got "{1}"'.format(id_or_class, token))
+
     def parse(program):
         nonlocal token
         entities = []
 
         while not isinstance(token, EndToken):
-            if token.id == '{':
-                entities.append(parse_entity())
+            entities.append(parse_entity())
 
         return entities
 
     def parse_entity():
-        e = Entity()
         nonlocal token
-        token = next()
+
+        e = Entity()
+        advance('{')
 
         while token.id != '}':
             if isinstance(token, StringLiteral):
@@ -119,6 +162,9 @@ def loads(s):
 
             elif token.id == '{':
                 e.brushes.append(parse_brush())
+
+            else:
+                error('Unexpected symbol: "{0}"'.format(token.id))
 
         advance('}')
 
@@ -168,6 +214,12 @@ def loads(s):
         advance('}')
 
         return b
+
+    def error(message):
+        nonlocal line, column
+
+        location = ' line {0}, column {1}'.format(line, column)
+        raise ParseError(message + location)
 
     next = tokenize(s).__next__
     token = next()
