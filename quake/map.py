@@ -219,11 +219,9 @@ def loads(s):
             if id_or_class and not isinstance(token, id_or_class):
                 error(error_message.format(id_or_class, token))
 
-    def parse(program):
-        """Main point of entry for parsing Map documents.
-
-        Args:
-            program: A string containing a Map document.
+    def parse():
+        """Main point of entry for parsing Map documents. Creates a list of
+        Entity objects from the token stream.
 
         Returns:
             A list of Entity objects
@@ -339,7 +337,7 @@ def loads(s):
     next = tokenize(s).__next__
     token = next()
 
-    return parse(s)
+    return parse()
 
 
 def dumps(entities):
