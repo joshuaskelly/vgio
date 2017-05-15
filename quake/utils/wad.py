@@ -12,7 +12,7 @@ import sys
 
 from PIL import Image
 
-from quake import bsp, wad
+from quake import bsp, lmp, wad
 
 
 class ResolvePathAction(argparse.Action):
@@ -94,7 +94,31 @@ with wad.WadFile(args.file, filemode) as wad_file:
             wad_file.write(file)
 
         elif args.type == 'QPIC':
-            pass
+            img = Image.open(file).convert(mode='RGB')
+            img = img.quantize(palette=palette_image)
+            pixels = img.tobytes()
+            name = os.path.basename(file).split('.')[0]
+
+            qpic = lmp.Lmp()
+            qpic.width = img.width
+            qpic.height = img.height
+            qpic.pixels = pixels
+
+            buff = io.BytesIO()
+            lmp.Lmp.write(buff, qpic)
+            file_size = buff.tell()
+            buff.seek(0)
+
+            info = wad.WadInfo(name)
+            info.file_size = file_size
+            info.disk_size = info.file_size
+            info.compression = wad.CMP_NONE
+            info.type = wad.TYPE_QPIC
+
+            if not args.quiet:
+                print('  adding: %s' % name)
+
+            wad_file.write_info(info, buff)
 
         else:
             try:
