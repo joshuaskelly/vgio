@@ -32,13 +32,14 @@ _HEADER_BEAM_LENGTH = 7
 _HEADER_SYNC_TYPE = 8
 
 # Sprite Frame structure
-sprite_frame_format = '<4i'
+sprite_frame_format = '<5i'
 sprite_frame_size = struct.calcsize(sprite_frame_format)
 
 # Indexes of Sprite Frame structure
-_SPRITE_FRAME_ORIGIN = 0
-_SPRITE_FRAME_WIDTH = 2
-_SPRITE_FRAME_HEIGHT = 3
+_SPRITE_FRAME_TYPE = 0
+_SPRITE_FRAME_ORIGIN = 1
+_SPRITE_FRAME_WIDTH = 3
+_SPRITE_FRAME_HEIGHT = 4
 
 
 def _check_sprfile(fp):
@@ -136,6 +137,10 @@ default_palette = (
 )
 
 
+SINGLE = 0
+GROUP = 1
+
+
 class SpriteFrame(object):
     """Class for representing a single sprite frame
 
@@ -154,17 +159,53 @@ class SpriteFrame(object):
     """
 
     __slots_ = (
+        'type',
         'origin',
         'width',
         'height',
         'pixels'
     )
 
-    def __init__(self, sprite_frame_struct):
-        self.origin = sprite_frame_struct[_SPRITE_FRAME_ORIGIN:_SPRITE_FRAME_WIDTH]
-        self.width = sprite_frame_struct[_SPRITE_FRAME_WIDTH]
-        self.height = sprite_frame_struct[_SPRITE_FRAME_HEIGHT]
-        self.pixels = []
+    def __init__(self):
+        self.type = SINGLE
+        self.origin = 0, 0
+        self.width = None
+        self.height = None
+        self.pixels = None
+
+    @staticmethod
+    def write(file, sprite_frame):
+        sprite_frame_data = struct.pack(sprite_frame_format,
+                                        sprite_frame.type,
+                                        *sprite_frame.origin,
+                                        sprite_frame.width,
+                                        sprite_frame.height)
+
+        file.write(sprite_frame_data)
+
+        pixels_format = '<%iB' % len(sprite_frame.pixels)
+        pixels_data = struct.pack(pixels_format, *sprite_frame.pixels)
+        file.write(pixels_data)
+
+    @staticmethod
+    def read(file):
+        sprite_frame = SpriteFrame()
+        sprite_frame_data = file.read(sprite_frame_size)
+        sprite_frame_struct = struct.unpack(sprite_frame_format, sprite_frame_data)
+
+        sprite_frame.type = sprite_frame_struct[_SPRITE_FRAME_TYPE]
+        sprite_frame.origin = sprite_frame_struct[_SPRITE_FRAME_ORIGIN:_SPRITE_FRAME_WIDTH]
+        sprite_frame.width = sprite_frame_struct[_SPRITE_FRAME_WIDTH]
+        sprite_frame.height = sprite_frame_struct[_SPRITE_FRAME_HEIGHT]
+
+        pixels_count = sprite_frame.width * sprite_frame.height
+        pixels_format = '<%iB' % pixels_count
+        pixels_size = struct.calcsize(pixels_format)
+        pixels = struct.unpack(pixels_format, file.read(pixels_size))
+
+        sprite_frame.pixels = pixels
+
+        return sprite_frame
 
 
 class SpriteGroup(object):
@@ -179,15 +220,48 @@ class SpriteGroup(object):
     """
 
     __slots__ = (
+        'type',
         'number_of_frames',
         'intervals',
         'frames'
     )
 
     def __init__(self):
+        self.type = GROUP
         self.number_of_frames = 0
         self.intervals = []
         self.frames = []
+
+    @staticmethod
+    def write(file, sprite_group):
+        frame_type_data = struct.pack('<i', sprite_group.type)
+        file.write(frame_type_data)
+
+        frame_count_data = struct.pack('<i', sprite_group.number_of_frames)
+        file.write(frame_count_data)
+
+        intervals_format = '<%if' % sprite_group.number_of_frames
+        intervals_data = struct.pack(intervals_format, *sprite_group.intervals)
+        file.write(intervals_data)
+
+        for frame in sprite_group.frames:
+            SpriteFrame.write(file, frame)
+
+    @staticmethod
+    def read(file):
+        frame_type = struct.unpack('<i', file.read(4))[0]
+        number_of_frames = struct.unpack('<i', file.read(4))[0]
+        intervals_format = '<%if' % number_of_frames
+        intervals_size = struct.calcsize(intervals_format)
+        intervals = struct.unpack(intervals_format, file.read(intervals_size))
+
+        sprite_group = SpriteGroup()
+        sprite_group.type = frame_type
+        sprite_group.number_of_frames = number_of_frames
+        sprite_group.intervals = intervals
+        sprite_group.frames = [SpriteFrame.read(file) for _ in range(number_of_frames)]
+
+        return sprite_group
 
 
 class Image(object):
@@ -266,6 +340,7 @@ class Spr(object):
     def __init__(self):
         self.fp = None
         self.mode = None
+        self._did_modify = False
 
         self.identifier = header_magic_number
         self.version = header_version
@@ -277,7 +352,7 @@ class Spr(object):
         self.beam_length = 0
         self.sync_type = SYNC
 
-        self.sprites = []
+        self.frames = []
 
     @staticmethod
     def open(file, mode='r'):
@@ -293,14 +368,13 @@ class Spr(object):
             file-like object.
         """
 
-        if mode not in ['r']:
+        if mode not in ('r', 'w', 'a'):
             raise ValueError("invalid mode: '%s'" % mode)
 
-        spr = Spr()
-        spr.mode = mode
+        filemode = {'r': 'rb', 'w': 'w+b', 'a': 'r+b'}[mode]
 
         if isinstance(file, str):
-            file = io.open(file, 'rb')
+            file = io.open(file, filemode)
 
         elif isinstance(file, bytes):
             file = io.BytesIO(file)
@@ -309,7 +383,31 @@ class Spr(object):
             raise RuntimeError(
                 "Spr.open() requires 'file' to be a path, a file-like object, or bytes")
 
+        # Read
+        if mode == 'r':
+            return Spr._read_file(file, mode)
+
+        # Write
+        elif mode == 'w':
+            spr = Spr()
+            spr.fp = file
+            spr.mode = 'w'
+            spr._did_modify = True
+
+            return spr
+
+        # Append
+        else:
+            spr = Spr._read_file(file, mode)
+            spr._did_modify = True
+
+            return spr
+
+    @staticmethod
+    def _read_file(file, mode):
+        spr = Spr()
         spr.fp = file
+        spr.mode = mode
 
         data = file.read(header_size)
         data = struct.unpack(header_format, data)
@@ -330,42 +428,141 @@ class Spr(object):
         spr.beam_length = data[_HEADER_BEAM_LENGTH]
         spr.sync_type = data[_HEADER_SYNC_TYPE]
 
-        def load_sprite_frame():
-            data = file.read(sprite_frame_size)
-            data = struct.unpack(sprite_frame_format, data)
-
-            frame = SpriteFrame(data)
-            pixels_count = frame.width * frame.height
-            pixels_format = '<%iB' % pixels_count
-            pixels_size = struct.calcsize(pixels_format)
-            pixels = struct.unpack(pixels_format, file.read(pixels_size))
-
-            frame.pixels = pixels
-
-            return frame
-
         for sprite_id in range(spr.number_of_frames):
-            type = struct.unpack('<i', file.read(4))[0]
+            pos = file.tell()
+            frame_type = struct.unpack('<i', file.read(4))[0]
+            file.seek(pos)
 
-            if type == 0:
-                spr.sprites.append(load_sprite_frame())
+            if frame_type == SINGLE:
+                sprite_frame = SpriteFrame.read(file)
+                spr.frames.append(sprite_frame)
 
             else:
-                number_of_frames = struct.unpack('<i', file.read(4))[0]
-                intervals_format = '<%if' % number_of_frames
-                intervals_size = struct.calcsize(intervals_format)
-                intervals = struct.unpack(intervals_format, file.read(intervals_size))
-
-                group = SpriteGroup()
-                group.number_of_frames = number_of_frames
-                group.intervals = intervals
-                group.frames = [load_sprite_frame() for _ in range(number_of_frames)]
-
-                spr.sprites.append(group)
+                sprite_group = SpriteGroup.read(file)
+                spr.frames.append(sprite_group)
 
         return spr
 
+    @staticmethod
+    def _write_file(file, spr):
+        # Validate Spr Data
+        spr.validate()
+
+        # Header
+        header_data = struct.pack(header_format,
+                                  spr.identifier,
+                                  spr.version,
+                                  spr.type,
+                                  spr.bounding_radius,
+                                  spr.width,
+                                  spr.height,
+                                  spr.number_of_frames,
+                                  spr.beam_length,
+                                  spr.sync_type)
+
+        file.write(header_data)
+
+        # Frames
+        for frame in spr.frames:
+            if frame.type == SINGLE:
+                SpriteFrame.write(file, frame)
+
+            elif frame.type == GROUP:
+                SpriteGroup.write(file, frame)
+
+            else:
+                raise BadSprFile('Unknown frame type: %s' % frame.type)
+
+    def validate(self):
+        """Verifies the correctness of Spr data.
+
+        Raises:
+            BadSprFile: If a discrepancy is found.
+        """
+
+        if self.identifier != header_magic_number:
+            raise BadSprFile('Bad magic number: %r' % self.identifier)
+
+        if self.version != header_version:
+            raise BadSprFile('Bad version number: %r' % self.version)
+
+        if self.number_of_frames != len(self.frames):
+            raise BadSprFile('Incorrect number of frames. Expected: %r Actual: %r' % (self.number_of_frames, len(self.frames)))
+
+        for frame in self.frames:
+            if frame.type == SINGLE:
+                if len(frame.pixels) != frame.width * frame.height:
+                    raise BadSprFile('Incorrect number of pixels. Expected: %r Actual: %r' % (frame.width * frame.height, len(frame.pixels)))
+
+            elif frame.type == GROUP:
+                if frame.number_of_frames != len(frame.invervals):
+                    raise BadSprFile('Incorrect number of frame intervals. Expected: %r Actual: %r' % (frame.number_of_frames, len(frame.invervals)))
+
+                if frame.number_of_frames != len(frame.frames):
+                    raise BadSprFile('Incorrect number of subframes. Expected: %r Actual: %r' % (self.number_of_frames, len(self.frames)))
+
+                for subframe in frame.frames:
+                    if subframe.type == SINGLE and len(subframe.pixels) != subframe.width * subframe.height:
+                        raise BadSprFile('Incorrect number of pixels. Expected: %r Actual: %r' % (subframe.width * subframe.height, len(subframe.pixels)))
+
+                    else:
+                        raise BadSprFile('Bad subframe type: %r' % (subframe.type))
+
+            else:
+                raise BadSprFile('Bad frame type: %r' % (frame.type))
+
+
+    @staticmethod
+    def write(file, lmp):
+        Spr._write_file(file, lmp)
+
+    def save(self, file):
+        """Writes Spr data to file
+
+        Args:
+            file: Either the path to the file, or a file-like object, or bytes.
+
+        Raises:
+            RuntimeError: If file argument is not a file-like object.
+        """
+
+        should_close = False
+
+        if isinstance(file, str):
+            file = io.open(file, 'r+b')
+            should_close = True
+
+        elif isinstance(file, bytes):
+            file = io.BytesIO(file)
+            should_close = True
+
+        elif not hasattr(file, 'write'):
+            raise RuntimeError(
+                "Spr.open() requires 'file' to be a path, a file-like object, "
+                "or bytes")
+
+        Spr._write_file(file, self)
+
+        if should_close:
+            file.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.close()
+
     def close(self):
+        """Closes the file pointer if possible. If mode is 'w' or 'a', the file
+        will be written to.
+        """
+
+        if self.fp:
+            if self.mode in ('w', 'a') and self._did_modify:
+                self.fp.seek(0)
+                Spr._write_file(self.fp, self)
+                self.fp.truncate()
+
         file_object = self.fp
         self.fp = None
         file_object.close()
@@ -386,10 +583,10 @@ class Spr(object):
             An Image object.
         """
 
-        if index > len(self.sprites):
+        if index > len(self.frames):
             raise IndexError('list index out of range')
 
-        sprite = self.sprites[0]
+        sprite = self.frames[0]
         if hasattr(sprite, 'intervals'):
             sprite = sprite.frames[subindex]
 
