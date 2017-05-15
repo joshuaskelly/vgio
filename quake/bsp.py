@@ -318,8 +318,8 @@ class Plane(object):
         self.distance = None
         self.type = None
 
-    @classmethod
-    def write(cls, file, plane):
+    @staticmethod
+    def write(file, plane):
         plane_data = struct.pack(plane_format,
                                  *plane.normal,
                                  plane.distance,
@@ -327,8 +327,8 @@ class Plane(object):
 
         file.write(plane_data)
 
-    @classmethod
-    def read(cls, file):
+    @staticmethod
+    def read(file):
         plane = Plane()
         plane_data = file.read(plane_size)
         plane_struct = struct.unpack(plane_format, plane_data)
@@ -385,8 +385,8 @@ class Miptexture(object):
         self.offsets = None
         self.pixels = None
 
-    @classmethod
-    def write(cls, file, miptexture):
+    @staticmethod
+    def write(file, miptexture):
         miptexture_data = struct.pack(miptexture_format,
                                       miptexture.name.encode('ascii'),
                                       miptexture.width,
@@ -400,8 +400,8 @@ class Miptexture(object):
         file.write(miptexture_data)
         file.write(pixels_data)
 
-    @classmethod
-    def read(cls, file):
+    @staticmethod
+    def read(file):
         miptexture = Miptexture()
         miptexture_data = file.read(miptexture_size)
         miptexture_struct = struct.unpack(miptexture_format, miptexture_data)
@@ -453,8 +453,8 @@ class Vertex(object):
 
             return [self.x, self.y, self.z][start:stop]
 
-    @classmethod
-    def write(cls, file, vertex):
+    @staticmethod
+    def write(file, vertex):
         vertex_data = struct.pack(vertex_format,
                                   vertex.x,
                                   vertex.y,
@@ -462,8 +462,8 @@ class Vertex(object):
 
         file.write(vertex_data)
 
-    @classmethod
-    def read(cls, file):
+    @staticmethod
+    def read(file):
         vertex = Vertex()
         vertex_data = file.read(vertex_size)
         vertex_struct = struct.unpack(vertex_format, vertex_data)
@@ -521,8 +521,8 @@ class Node(object):
         self.first_face = None
         self.number_of_faces = None
 
-    @classmethod
-    def write(cls, file, node):
+    @staticmethod
+    def write(file, node):
         node_data = struct.pack(node_format,
                                 node.plane_number,
                                 *node.children,
@@ -533,8 +533,8 @@ class Node(object):
 
         file.write(node_data)
 
-    @classmethod
-    def read(cls, file):
+    @staticmethod
+    def read(file):
         node = Node()
         node_data = file.read(node_size)
         node_struct = struct.unpack(node_format, node_data)
@@ -583,8 +583,8 @@ class TextureInfo(object):
         self.miptexture_number = None
         self.flags = None
 
-    @classmethod
-    def write(cls, file, texture_info):
+    @staticmethod
+    def write(file, texture_info):
         texture_info_data = struct.pack(texture_info_format,
                                         *texture_info.s,
                                         texture_info.s_offset,
@@ -594,8 +594,8 @@ class TextureInfo(object):
                                         texture_info.flags)
         file.write(texture_info_data)
 
-    @classmethod
-    def read(cls, file):
+    @staticmethod
+    def read(file):
         texture_info = TextureInfo()
         texture_info_data = file.read(texture_info_size)
         texture_info_struct = struct.unpack(texture_info_format, texture_info_data)
@@ -651,8 +651,8 @@ class Face(object):
         self.styles = None
         self.light_offset = None
 
-    @classmethod
-    def write(cls, file, plane):
+    @staticmethod
+    def write(file, plane):
         face_data = struct.pack(face_format,
                                 plane.plane_number,
                                 plane.side,
@@ -664,8 +664,8 @@ class Face(object):
 
         file.write(face_data)
 
-    @classmethod
-    def read(cls, file):
+    @staticmethod
+    def read(file):
         face = Face()
         face_data = file.read(face_size)
         face_struct = struct.unpack(face_format, face_data)
@@ -702,16 +702,16 @@ class ClipNode(object):
         self.plane_number = None
         self.children = None
 
-    @classmethod
-    def write(cls, file, clip_node):
+    @staticmethod
+    def write(file, clip_node):
         clip_node_data = struct.pack(clip_node_format,
                                      clip_node.plane_number,
                                      *clip_node.children)
 
         file.write(clip_node_data)
 
-    @classmethod
-    def read(cls, file):
+    @staticmethod
+    def read(file):
         clip_node = ClipNode()
         clip_node_data = file.read(clip_node_size)
         clip_node_struct = struct.unpack(clip_node_format, clip_node_data)
@@ -778,8 +778,8 @@ class Leaf(object):
         self.number_of_marked_surfaces = None
         self.ambient_level = None
 
-    @classmethod
-    def write(cls, file, leaf):
+    @staticmethod
+    def write(file, leaf):
         leaf_data = struct.pack(leaf_format,
                                     leaf.contents,
                                     leaf.visibilitiy_offset,
@@ -791,8 +791,8 @@ class Leaf(object):
 
         file.write(leaf_data)
 
-    @classmethod
-    def read(cls, file):
+    @staticmethod
+    def read(file):
         leaf = Leaf()
         leaf_data = file.read(leaf_size)
         leaf_struct = struct.unpack(leaf_format, leaf_data)
@@ -829,15 +829,15 @@ class Edge(object):
 
         return self.vertexes[item]
 
-    @classmethod
-    def write(cls, file, edge):
+    @staticmethod
+    def write(file, edge):
         edge_data = struct.pack(edge_format,
                                 *edge.vertexes)
 
         file.write(edge_data)
 
-    @classmethod
-    def read(cls, file):
+    @staticmethod
+    def read(file):
         edge = Edge()
         edge_data = file.read(edge_size)
         edge_struct = struct.unpack(edge_format, edge_data)
@@ -889,8 +889,8 @@ class Model(object):
         self.first_face = None
         self.number_of_faces = None
 
-    @classmethod
-    def write(cls, file, model):
+    @staticmethod
+    def write(file, model):
         model_data = struct.pack(model_format,
                                  *model.bounding_box_min,
                                  *model.bounding_box_max,
@@ -902,8 +902,8 @@ class Model(object):
 
         file.write(model_data)
 
-    @classmethod
-    def read(cls, file):
+    @staticmethod
+    def read(file):
         model = Model()
         model_data = file.read(model_size)
         model_struct = struct.unpack(model_format, model_data)
@@ -1052,8 +1052,8 @@ class Bsp(object):
         self.surf_edges = []
         self.models = []
 
-    @classmethod
-    def open(cls, file, mode='r'):
+    @staticmethod
+    def open(file, mode='r'):
         """Returns a Bsp object
 
         Args:
@@ -1107,8 +1107,8 @@ class Bsp(object):
 
             return bsp
 
-    @classmethod
-    def _read_file(cls, file, mode):
+    @staticmethod
+    def _read_file(file, mode):
         bsp = Bsp()
         bsp.mode = mode
         bsp.fp = file
@@ -1267,8 +1267,8 @@ class Bsp(object):
 
         return bsp
 
-    @classmethod
-    def _write_file(cls, file, bsp):
+    @staticmethod
+    def _write_file(file, bsp):
         # Stub out header info
         header_data = struct.pack(header_format,
                                   bsp.version,

@@ -290,8 +290,8 @@ class Skin(object):
         self.type = SINGLE
         self.pixels = None
 
-    @classmethod
-    def write(cls, file, skin, size):
+    @staticmethod
+    def write(file, skin, size):
         width, height = size
         skin_format = _calculate_skin_format(size)
         skin_data = struct.pack(skin_format,
@@ -300,8 +300,8 @@ class Skin(object):
 
         file.write(skin_data)
 
-    @classmethod
-    def read(cls, file, size):
+    @staticmethod
+    def read(file, size):
         skin = Skin()
         skin_format = _calculate_skin_format(size)
         skin_size = struct.calcsize(skin_format)
@@ -347,8 +347,8 @@ class SkinGroup(object):
         self.intervals = None
         self.pixels = None
 
-    @classmethod
-    def write(cls, file, skin_group, size):
+    @staticmethod
+    def write(file, skin_group, size):
         group = struct.pack('<l', skin_group.type)
         file.write(group)
         number_of_skins = struct.pack('<l', skin_group.number_of_skins)
@@ -360,9 +360,8 @@ class SkinGroup(object):
 
         file.write(skin_group_data)
 
-
-    @classmethod
-    def read(cls, file, size):
+    @staticmethod
+    def read(file, size):
         skin_group = SkinGroup()
         group = file.read(4)
         group = struct.unpack('<l', group)[0]
@@ -437,8 +436,8 @@ class StVertex(object):
             for i in range(start, stop):
                 self[i] = value[i]
 
-    @classmethod
-    def write(cls, file, st_vertex):
+    @staticmethod
+    def write(file, st_vertex):
         st_vertex_data = struct.pack(st_vertex_format,
                                      st_vertex.on_seam,
                                      st_vertex.s,
@@ -446,8 +445,8 @@ class StVertex(object):
 
         file.write(st_vertex_data)
 
-    @classmethod
-    def read(cls, file):
+    @staticmethod
+    def read(file):
         st_vertex = StVertex()
         st_vertex_data = file.read(st_vertex_size)
         st_vertex_struct = struct.unpack(st_vertex_format, st_vertex_data)
@@ -489,16 +488,16 @@ class Triangle(object):
     def __setitem__(self, key, value):
         self.vertices[key] = value
 
-    @classmethod
-    def write(cls, file, triangle):
+    @staticmethod
+    def write(file, triangle):
         triangle_data = struct.pack(triangle_format,
                                     triangle.faces_front,
                                     *triangle.vertices)
 
         file.write(triangle_data)
 
-    @classmethod
-    def read(cls, file):
+    @staticmethod
+    def read(file):
         triangle = Triangle()
         triangle_data = file.read(triangle_size)
         triangle_struct = struct.unpack(triangle_format, triangle_data)
@@ -577,8 +576,8 @@ class TriVertex(object):
             for i in range(start, stop):
                 self[i] = value[i]
 
-    @classmethod
-    def write(cls, file, tri_vertex):
+    @staticmethod
+    def write(file, tri_vertex):
         tri_vertex_data = struct.pack(trivertex_format,
                                       tri_vertex.x,
                                       tri_vertex.y,
@@ -587,8 +586,8 @@ class TriVertex(object):
 
         file.write(tri_vertex_data)
 
-    @classmethod
-    def read(cls, file):
+    @staticmethod
+    def read(file):
         tri_vertex = TriVertex()
         tri_vertex_data = file.read(trivertex_size)
         tri_vertex_struct = struct.unpack(trivertex_format, tri_vertex_data)
@@ -641,16 +640,16 @@ class Frame(object):
         self.name = None
         self.vertices = []
 
-    @classmethod
-    def write(cls, file, frame, number_of_vertices):
+    @staticmethod
+    def write(file, frame, number_of_vertices):
         TriVertex.write(file, frame.bounding_box_min)
         TriVertex.write(file, frame.bounding_box_max)
         file.write(struct.pack('<16s', frame.name.encode('ascii')))
         for vertex in frame.vertices:
             TriVertex.write(file, vertex)
 
-    @classmethod
-    def read(cls, file, number_of_vertices):
+    @staticmethod
+    def read(file, number_of_vertices):
         frame = Frame()
         frame.bounding_box_min = TriVertex.read(file)
         frame.bounding_box_max = TriVertex.read(file)
@@ -697,8 +696,8 @@ class FrameGroup(object):
         self.intervals = None
         self.frames = None
 
-    @classmethod
-    def write(cls, file, frame_group, number_of_vertices):
+    @staticmethod
+    def write(file, frame_group, number_of_vertices):
         file.write(struct.pack('<l', frame_group.number_of_frames))
         TriVertex.write(file, frame_group.bounding_box_min)
         TriVertex.write(file, frame_group.bounding_box_max)
@@ -707,8 +706,8 @@ class FrameGroup(object):
         for frame in frame_group.frames:
             Frame.write(file, frame, number_of_vertices)
 
-    @classmethod
-    def read(cls, file, number_of_vertices):
+    @staticmethod
+    def read(file, number_of_vertices):
         frame_group = FrameGroup()
         frame_group.number_of_frames = struct.unpack('<l', file.read(4))[0]
         frame_group.bounding_box_min = TriVertex.read(file)
@@ -936,8 +935,8 @@ class Mdl(object):
 
             return mdl
 
-    @classmethod
-    def _read_file(cls, file, mode):
+    @staticmethod
+    def _read_file(file, mode):
         mdl = Mdl()
         mdl.mode = mode
         mdl.fp = file
@@ -1007,8 +1006,8 @@ class Mdl(object):
 
         return mdl
 
-    @classmethod
-    def _write_file(cls, file, mdl):
+    @staticmethod
+    def _write_file(file, mdl):
         # Validate mdl data
         mdl.validate()
 
