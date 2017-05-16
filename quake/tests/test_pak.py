@@ -1,13 +1,11 @@
 import io
 import unittest
 
+from quake.tests import basecase
 from quake import pak
 
 
-class TestPakReadWrite(unittest.TestCase):
-    def setUp(self):
-        self.buff = io.BytesIO()
-
+class TestPakReadWrite(basecase.TestCase):
     def test_check_file_type(self):
         self.assertFalse(pak.is_pakfile('./test_data/test.bsp'))
         self.assertFalse(pak.is_pakfile('./test_data/test.lmp'))
@@ -56,8 +54,9 @@ class TestPakReadWrite(unittest.TestCase):
     def test_append(self):
         f = open('./test_data/test.pak', 'rb')
         buff = io.BytesIO(f.read(-1))
+        f.close()
 
-        pak_file = pak.PakFile(buff, 'a')
+        pak_file = pak.PakFile('./test_data/test.pak', 'a')
         pak_file.write('./test_data/test.bsp')
         pak_file.close()
 

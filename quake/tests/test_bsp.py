@@ -1,15 +1,12 @@
-import io
 import unittest
 
+from quake.tests import basecase
 from quake import bsp
 
 significant_digits = 5
 
 
-class TestBspReadWrite(unittest.TestCase):
-    def setUp(self):
-        self.buff = io.BytesIO()
-
+class TestBspReadWrite(basecase.TestCase):
     def test_check_file_type(self):
         self.assertTrue(bsp.is_bspfile('./test_data/test.bsp'))
         self.assertFalse(bsp.is_bspfile('./test_data/test.lmp'))

@@ -1,13 +1,11 @@
 import io
 import unittest
 
+from quake.tests import basecase
 from quake import wad
 
 
-class TestWadReadWrite(unittest.TestCase):
-    def setUp(self):
-        self.buff = io.BytesIO()
-
+class TestWadReadWrite(basecase.TestCase):
     def test_check_file_type(self):
         self.assertFalse(wad.is_wadfile('./test_data/test.bsp'))
         self.assertFalse(wad.is_wadfile('./test_data/test.lmp'))
@@ -57,6 +55,7 @@ class TestWadReadWrite(unittest.TestCase):
     def test_append(self):
         f = open('./test_data/test.wad', 'rb')
         buff = io.BytesIO(f.read(-1))
+        f.close()
 
         wad_file = wad.WadFile(buff, 'a')
         wad_file.write('./test_data/test.bsp')
