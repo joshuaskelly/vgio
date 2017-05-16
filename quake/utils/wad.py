@@ -161,5 +161,3 @@ with wad.WadFile(args.file, filemode) as wad_file:
                 print('{0}: error: {1}'.format(parser.prog, sys.exc_info()[1]), file=sys.stderr)
 
 sys.exit(0)
-
-

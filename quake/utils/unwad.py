@@ -96,14 +96,14 @@ with wad.WadFile(args.file) as wad_file:
         size = None
 
         # Pictures
-        if item.type == 66:
+        if item.type == wad.TYPE_QPIC:
             with wad_file.open(filename) as lmp_file:
                 lmp = lmp.Lmp.open(lmp_file)
                 size = lmp_file.width, lmp.height
                 data = array.array('B', lmp.pixels)
 
         # Special cases
-        elif item.type == 68:
+        elif item.type == wad.TYPE_MIPTEX:
             # Console characters
             if item.file_size == 128 * 128:
                 size = 128, 128
