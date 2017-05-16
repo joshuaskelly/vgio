@@ -8,13 +8,22 @@ class TestSprReadWrite(unittest.TestCase):
     def setUp(self):
         self.buff = io.BytesIO()
 
+    def test_check_file_type(self):
+        self.assertFalse(spr.is_sprfile('./test_data/test.bsp'))
+        self.assertFalse(spr.is_sprfile('./test_data/test.lmp'))
+        self.assertFalse(spr.is_sprfile('./test_data/test.map'))
+        self.assertFalse(spr.is_sprfile('./test_data/test.mdl'))
+        self.assertFalse(spr.is_sprfile('./test_data/test.pak'))
+        self.assertTrue(spr.is_sprfile('./test_data/test.spr'))
+        self.assertFalse(spr.is_sprfile('./test_data/test.wad'))
+
     def test_sprite_frame(self):
         f0 = spr.SpriteFrame()
         f0.type = spr.SINGLE
         f0.origin = 0, 0
         f0.width = 4
         f0.height = 4
-        f0.pixels = (0,) * 4 * 4
+        f0.pixels = (0,) * f0.width * f0.height
 
         spr.SpriteFrame.write(self.buff, f0)
         self.buff.seek(0)
@@ -76,6 +85,12 @@ class TestSprReadWrite(unittest.TestCase):
         self.assertEqual(s0.number_of_frames, s1.number_of_frames, 'Number of frames should be equal')
         self.assertEqual(s0.beam_length, s1.beam_length, 'Beam lengths should be equal')
         self.assertEqual(s0.sync_type, s1.sync_type, 'Sync types should be equal')
+
+        self.assertFalse(s1.fp.closed, 'File should be open')
+        fp = s1.fp
+        s1.close()
+        self.assertTrue(fp.closed, 'File should be closed')
+        self.assertIsNone(s1.fp, 'File pointer should be cleaned up')
 
     def test_context_manager(self):
         with spr.Spr.open('./test_data/test.spr', 'a') as spr_file:

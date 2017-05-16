@@ -8,6 +8,15 @@ class TestPakReadWrite(unittest.TestCase):
     def setUp(self):
         self.buff = io.BytesIO()
 
+    def test_check_file_type(self):
+        self.assertFalse(pak.is_pakfile('./test_data/test.bsp'))
+        self.assertFalse(pak.is_pakfile('./test_data/test.lmp'))
+        self.assertFalse(pak.is_pakfile('./test_data/test.map'))
+        self.assertFalse(pak.is_pakfile('./test_data/test.mdl'))
+        self.assertTrue(pak.is_pakfile('./test_data/test.pak'))
+        self.assertFalse(pak.is_pakfile('./test_data/test.spr'))
+        self.assertFalse(pak.is_pakfile('./test_data/test.wad'))
+
     def test_read(self):
         pak_file = pak.PakFile('./test_data/test.pak', 'r')
         self.assertFalse(pak_file.fp.closed, 'File should be open')

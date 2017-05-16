@@ -10,6 +10,15 @@ class TestBspReadWrite(unittest.TestCase):
     def setUp(self):
         self.buff = io.BytesIO()
 
+    def test_check_file_type(self):
+        self.assertTrue(bsp.is_bspfile('./test_data/test.bsp'))
+        self.assertFalse(bsp.is_bspfile('./test_data/test.lmp'))
+        self.assertFalse(bsp.is_bspfile('./test_data/test.map'))
+        self.assertFalse(bsp.is_bspfile('./test_data/test.mdl'))
+        self.assertFalse(bsp.is_bspfile('./test_data/test.pak'))
+        self.assertFalse(bsp.is_bspfile('./test_data/test.spr'))
+        self.assertFalse(bsp.is_bspfile('./test_data/test.wad'))
+
     def test_plane(self):
         p0 = bsp.Plane()
         p0.normal = 0.0, 0.0, 1.0
@@ -290,6 +299,12 @@ class TestBspReadWrite(unittest.TestCase):
             self.assertEqual(m0.visleafs, m1.visleafs, 'Visleafs should be equal')
             self.assertEqual(m0.first_face, m1.first_face, 'First faces should be equal')
             self.assertEqual(m0.number_of_faces, m1.number_of_faces, 'Number of faces should be equal')
+
+        self.assertFalse(b1.fp.closed, 'File should be open')
+        fp = b1.fp
+        b1.close()
+        self.assertTrue(fp.closed, 'File should be closed')
+        self.assertIsNone(b1.fp, 'File pointer should be cleaned up')
 
     def test_context_manager(self):
         with bsp.Bsp.open('./test_data/test.bsp', 'a') as bsp_file:

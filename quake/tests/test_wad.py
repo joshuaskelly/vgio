@@ -8,6 +8,15 @@ class TestWadReadWrite(unittest.TestCase):
     def setUp(self):
         self.buff = io.BytesIO()
 
+    def test_check_file_type(self):
+        self.assertFalse(wad.is_wadfile('./test_data/test.bsp'))
+        self.assertFalse(wad.is_wadfile('./test_data/test.lmp'))
+        self.assertFalse(wad.is_wadfile('./test_data/test.map'))
+        self.assertFalse(wad.is_wadfile('./test_data/test.mdl'))
+        self.assertFalse(wad.is_wadfile('./test_data/test.pak'))
+        self.assertFalse(wad.is_wadfile('./test_data/test.spr'))
+        self.assertTrue(wad.is_wadfile('./test_data/test.wad'))
+
     def test_read(self):
         wad_file = wad.WadFile('./test_data/test.wad', 'r')
         self.assertFalse(wad_file.fp.closed, 'File should be open')

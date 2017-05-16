@@ -10,6 +10,15 @@ class TestBspReadWrite(unittest.TestCase):
     def setUp(self):
         self.buff = io.BytesIO()
 
+    def test_check_file_type(self):
+        self.assertFalse(mdl.is_mdlfile('./test_data/test.bsp'))
+        self.assertFalse(mdl.is_mdlfile('./test_data/test.lmp'))
+        self.assertFalse(mdl.is_mdlfile('./test_data/test.map'))
+        self.assertTrue(mdl.is_mdlfile('./test_data/test.mdl'))
+        self.assertFalse(mdl.is_mdlfile('./test_data/test.pak'))
+        self.assertFalse(mdl.is_mdlfile('./test_data/test.spr'))
+        self.assertFalse(mdl.is_mdlfile('./test_data/test.wad'))
+
     def test_skin(self):
         s0 = mdl.Skin()
         s0.type = mdl.SINGLE
@@ -169,6 +178,12 @@ class TestBspReadWrite(unittest.TestCase):
         self.assertEqual(m0.synctype, m1.synctype, 'Sync type should be equal')
         self.assertEqual(m0.flags, m1.flags, 'Flags should be equal')
         self.assertEqual(m0.size, m1.size, 'Size should be equal')
+
+        self.assertFalse(m1.fp.closed, 'File should be open')
+        fp = m1.fp
+        m1.close()
+        self.assertTrue(fp.closed, 'File should be closed')
+        self.assertIsNone(m1.fp, 'File pointer should be cleaned up')
 
     def test_context_manager(self):
         with mdl.Mdl.open('./test_data/test.mdl', 'a') as mdl_file:

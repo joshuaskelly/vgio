@@ -21,6 +21,12 @@ class TestLmpReadWrite(unittest.TestCase):
         self.assertEqual(l0.height, l1.height, 'Image heights should be equal')
         self.assertEqual(l0.pixels, l1.pixels, 'Image pixel data should be equal')
 
+        self.assertFalse(l1.fp.closed, 'File should be open')
+        fp = l1.fp
+        l1.close()
+        self.assertTrue(fp.closed, 'File should be closed')
+        self.assertIsNone(l1.fp, 'File pointer should be cleaned up')
+
     def test_palette(self):
         l0 = lmp.Lmp()
         l0.palette = []
