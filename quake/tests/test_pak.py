@@ -18,6 +18,7 @@ class TestPakReadWrite(basecase.TestCase):
     def test_read(self):
         pak_file = pak.PakFile('./test_data/test.pak', 'r')
         self.assertFalse(pak_file.fp.closed, 'File should be open')
+        self.assertEqual(len(pak_file.infolist()), 2, 'Pak file should contain exactly two entries.')
 
         info = pak_file.getinfo('./test_data/test.mdl')
         self.assertIsNotNone(info, 'FileInfo should not be None')
@@ -56,7 +57,7 @@ class TestPakReadWrite(basecase.TestCase):
         buff = io.BytesIO(f.read(-1))
         f.close()
 
-        pak_file = pak.PakFile('./test_data/test.pak', 'a')
+        pak_file = pak.PakFile(buff, 'a')
         pak_file.write('./test_data/test.bsp')
         pak_file.close()
 
@@ -64,6 +65,7 @@ class TestPakReadWrite(basecase.TestCase):
 
         pak_file = pak.PakFile(buff, 'r')
         self.assertTrue('./test_data/test.bsp' in pak_file.namelist(), 'Appended file should be in Pak file')
+        self.assertEqual(len(pak_file.infolist()), 3, 'Pak file should contain exactly three entries.')
 
         fp = pak_file.fp
         pak_file.close()
