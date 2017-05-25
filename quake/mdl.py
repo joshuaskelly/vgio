@@ -1,7 +1,16 @@
-"""Module for working with id Software style MDL files
+"""This module provides file I/O for Quake MDL model files.
 
-Supported games:
-    - QUAKE
+Example:
+    mdl_file = mdl.Mdl.open('player.mdl')
+
+References:
+    Quake Source
+    - id Software
+    - https://github.com/id-Software/Quake
+
+    Quake Documentation Version 3.4
+    - Olivier Montanuy, et al.
+    - http://www.gamers.org/dEngine/quake/spec/quake-spec34/qkspec_5.htm
 """
 
 import io

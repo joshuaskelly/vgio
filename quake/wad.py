@@ -1,7 +1,16 @@
-"""Module for working with id Software style WAD files
+"""This module provides file I/O for Quake WAD archive files.
 
-Supported Games:
-    - QUAKE
+Example:
+    wad_file = wad.Wad.open('gfx.wad')
+
+References:
+    Quake Source
+    - id Software
+    - https://github.com/id-Software/Quake
+
+    Quake Documentation Version 3.4
+    - Olivier Montanuy, et al.
+    - http://www.gamers.org/dEngine/quake/spec/quake-spec34/qkspec_7.htm
 """
 
 import io

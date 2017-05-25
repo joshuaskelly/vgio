@@ -1,7 +1,16 @@
-"""Module for working with id Software style MAP files
+"""This module provides file I/O for Quake MAP map files.
 
-Supported games:
-    - QUAKE
+Example:
+    map_file = map.Map.open('e1m1.map')
+
+References:
+    Quake Source
+    - id Software
+    - https://github.com/id-Software/Quake
+
+    Quake Documentation Version 3.4
+    - Olivier Montanuy, et al.
+    - http://www.gamers.org/dEngine/quake/spec/quake-spec34/qkspec_2.htm
 """
 
 import re

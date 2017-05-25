@@ -1,7 +1,16 @@
-"""Module for working with id Software style PAK files
+"""This module provides file I/O for Quake PAK archive files.
 
-Supported Games:
-    - QUAKE
+Example:
+    pak_file = pak.Pak.open('PAK0.PAK')
+
+References:
+    Quake Source
+    - id Software
+    - https://github.com/id-Software/Quake
+
+    Quake Documentation Version 3.4
+    - Olivier Montanuy, et al.
+    - http://www.gamers.org/dEngine/quake/spec/quake-spec34/qkspec_3.htm
 """
 
 import io

@@ -1,7 +1,16 @@
-"""Module for working with id Software style LMP files
+"""This module provides file I/O for Quake LMP lump files.
 
-Supported games:
-    - QUAKE
+Example:
+    lmp_file = lmp.Lmp.open('palette.lmp')
+
+References:
+    Quake Source
+    - id Software
+    - https://github.com/id-Software/Quake
+
+    Quake Documentation Version 3.4
+    - Olivier Montanuy, et al.
+    - http://www.gamers.org/dEngine/quake/spec/quake-spec34/qkspec_7.htm#CWADS
 """
 
 import io
