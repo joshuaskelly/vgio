@@ -4,6 +4,11 @@ import unittest
 
 
 class TestCase(unittest.TestCase):
+    """Base class for unit tests
+
+    Provides some common setup and helper functions
+    """
+
     @classmethod
     def setUpClass(cls):
         cls.current_directory = os.getcwd()
@@ -15,3 +20,7 @@ class TestCase(unittest.TestCase):
 
     def setUp(self):
         self.buff = io.BytesIO()
+
+    def clear_buffer(self):
+        self.buff.seek(0)
+        self.buff.truncate()
