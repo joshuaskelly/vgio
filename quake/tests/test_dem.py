@@ -586,7 +586,7 @@ class TestDemReadWrite(basecase.TestCase):
 
         self.assertEqual(u0.bit_mask, u1.bit_mask, 'Bit masks should be equal')
         self.assertEqual(u0.entity, u1.entity, 'Entities should be equal')
-        self.assertEqual(u0.model_index, u1.model, 'Models should be equal')
+        self.assertEqual(u0.model_index, u1.model_index, 'Models should be equal')
         self.assertEqual(u0.frame, u1.frame, 'Frames should be equal')
         self.assertEqual(u0.colormap, u1.colormap, 'Colormaps should be equal')
         self.assertEqual(u0.skin, u1.skin, 'Skins should be equal')

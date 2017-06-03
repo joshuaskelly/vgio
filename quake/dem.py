@@ -1729,7 +1729,7 @@ class UpdateEntity(object):
             _write_byte(file, update_entity.entity)
 
         if update_entity.bit_mask & U_MODEL:
-            _write_byte(file, update_entity.model)
+            _write_byte(file, update_entity.model_index)
 
         if update_entity.bit_mask & U_FRAME:
             _write_byte(file, update_entity.frame)
