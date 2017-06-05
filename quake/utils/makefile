@@ -10,6 +10,9 @@ build:
 install_dependencies:
 	pip install -r requirements.txt
 
+install_dev_dependencies:
+	pip install -r dev-requirements.txt
+
 clean:
 	rm -rf ./dist
 	rm -rf ./build
