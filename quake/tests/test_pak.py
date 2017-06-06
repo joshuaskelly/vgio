@@ -40,10 +40,10 @@ class TestPakReadWrite(basecase.TestCase):
         self.assertFalse(pak_file.fp.closed, 'File should be open')
 
         pak_file.write('./test_data/test.mdl')
-        pak_file.write('./test_data/test.bsp')
+        pak_file.write('./test_data/test.bsp', './progs/test.bsp')
 
         self.assertTrue('./test_data/test.mdl' in pak_file.namelist(), 'Mdl file should be in Pak file')
-        self.assertTrue('./test_data/test.bsp' in pak_file.namelist(), 'Bsp file should be in Pak file')
+        self.assertTrue('./progs/test.bsp' in pak_file.namelist(), 'Bsp file should be in Pak file')
 
         fp = pak_file.fp
         pak_file.close()
@@ -52,27 +52,43 @@ class TestPakReadWrite(basecase.TestCase):
 
         self.buff.close()
 
-    def test_append(self):
-        f = open('./test_data/test.pak', 'rb')
-        buff = io.BytesIO(f.read(-1))
-        f.close()
+    def test_write_string(self):
+        p0 = pak.PakFile(self.buff, 'w')
+        p0.writestr('test.cfg', b'bind ALT +strafe')
+        p0.writestr(pak.PakInfo('docs/readme.txt'), 'test')
+        p0.close()
 
-        pak_file = pak.PakFile(buff, 'a')
+        self.buff.seek(0)
+
+        p1 = pak.PakFile(self.buff, 'r')
+
+        self.assertTrue('test.cfg' in p1.namelist(), 'Cfg file should be in Pak file')
+        self.assertTrue('docs/readme.txt' in p1.namelist(), 'Txt file should be in Pak file')
+        self.assertEqual(p1.read('test.cfg'), b'bind ALT +strafe', 'Cfg file content should not change')
+        self.assertEqual(p1.read('docs/readme.txt').decode('ascii'), 'test', 'Txt file conent should not change')
+
+        self.buff.close()
+
+    def test_append(self):
+        with open('./test_data/test.pak', 'rb') as f:
+            self.buff = io.BytesIO(f.read())
+
+        pak_file = pak.PakFile(self.buff, 'a')
         pak_file.write('./test_data/test.bsp')
         pak_file.close()
 
-        buff.seek(0)
+        self.buff.seek(0)
 
-        pak_file = pak.PakFile(buff, 'r')
+        pak_file = pak.PakFile(self.buff, 'r')
         self.assertTrue('./test_data/test.bsp' in pak_file.namelist(), 'Appended file should be in Pak file')
         self.assertEqual(len(pak_file.infolist()), 3, 'Pak file should contain exactly three entries.')
 
         fp = pak_file.fp
         pak_file.close()
 
-        self.assertFalse(buff.closed, 'Pak file should not close passed file-like object')
+        self.assertFalse(self.buff.closed, 'Pak file should not close passed file-like object')
 
-        buff.close()
+        self.buff.close()
 
     def test_context_manager(self):
         with pak.PakFile('./test_data/test.pak', 'r') as pak_file:

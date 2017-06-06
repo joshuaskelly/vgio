@@ -585,9 +585,19 @@ class PakFile(object):
 
         return target_path
 
-    def write(self, filename):
+    def write(self, filename, arcname=None):
+        """Put the bytes from filename into the pak file under the name
+        arcname.
+
+        Args:
+            filename: The path to the file to read from.
+
+            arcname: Optional. Name of the info object. If omitted the
+                filename will be used.
+        """
+
         if not self.fp:
-            raise ValueError
+            raise RuntimeError('Attempt to read PAK archive that was already closed')
 
         if self._writing:
             raise ValueError
@@ -595,12 +605,57 @@ class PakFile(object):
         info = PakInfo.from_file(filename)
         info.file_offset = self.fp.tell()
 
+        if arcname:
+            info.filename = arcname
+
         if filename[-1] == '/':
             raise RuntimeError('PakFile expects a file, got a directory')
 
         else:
             with open(filename, 'rb') as src, self.open(info, 'w') as dest:
                 shutil.copyfileobj(src, dest, 8*1024)
+
+    def writestr(self, info_or_arcname, data):
+        """Write a file into the pak file. The contents are 'data', which may
+        be either a string or bytes object. If it is string it will be encoded
+        as ASCII.
+
+        Args:
+            info_or_arcname: Either a PakInfo object or a string to be used as
+                the info object's name.
+
+            data: The data to be written. Either a string or bytes object.
+        """
+
+        if not self.fp:
+            raise RuntimeError('Attempt to read PAK archive that was already closed')
+
+        if self._writing:
+            raise ValueError
+
+        if not isinstance(info_or_arcname, PakInfo):
+            info = PakInfo(info_or_arcname)
+
+        else:
+            info = info_or_arcname
+
+        info.file_offset = self.fp.tell()
+        info.file_size = len(data)
+
+        should_close = False
+
+        if isinstance(data, str):
+            data = data.encode('ascii')
+
+        if isinstance(data, bytes):
+            data = io.BytesIO(data)
+            should_close = True
+
+        with self.open(info, 'w') as dest:
+            shutil.copyfileobj(data, dest, 8*1024)
+
+        if should_close:
+            data.close()
 
     def close(self):
         """Close the file."""
