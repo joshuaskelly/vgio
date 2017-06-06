@@ -640,7 +640,9 @@ class PakFile(object):
             info = info_or_arcname
 
         info.file_offset = self.fp.tell()
-        info.file_size = len(data)
+
+        if not info.file_size:
+            info.file_size = len(data)
 
         should_close = False
 
@@ -650,6 +652,9 @@ class PakFile(object):
         if isinstance(data, bytes):
             data = io.BytesIO(data)
             should_close = True
+
+        if not hasattr(data, 'read'):
+            raise BadPakFile('Invalid data type. Pak.writestr expects a string or bytes.')
 
         with self.open(info, 'w') as dest:
             shutil.copyfileobj(data, dest, 8*1024)

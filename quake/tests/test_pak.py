@@ -67,6 +67,7 @@ class TestPakReadWrite(basecase.TestCase):
         self.assertEqual(p1.read('test.cfg'), b'bind ALT +strafe', 'Cfg file content should not change')
         self.assertEqual(p1.read('docs/readme.txt').decode('ascii'), 'test', 'Txt file conent should not change')
 
+        p1.close()
         self.buff.close()
 
     def test_append(self):
