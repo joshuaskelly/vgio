@@ -7,6 +7,7 @@ Supported Games:
 import argparse
 import os
 import sys
+from tabulate import tabulate
 
 from quake import pak
 
@@ -57,8 +58,23 @@ if not pak.is_pakfile(args.file):
 
 if args.list:
     with pak.PakFile(args.file) as pak_file:
-        for filename in sorted(pak_file.namelist()):
-            print(filename)
+        info_list = sorted(pak_file.infolist(), key=lambda i: i.filename)
+
+        headers = ['Length', 'Name']
+        table = [[i.file_size, i.filename] for i in info_list]
+        length = sum([i.file_size for i in info_list])
+        count = len(info_list)
+        table.append([length, '%d file%s' % (count, 's' if count == 1 else '')])
+
+        separator = []
+        for i in range(len(headers)):
+            t = max(len(str(length)), len(headers[i]) + 2)
+            separator.append('-' * t)
+
+        table.insert(-1, separator)
+
+        print('Archive: %s' % os.path.basename(args.file))
+        print(tabulate(table, headers=headers))
 
         sys.exit(0)
 
