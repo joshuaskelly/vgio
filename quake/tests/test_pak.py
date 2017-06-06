@@ -84,5 +84,15 @@ class TestPakReadWrite(basecase.TestCase):
         self.assertTrue(fp.closed, 'File should be closed')
         self.assertIsNone(pak_file.fp, 'File pointer should be cleaned up')
 
+    def test_empty_pak_file(self):
+        with pak.PakFile(self.buff, 'w'):
+            pass
+
+        self.buff.seek(0)
+
+        with pak.PakFile(self.buff, 'r') as pak_file:
+            self.assertEqual(len(pak_file.namelist()), 0, 'Pak file should have not entries')
+            self.assertEqual(pak_file.start_of_directory, 12, 'Directory should start immediately after header')
+
 if __name__ == '__main__':
     unittest.main()

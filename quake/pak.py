@@ -337,7 +337,7 @@ class PakFile(object):
                                    header_size)
 
                 self.fp.write(data)
-                self.start_of_data = self.fp.tell()
+                self.start_of_directory = self.fp.tell()
 
             elif mode == 'a':
                 try:
