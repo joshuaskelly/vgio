@@ -118,7 +118,7 @@ with wad.WadFile(args.file, filemode) as wad_file:
             if not args.quiet:
                 print('  adding: %s' % name)
 
-            wad_file.write_info(info, buff)
+            wad_file.writestr(info, buff)
 
         else:
             try:
@@ -155,7 +155,7 @@ with wad.WadFile(args.file, filemode) as wad_file:
                 if not args.quiet:
                     print('  adding: %s' % name)
 
-                wad_file.write_info(info, buff)
+                wad_file.writestr(info, buff)
 
             except:
                 print('{0}: error: {1}'.format(parser.prog, sys.exc_info()[1]), file=sys.stderr)

@@ -40,16 +40,42 @@ class TestWadReadWrite(basecase.TestCase):
         self.assertFalse(wad_file.fp.closed, 'File should be open')
 
         wad_file.write('./test_data/test.mdl')
-        wad_file.write('./test_data/test.bsp')
+        wad_file.write('./test_data/test.bsp', 'e1m1.bsp')
 
         self.assertTrue('test.mdl' in wad_file.namelist(), 'Mdl file should be in Wad file')
-        self.assertTrue('test.bsp' in wad_file.namelist(), 'Bsp file should be in Wad file')
+        self.assertTrue('e1m1.bsp' in wad_file.namelist(), 'Bsp file should be in Wad file')
 
         fp = wad_file.fp
         wad_file.close()
         self.assertFalse(fp.closed, 'File should be open')
         self.assertIsNone(wad_file.fp, 'File pointer should be cleaned up')
 
+        self.buff.close()
+
+    def test_write_string(self):
+        w0 = wad.WadFile(self.buff, 'w')
+        w0.writestr('test.cfg', b'bind ALT +strafe')
+        w0.writestr(wad.WadInfo('readme.txt'), 'test')
+
+        info = wad.WadInfo('bytes')
+        info.file_size = len(b'bytes')
+        info.type = wad.TYPE_LUMP
+        w0.writestr(info, io.BytesIO(b'bytes'))
+
+        w0.close()
+
+        self.buff.seek(0)
+
+        w1 = wad.WadFile(self.buff, 'r')
+
+        self.assertTrue('test.cfg' in w1.namelist(), 'Cfg file should be in Wad file')
+        self.assertTrue('readme.txt' in w1.namelist(), 'Txt file should be in Wad file')
+        self.assertTrue('bytes' in w1.namelist(), 'Bytes should be in Wad file')
+        self.assertEqual(w1.read('test.cfg'), b'bind ALT +strafe', 'Cfg file content should not change')
+        self.assertEqual(w1.read('readme.txt').decode('ascii'), 'test', 'Txt file content should not change')
+        self.assertEqual(w1.read('bytes'), b'bytes', 'Bytes content should not change')
+
+        w1.close()
         self.buff.close()
 
     def test_append(self):

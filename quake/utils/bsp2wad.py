@@ -90,6 +90,6 @@ with wad.WadFile(args.dest, mode='w') as wad_file:
         if not args.quiet:
             print(' adding: %s' % info.filename)
 
-        wad_file.write_info(info, buff)
+        wad_file.writestr(info, buff)
 
 sys.exit(0)

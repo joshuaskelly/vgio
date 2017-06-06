@@ -624,7 +624,16 @@ class WadFile(object):
 
         return target_path
 
-    def write(self, filename):
+    def write(self, filename, arcname=None):
+        """Puts bytes from filename into the wad file under the name arcname.
+
+        Args:
+            filename:
+
+            arcname: Optional. Name of the info object. If omitted filename
+                will be used.
+        """
+
         if not self.fp:
             raise ValueError('Attempting to write to WAD archive that was'
                              ' already closed')
@@ -635,6 +644,9 @@ class WadFile(object):
         info = WadInfo.from_file(filename)
         info.file_offset = self.fp.tell()
 
+        if arcname:
+            info.filename = arcname
+
         if filename[-1] == '/':
             raise RuntimeError('WadFile expects a file, got a directory')
 
@@ -642,7 +654,7 @@ class WadFile(object):
             with open(filename, 'rb') as src, self.open(info, 'w') as dest:
                 shutil.copyfileobj(src, dest, 8*1024)
 
-    def write_info(self, wad_info, file):
+    def writestr(self, info_or_arcname, data):
         if not self.fp:
             raise ValueError('Attempting to write to WAD archive that was'
                              ' already closed')
@@ -650,10 +662,34 @@ class WadFile(object):
             raise ValueError("Can't write to WAD archive while an open writing"
                              " handle exists")
 
-        wad_info.file_offset = self.fp.tell()
+        if not isinstance(info_or_arcname, WadInfo):
+            info = WadInfo(info_or_arcname)
 
-        with file as src, self.open(wad_info, 'w') as dest:
+        else:
+            info = info_or_arcname
+
+        info.file_offset = self.fp.tell()
+
+        if not info.file_size:
+            info.file_size = len(data)
+
+        should_close = False
+
+        if isinstance(data, str):
+            data = data.encode('ascii')
+
+        if isinstance(data, bytes):
+            data = io.BytesIO(data)
+            should_close = True
+
+        if not hasattr(data, 'read'):
+            raise BadWadFile('Invalid data type. Wad.writestr expects a string or bytes')
+
+        with data as src, self.open(info, 'w') as dest:
             shutil.copyfileobj(src, dest, 8*1024)
+
+        if should_close:
+            data.close()
 
     def close(self):
         """Close the file."""

@@ -98,9 +98,9 @@ with wad.WadFile(args.file) as wad_file:
         # Pictures
         if item.type == wad.TYPE_QPIC:
             with wad_file.open(filename) as lmp_file:
-                lmp = lmp.Lmp.open(lmp_file)
-                size = lmp_file.width, lmp.height
-                data = array.array('B', lmp.pixels)
+                lump = lmp.Lmp.open(lmp_file)
+                size = lump.width, lump.height
+                data = array.array('B', lump.pixels)
 
         # Special cases
         elif item.type == wad.TYPE_MIPTEX:
@@ -108,8 +108,8 @@ with wad.WadFile(args.file) as wad_file:
             if item.file_size == 128 * 128:
                 size = 128, 128
 
-                with wad_file.open(filename) as lmp:
-                    data = lmp.read(item.file_size)
+                with wad_file.open(filename) as lump:
+                    data = lump.read(item.file_size)
 
             else:
                 # Miptextures
