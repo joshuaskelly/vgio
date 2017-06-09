@@ -443,8 +443,10 @@ class PakFile(object):
     def read(self, name):
         """Return file bytes (as a string) for 'name'."""
 
+        info = self.getinfo(name)
+
         with self.open(name, 'r') as fp:
-            return fp.read()
+            return fp.read(info.file_size)
 
     def open(self, name, mode='r'):
         """Return a file-like object for 'name'."""

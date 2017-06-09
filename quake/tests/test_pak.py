@@ -111,5 +111,20 @@ class TestPakReadWrite(basecase.TestCase):
             self.assertEqual(len(pak_file.namelist()), 0, 'Pak file should have not entries')
             self.assertEqual(pak_file.start_of_directory, 12, 'Directory should start immediately after header')
 
+    def test_zero_byte_file(self):
+        with pak.PakFile(self.buff, 'w') as pak_file:
+            pak_file.writestr('zero.txt', b'')
+
+        self.buff.seek(0)
+
+        with pak.PakFile(self.buff) as pak_file:
+            info = pak_file.getinfo('zero.txt')
+            self.assertEqual(info.file_offset, 12, 'File Info offset of test file should be 12')
+            self.assertEqual(info.file_size, 0, 'File Info size of test file should be 0')
+
+            data = pak_file.read('zero.txt')
+            self.assertEqual(len(data), 0, 'Length of bytes read should be zero.')
+
+
 if __name__ == '__main__':
     unittest.main()
