@@ -85,6 +85,7 @@ class TempPakFileHandler(Handler):
             print('{0} created'.format(os.path.relpath(event.src_path, temp_directory)))
 
         rel_path = os.path.relpath(event.src_path, temp_directory)
+
         with open(event.src_path, 'rb') as file:
             files[rel_path] = file.read()
 
@@ -110,7 +111,7 @@ class TempPakFileHandler(Handler):
         rel_src_path = os.path.relpath(event.src_path, temp_directory)
         rel_dest_path = os.path.relpath(event.dest_path, temp_directory)
 
-        files[rel_dest_path] = files.pop(rel_src_path)
+        files[rel_dest_path] = files.pop(rel_src_path, None)
 
 
 class PlatformHelper(object):
@@ -124,10 +125,21 @@ class PlatformHelper(object):
                 subprocess.run('diskutil unmount {0}'.format(td), shell=True)
 
             print('Mounting {0} to {1}'.format(os.path.basename(args.file), td))
-
             subprocess.run("diskutil erasevolume HFS+ '{0}' `hdiutil attach -nomount ram://262144`".format(disk_name), stdout=subprocess.DEVNULL, shell=True)
 
             return td
+
+        elif sys.platform == 'win32':
+            td = tempfile.mkdtemp()
+            drive = 'Q:\\'
+
+            if os.path.exists(drive):
+                subprocess.run('subst /D {0}'.format(drive[:2]), stdout=subprocess.DEVNULL, shell=True)
+
+            print('Mounting {0} to {1}'.format(os.path.basename(args.file), drive))
+            subprocess.run('subst Q: {0}'.format(td), stdout=subprocess.DEVNULL, shell=True)
+
+            return drive
 
         else:
             td = tempfile.mkdtemp()
@@ -139,7 +151,12 @@ class PlatformHelper(object):
     def clean_up_temp_directory(path):
         if sys.platform == 'darwin':
             if os.path.exists(path):
-                subprocess.call('diskutil unmount {0}'.format(path), shell=True)
+                subprocess.run('diskutil unmount {0}'.format(path), stdout=subprocess.DEVNULL, shell=True)
+
+        elif sys.platform == 'win32':
+            if os.path.exists(path):
+                shutil.rmtree(path)
+                subprocess.run('subst /D Q:', stdout=subprocess.DEVNULL, shell=True)
 
         else:
             shutil.rmtree(path)
