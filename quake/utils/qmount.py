@@ -37,7 +37,7 @@ signal.signal(signal.SIGINT, handleSIGINT)
 
 
 class TempPakFileHandler(Handler):
-    """A Watchdog handler that maintains a list of file to be written out to 
+    """A Watchdog handler that maintains a list of files to be written out to 
     the target pak file.
     """
 
@@ -104,7 +104,8 @@ class PlatformHelper(object):
                 uses the SUBST command to make it appear as a drive.
                 
             Linux:
-                TODO: Ram drive most likely.
+                The Linux implementation defaults to using a temporary 
+                directory.
         
         Returns:
             A path to the created volume.
@@ -153,7 +154,7 @@ class PlatformHelper(object):
                 the SUBST command to remove the drive.
                 
             Linux:
-                TODO:
+                Deletes the temporary directory.
         
         Args:
             path: The path to the volume to unmount.
