@@ -36,36 +36,9 @@ def handleSIGINT(signum, frame):
 signal.signal(signal.SIGINT, handleSIGINT)
 
 
-blacklisted_files = '.DS_Store', '.Trashes'
-
-
-def ignore_blacklisted_files(func):
-    def inner(*args, **kwargs):
-        event = args[1]
-        filename = os.path.basename(event.src_path)
-
-        if filename in blacklisted_files:
-            return
-
-        return func(*args, **kwargs)
-
-    return inner
-
-
-def ignore_directories(func):
-    def inner(*args, **kwargs):
-        event = args[1]
-        if os.path.isdir(event.src_path):
-            return None
-
-        return func(*args, **kwargs)
-
-    return inner
-
-
 class TempPakFileHandler(Handler):
-    @ignore_directories
-    @ignore_blacklisted_files
+    """A Watchdog handler that maintains a list of file to be written out to the target pak file."""
+
     def on_modified(self, event):
         context['dirty'] = True
 
@@ -76,8 +49,6 @@ class TempPakFileHandler(Handler):
         with open(event.src_path, 'rb') as file:
             files[rel_path] = file.read()
 
-    @ignore_directories
-    @ignore_blacklisted_files
     def on_created(self, event):
         context['dirty'] = True
 
@@ -89,8 +60,6 @@ class TempPakFileHandler(Handler):
         with open(event.src_path, 'rb') as file:
             files[rel_path] = file.read()
 
-    @ignore_directories
-    @ignore_blacklisted_files
     def on_deleted(self, event):
         context['dirty'] = True
 
@@ -100,8 +69,6 @@ class TempPakFileHandler(Handler):
         rel_path = os.path.relpath(event.src_path, temp_directory)
         files.pop(rel_path, None)
 
-    @ignore_directories
-    @ignore_blacklisted_files
     def on_moved(self, event):
         context['dirty'] = True
 
@@ -115,8 +82,27 @@ class TempPakFileHandler(Handler):
 
 
 class PlatformHelper(object):
+    """A static helper class for performing OS specific tasks."""
+
     @staticmethod
-    def temp_directory():
+    def temp_volume():
+        """Creates a temporary volume and returns the path to it.
+        
+        Notes:
+            Darwin:
+                The MacOS implementation creates a ram drive.
+                
+            Win32:
+                The Windows implementation creates a temporary directory and uses the SUBST command to make it appear
+                as a drive.
+                
+            Linux:
+                TODO: Ram drive most likely.
+        
+        Returns:
+            A path to the created volume.
+        """
+
         if sys.platform == 'darwin':
             disk_name = os.path.basename(args.file).upper()
             td = '/Volumes/{0}'.format(disk_name)
@@ -148,7 +134,23 @@ class PlatformHelper(object):
             return td
 
     @staticmethod
-    def clean_up_temp_directory(path):
+    def unmount_temp_volume(path):
+        """Unmounts the given volume
+        
+        Notes:
+            Darwin:
+                The MacOS implementation unmounts the ram drive.
+                
+            Win32:
+                The Windows implementation deletes the temporary files and uses the SUBST command to remove the drive.
+                
+            Linux:
+                TODO:
+        
+        Args:
+            path: The path to the volume to unmount.
+        """
+
         if sys.platform == 'darwin':
             if os.path.exists(path):
                 subprocess.run('diskutil unmount {0}'.format(path), stdout=subprocess.DEVNULL, shell=True)
@@ -163,6 +165,11 @@ class PlatformHelper(object):
 
     @staticmethod
     def open_file_browser(path):
+        """Opens a file browser at the given path.
+        
+        Args:
+            path: The location to be opened.
+        """
         if sys.platform == 'darwin':
             subprocess.run('open %s' % path, shell=True)
 
@@ -177,6 +184,7 @@ class PlatformHelper(object):
 
 
 class ResolvePathAction(argparse.Action):
+    """Helper class to resolve user paths"""
     def __call__(self, parser, namespace, values, option_string=None):
         if isinstance(values, list):
             fullpath = [os.path.expanduser(v) for v in values]
@@ -216,10 +224,6 @@ parser.add_argument('-v', '--verbose',
 
 args = parser.parse_args()
 
-STDOUT = subprocess.DEVNULL
-
-if args.verbose:
-    STDOUT = subprocess.STDOUT
 
 dir = os.path.dirname(args.file) or '.'
 if not os.path.exists(dir):
@@ -237,7 +241,7 @@ if os.path.exists(args.file):
 else:
     context['dirty'] = True
 
-temp_directory = PlatformHelper.temp_directory()
+temp_directory = PlatformHelper.temp_volume()
 
 # Copy pak file contents into the temporary directory
 for filename in files:
@@ -256,7 +260,7 @@ if args.open_file_browser:
 
 # Start file watching
 observer = Observer()
-handler = TempPakFileHandler(ignore_patterns=['*/.DS_Store'])
+handler = TempPakFileHandler(ignore_patterns=['*/.DS_Store', '*/Thumbs.db'], ignore_directories=True)
 handler.start = temp_directory
 observer.schedule(handler, path=temp_directory, recursive=True)
 
@@ -296,6 +300,6 @@ else:
     print('No changes detected to {0}'.format(os.path.basename(args.file)))
 
 # Clean up temp directory
-PlatformHelper.clean_up_temp_directory(temp_directory)
+PlatformHelper.unmount_temp_volume(temp_directory)
 
 sys.exit(0)
