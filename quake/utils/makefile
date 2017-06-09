@@ -1,4 +1,4 @@
-.PHONY: build clean
+.PHONY: build bsp2wad pak unpak wad unwad qmount install_dependencies install_dev_dependencies clean
 
 build: bsp2wad pak unpak wad unwad qmount
 
