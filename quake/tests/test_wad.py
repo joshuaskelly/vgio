@@ -109,5 +109,29 @@ class TestWadReadWrite(basecase.TestCase):
         self.assertTrue(fp.closed, 'File should be closed')
         self.assertIsNone(wad_file.fp, 'File pointer should be cleaned up')
 
+    def test_empty_pak_file(self):
+        with wad.WadFile(self.buff, 'w'):
+            pass
+
+        self.buff.seek(0)
+
+        with wad.WadFile(self.buff, 'r') as wad_file:
+            self.assertEqual(len(wad_file.namelist()), 0, 'Wad file should have not entries')
+            self.assertEqual(wad_file.start_of_directory, 12, 'Directory should start immediately after header')
+            
+    def test_zero_byte_file(self):
+        with wad.WadFile(self.buff, 'w') as wad_file:
+            wad_file.writestr('zero.txt', b'')
+
+        self.buff.seek(0)
+
+        with wad.WadFile(self.buff) as wad_file:
+            info = wad_file.getinfo('zero.txt')
+            self.assertEqual(info.file_offset, 12, 'File Info offset of test file should be 12')
+            self.assertEqual(info.file_size, 0, 'File Info size of test file should be 0')
+
+            data = wad_file.read('zero.txt')
+            self.assertEqual(len(data), 0, 'Length of bytes read should be zero.')
+
 if __name__ == '__main__':
     unittest.main()

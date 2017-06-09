@@ -125,6 +125,5 @@ class TestPakReadWrite(basecase.TestCase):
             data = pak_file.read('zero.txt')
             self.assertEqual(len(data), 0, 'Length of bytes read should be zero.')
 
-
 if __name__ == '__main__':
     unittest.main()

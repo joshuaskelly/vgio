@@ -365,7 +365,7 @@ class WadFile(object):
                                    header_size)
 
                 self.fp.write(data)
-                self.start_of_data = self.fp.tell()
+                self.start_of_directory = self.fp.tell()
 
             elif mode == 'a':
                 try:
@@ -482,8 +482,10 @@ class WadFile(object):
     def read(self, name):
         """Return file bytes (as a string) for 'name'."""
 
+        info = self.getinfo(name)
+
         with self.open(name, 'r') as fp:
-            return fp.read()
+            return fp.read(info.file_size)
 
     def open(self, name, mode='r'):
         """Return a file-like object for 'name'."""
