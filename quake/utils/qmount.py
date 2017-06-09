@@ -179,13 +179,13 @@ class PlatformHelper(object):
             path: The location to be opened.
         """
         if sys.platform == 'darwin':
-            subprocess.run('open %s' % path, shell=True)
+            subprocess.run('open %s' % path, stdout=subprocess.DEVNULL, shell=True)
 
         elif sys.platform == 'win32':
-            subprocess.run('start %s' % path, shell=True)
+            subprocess.run('start %s' % path, stdout=subprocess.DEVNULL, shell=True)
 
         elif sys.platform == 'linux':
-            subprocess.run('xdg-open %s' % path, shell=True)
+            subprocess.run('xdg-open %s' % path, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True)
 
         else:
             raise
