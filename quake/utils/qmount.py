@@ -37,46 +37,53 @@ signal.signal(signal.SIGINT, handleSIGINT)
 
 
 class TempPakFileHandler(Handler):
-    """A Watchdog handler that maintains a list of file to be written out to the target pak file."""
+    """A Watchdog handler that maintains a list of file to be written out to 
+    the target pak file.
+    """
+
+    def __init__(self, context, working_directory, **kwargs):
+        super().__init__(**kwargs)
+        self.context = context
+        self.working_directory = working_directory
 
     def on_modified(self, event):
-        context['dirty'] = True
+        self.context['dirty'] = True
 
         if args.verbose:
-            print('{0} modified'.format(os.path.relpath(event.src_path, temp_directory)))
+            print('{0} modified'.format(os.path.relpath(event.src_path, self.working_directory)))
 
-        rel_path = os.path.relpath(event.src_path, temp_directory)
+        rel_path = os.path.relpath(event.src_path, self.working_directory)
         with open(event.src_path, 'rb') as file:
             files[rel_path] = file.read()
 
     def on_created(self, event):
-        context['dirty'] = True
+        self.context['dirty'] = True
 
         if args.verbose:
-            print('{0} created'.format(os.path.relpath(event.src_path, temp_directory)))
+            print('{0} created'.format(os.path.relpath(event.src_path, self.working_directory)))
 
-        rel_path = os.path.relpath(event.src_path, temp_directory)
+        rel_path = os.path.relpath(event.src_path, self.working_directory)
 
         with open(event.src_path, 'rb') as file:
             files[rel_path] = file.read()
 
     def on_deleted(self, event):
-        context['dirty'] = True
+        self.context['dirty'] = True
 
         if args.verbose:
-            print('{0} deleted'.format(os.path.relpath(event.src_path, temp_directory)))
+            print('{0} deleted'.format(os.path.relpath(event.src_path, self.working_directory)))
 
-        rel_path = os.path.relpath(event.src_path, temp_directory)
+        rel_path = os.path.relpath(event.src_path, self.working_directory)
         files.pop(rel_path, None)
 
     def on_moved(self, event):
-        context['dirty'] = True
+        self.context['dirty'] = True
 
         if args.verbose:
-            print('{0} moved'.format(os.path.relpath(event.src_path, temp_directory)))
+            print('{0} moved'.format(os.path.relpath(event.src_path, self.working_directory)))
 
-        rel_src_path = os.path.relpath(event.src_path, temp_directory)
-        rel_dest_path = os.path.relpath(event.dest_path, temp_directory)
+        rel_src_path = os.path.relpath(event.src_path, self.working_directory)
+        rel_dest_path = os.path.relpath(event.dest_path, self.working_directory)
 
         files[rel_dest_path] = files.pop(rel_src_path, None)
 
@@ -93,8 +100,8 @@ class PlatformHelper(object):
                 The MacOS implementation creates a ram drive.
                 
             Win32:
-                The Windows implementation creates a temporary directory and uses the SUBST command to make it appear
-                as a drive.
+                The Windows implementation creates a temporary directory and 
+                uses the SUBST command to make it appear as a drive.
                 
             Linux:
                 TODO: Ram drive most likely.
@@ -142,7 +149,8 @@ class PlatformHelper(object):
                 The MacOS implementation unmounts the ram drive.
                 
             Win32:
-                The Windows implementation deletes the temporary files and uses the SUBST command to remove the drive.
+                The Windows implementation deletes the temporary files and uses
+                the SUBST command to remove the drive.
                 
             Linux:
                 TODO:
@@ -203,103 +211,103 @@ class Parser(argparse.ArgumentParser):
         sys.exit(1)
 
 
-parser = Parser(prog='qmount',
-                description='Default action is to mount the given pak file as a logical volume.',
-                epilog='example: qmount TEST.PAK => mounts TEST.PAK as a logical volume.')
+if __name__ == '__main__':
+    parser = Parser(prog='qmount',
+                    description='Default action is to mount the given pak file as a logical volume.',
+                    epilog='example: qmount TEST.PAK => mounts TEST.PAK as a logical volume.')
 
-parser.add_argument('file',
-                    metavar='file.pak',
-                    action=ResolvePathAction,
-                    help='pak file to mount')
+    parser.add_argument('file',
+                        metavar='file.pak',
+                        action=ResolvePathAction,
+                        help='pak file to mount')
 
-parser.add_argument('-f', '--file-browser',
-                    dest='open_file_browser',
-                    action='store_true',
-                    help='opens a file browser once mounted')
+    parser.add_argument('-f', '--file-browser',
+                        dest='open_file_browser',
+                        action='store_true',
+                        help='opens a file browser once mounted')
 
-parser.add_argument('-v', '--verbose',
-                    dest='verbose',
-                    action='store_true',
-                    help='verbose mode')
+    parser.add_argument('-v', '--verbose',
+                        dest='verbose',
+                        action='store_true',
+                        help='verbose mode')
 
-args = parser.parse_args()
+    args = parser.parse_args()
 
-
-dir = os.path.dirname(args.file) or '.'
-if not os.path.exists(dir):
-    os.makedirs(dir)
-
-context = {'dirty': False}
-files = {}
-
-# If the pak file exists put the contents into the file dictionary
-if os.path.exists(args.file):
-    with pak.PakFile(args.file) as pak_file:
-        for info in pak_file.infolist():
-            name = info.filename
-            files[name] = pak_file.read(name)
-else:
-    context['dirty'] = True
-
-temp_directory = PlatformHelper.temp_volume()
-
-# Copy pak file contents into the temporary directory
-for filename in files:
-    abs_path = os.path.join(temp_directory, filename)
-    dir = os.path.dirname(abs_path)
-
+    dir = os.path.dirname(args.file) or '.'
     if not os.path.exists(dir):
         os.makedirs(dir)
 
-    with open(abs_path, 'wb') as out_file:
-        out_file.write(files[filename])
+    context = {'dirty': False}
+    files = {}
 
-# Open a native file browser
-if args.open_file_browser:
-    PlatformHelper.open_file_browser(temp_directory)
+    # If the pak file exists put the contents into the file dictionary
+    if os.path.exists(args.file):
+        with pak.PakFile(args.file) as pak_file:
+            for info in pak_file.infolist():
+                name = info.filename
+                files[name] = pak_file.read(name)
 
-# Start file watching
-observer = Observer()
-handler = TempPakFileHandler(ignore_patterns=['*/.DS_Store', '*/Thumbs.db'], ignore_directories=True)
-handler.start = temp_directory
-observer.schedule(handler, path=temp_directory, recursive=True)
+    else:
+        context['dirty'] = True
 
-print('Press Ctrl+C to save and quit')
+    temp_directory = PlatformHelper.temp_volume()
 
-observer.start()
+    # Copy pak file contents into the temporary directory
+    for filename in files:
+        abs_path = os.path.join(temp_directory, filename)
+        dir = os.path.dirname(abs_path)
 
-# Wait for user to terminate
-try:
-    while True:
-        time.sleep(1)
+        if not os.path.exists(dir):
+            os.makedirs(dir)
 
-        # Detect the deletion of the watched directory.
-        if not os.path.exists(temp_directory):
-            raise KeyboardInterrupt
+        with open(abs_path, 'wb') as out_file:
+            out_file.write(files[filename])
 
-except KeyboardInterrupt:
-    print()
+    # Open a native file browser
+    if args.open_file_browser:
+        PlatformHelper.open_file_browser(temp_directory)
+
+    # Start file watching
+    observer = Observer()
+    handler = TempPakFileHandler(context, temp_directory, ignore_patterns=['*/.DS_Store', '*/Thumbs.db'], ignore_directories=True)
+    observer.schedule(handler, path=temp_directory, recursive=True)
+
+    print('Press Ctrl+C to save and quit')
+
+    observer.start()
+
+    # Wait for user to terminate
     try:
-        observer.stop()
+        while True:
+            time.sleep(1)
 
-    except:
-        """This is a temporary workaround. Watchdog will raise an exception
-        if the watched media is ejected."""
+            # Detect the deletion of the watched directory.
+            if not os.path.exists(temp_directory):
+                raise KeyboardInterrupt
 
-observer.join()
+    except KeyboardInterrupt:
+        print()
+        try:
+            observer.stop()
 
-# Write out updated files
-if context['dirty']:
-    print('Updating changes to {0}'.format(os.path.basename(args.file)))
+        except:
+            """This is a temporary workaround. Watchdog will raise an exception
+            if the watched media is ejected."""
 
-    with pak.PakFile(args.file, 'w') as pak_file:
-        for filename in files:
-            pak_file.writestr(filename, files[filename])
+    observer.join()
 
-else:
-    print('No changes detected to {0}'.format(os.path.basename(args.file)))
+    # Write out updated files
+    if context['dirty']:
+        print('Updating changes to {0}'.format(os.path.basename(args.file)))
 
-# Clean up temp directory
-PlatformHelper.unmount_temp_volume(temp_directory)
+        with pak.PakFile(args.file, 'w') as pak_file:
+            for filename in files:
+                pak_file.writestr(filename, files[filename])
 
-sys.exit(0)
+    else:
+        print('No changes detected to {0}'.format(os.path.basename(args.file)))
+
+    # Clean up temp directory
+    PlatformHelper.unmount_temp_volume(temp_directory)
+
+    sys.exit(0)
