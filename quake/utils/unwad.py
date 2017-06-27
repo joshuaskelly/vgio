@@ -49,16 +49,24 @@ if args.list:
     with wad.WadFile(args.file) as wad_file:
         info_list = sorted(wad_file.infolist(), key=lambda i: i.filename)
 
-        lump_types = {0: 'NONE',
-                      1: 'LABEL',
-                      64: 'LUMP',
-                      65: 'QTEX',
-                      66: 'QPIC',
-                      67: 'SOUND',
-                      68: 'MIPTEX'}
+        lump_types = {
+            0: 'NONE',
+            1: 'LABEL',
+            64: 'LUMP',
+            65: 'QTEX',
+            66: 'QPIC',
+            67: 'SOUND',
+            68: 'MIPTEX'
+        }
+
+        def lump_type(num):
+            if num in lump_types:
+                return lump_types[num]
+
+            return num
 
         headers = ['Length', 'Type', 'Name']
-        table = [[i.file_size, lump_types[i.type], i.filename] for i in info_list]
+        table = [[i.file_size, lump_type(i.type), i.filename] for i in info_list]
         length = sum([i.file_size for i in info_list])
         count = len(info_list)
         table.append([length, '', '%d file%s' % (count, 's' if count > 1 else '')])
