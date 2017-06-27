@@ -1,7 +1,7 @@
 from setuptools import setup
 from quake import __version__
 
-setup(name='quake',
+setup(name='quake-tools',
       version=__version__,
       description='Python API for Quake File Formats',
       url='https://github.com/JoshuaSkelly/game-tools/quake',
