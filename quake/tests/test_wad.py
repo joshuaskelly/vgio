@@ -1,11 +1,11 @@
 import io
 import unittest
 
-from quake.tests import basecase
+from tests.basecase import TestCase
 from quake import wad
 
 
-class TestWadReadWrite(basecase.TestCase):
+class TestWadReadWrite(TestCase):
     def test_check_file_type(self):
         self.assertFalse(wad.is_wadfile('./test_data/test.bsp'))
         self.assertFalse(wad.is_wadfile('./test_data/test.lmp'))

@@ -1,11 +1,11 @@
 import io
 import unittest
 
-from quake.tests import basecase
+from tests.basecase import TestCase
 from quake import pak
 
 
-class TestPakReadWrite(basecase.TestCase):
+class TestPakReadWrite(TestCase):
     def test_check_file_type(self):
         self.assertFalse(pak.is_pakfile('./test_data/test.bsp'))
         self.assertFalse(pak.is_pakfile('./test_data/test.lmp'))

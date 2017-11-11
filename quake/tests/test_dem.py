@@ -1,11 +1,11 @@
 import io
 import unittest
 
-from quake.tests import basecase
+from tests.basecase import TestCase
 from quake import dem
 
 
-class TestDemReadWrite(basecase.TestCase):
+class TestDemReadWrite(TestCase):
     def test_bad_message(self):
         dem.Bad.write(self.buff)
         self.buff.seek(0)
