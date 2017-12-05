@@ -1,10 +1,10 @@
 import unittest
 
-from quake.tests import basecase
+from tests.basecase import TestCase
 from quake import lmp
 
 
-class TestLmpReadWrite(basecase.TestCase):
+class TestLmpReadWrite(TestCase):
     def test_lmp(self):
         l0 = lmp.Lmp.open('./test_data/test.lmp')
         l0.close()

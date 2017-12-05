@@ -1,12 +1,12 @@
 import unittest
 
-from quake.tests import basecase
+from tests.basecase import TestCase
 from quake import mdl
 
 significant_digits = 5
 
 
-class TestBspReadWrite(basecase.TestCase):
+class TestBspReadWrite(TestCase):
     def test_check_file_type(self):
         self.assertFalse(mdl.is_mdlfile('./test_data/test.bsp'))
         self.assertFalse(mdl.is_mdlfile('./test_data/test.lmp'))

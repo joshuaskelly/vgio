@@ -1,10 +1,10 @@
 import unittest
 
-from quake.tests import basecase
+from tests.basecase import TestCase
 from quake import spr
 
 
-class TestSprReadWrite(basecase.TestCase):
+class TestSprReadWrite(TestCase):
     def test_check_file_type(self):
         self.assertFalse(spr.is_sprfile('./test_data/test.bsp'))
         self.assertFalse(spr.is_sprfile('./test_data/test.lmp'))

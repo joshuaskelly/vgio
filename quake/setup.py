@@ -8,4 +8,4 @@ setup(name='quake-tools',
       author='Joshua Skelton',
       author_email='joshua.skelton@gmail.com',
       license='MIT',
-      packages=['.'])
+      packages=['quake'])

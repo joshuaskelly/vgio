@@ -1,11 +1,11 @@
 import re
 import unittest
 
-from quake.tests import basecase
+from tests.basecase import TestCase
 from quake import map
 
 
-class TestMapReadWrite(basecase.TestCase):
+class TestMapReadWrite(TestCase):
     def test_loads(self):
         map_file = open('./test_data/test.map')
         map_text = map_file.read(-1)
