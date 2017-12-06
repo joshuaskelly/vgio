@@ -1,0 +1,18 @@
+{
+	"tilesize": 128,
+    "tilesets": [
+        {
+            "filename": "tileset.png",
+            "tiles": {
+                "0": "./tiles/t1.map",
+                "1": "./tiles/t2.map",
+                "2": "./tiles/t3.map",
+                "3": "./tiles/t4.map",
+                "4": "./tiles/t5.map",
+                "5": "./tiles/t6.map",
+                "6": "./tiles/t7.map",
+                "9": "./tiles/t10.map"
+            }
+        }
+    ]
+}
