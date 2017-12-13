@@ -127,6 +127,22 @@ class TestMapReadWrite(TestCase):
         p1 = m1[0].brushes[0].planes[0].points[0][0]
         self.assertAlmostEqual(p0, p1, significant_digits)
 
+    def test_texture_names_starting_with_numeral(self):
+        map_text = """
+        {
+        {
+        ( 2 0 0 ) ( 2 1 0 ) ( 2 0 1 ) 32_tex 0 0 0 1.0 1.0
+        ( 2 0 0 ) ( 2 1 0 ) ( 2 0 1 ) 32_tex 0 0 0 1.0 1.0
+        ( 2 0 0 ) ( 2 1 0 ) ( 2 0 1 ) 32_tex 0 0 0 1.0 1.0
+        ( 2 0 0 ) ( 2 1 0 ) ( 2 0 1 ) 32_tex 0 0 0 1.0 1.0
+        ( 2 0 0 ) ( 2 1 0 ) ( 2 0 1 ) 32_tex 0 0 0 1.0 1.0
+        }
+        }
+        """
+
+        m0 = map.loads(map_text)
+        self.assertEqual(m0[0].brushes[0].planes[0].texture_name, '32_tex')
+
 
 if __name__ == '__main__':
     unittest.main()

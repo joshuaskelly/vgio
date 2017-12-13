@@ -116,7 +116,7 @@ def loads(s):
     separator_pattern = '\B([{}\(\)])\B'
     comment_pattern = '(\/\/.*)'
     quoted_literal_pattern = '(?:\"(.+?)\")'
-    numeric_literal_pattern = '(-?\d+\.?\d*)'
+    numeric_literal_pattern = '(-?\d+\.?\d*)\\b'
     literal_pattern = '([\S\w\/\.]+)'
     white_space_pattern = '([\s\n])'
     rest_pattern = '(.)'
@@ -363,6 +363,15 @@ def dumps(entities):
 
     result = ''
 
+    def number(value):
+        int_value = int(value)
+        float_value = float(value)
+
+        if int_value == float_value:
+            return int_value
+
+        return float_value
+
     for entity in entities:
         assert(isinstance(entity, Entity))
 
@@ -388,15 +397,15 @@ def dumps(entities):
                 scale = plane.scale
 
                 plane_text = '( {0} {1} {2} ) ( {3} {4} {5} ) ( {6} {7} {8} ) {9} {10} {11} {12} {13} {14}\n'
-                plane_text = plane_text.format(coords[0][0],
-                                               coords[0][1],
-                                               coords[0][2],
-                                               coords[1][0],
-                                               coords[1][1],
-                                               coords[1][2],
-                                               coords[2][0],
-                                               coords[2][1],
-                                               coords[2][2],
+                plane_text = plane_text.format(number(coords[0][0]),
+                                               number(coords[0][1]),
+                                               number(coords[0][2]),
+                                               number(coords[1][0]),
+                                               number(coords[1][1]),
+                                               number(coords[1][2]),
+                                               number(coords[2][0]),
+                                               number(coords[2][1]),
+                                               number(coords[2][2]),
                                                name,
                                                int(offset[0]),
                                                int(offset[1]),
