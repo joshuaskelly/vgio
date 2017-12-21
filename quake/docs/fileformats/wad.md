@@ -9,15 +9,11 @@ The Wad file is an archive used to store resource files for the video game Quake
 |            | [Directory](#directory) |
 
 ## Header
-| Offset | Length | Type     | Description      | Notes           |
-|--------|--------|----------|------------------|-----------------|
-| 0x00   | 4      | char[4]  | Magic Number     | Identifies the WAD format. Should be 'WAD2'|
-| 0x04   | 4      | int      | File Entry Count |                 |
-| 0x08   | 4      | int      | Directory Offset |                 |
-
-
-|               |               |          | Data             |                 |
-|               |               |          | Directory        |                 |
+| Offset | Length | Type     | Description           | Notes                                                   |
+|--------|--------|----------|------------------     |---------------------------------------------------------|
+| 0x00   | 4      | char[4]  | Magic Number          | Identifies the WAD format. Should be 'WAD2'             |
+| 0x04   | 4      | int      | Directory Entry Count | Number of directory entries.                            |
+| 0x08   | 4      | int      | Directory Offset      | Offset of the directory from the start of the wad file. |
 
 ## Directory
 The directory is a sequence of directory entries. The size of the directory is given by ```Number of Entries * 0x20```.
