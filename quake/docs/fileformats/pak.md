@@ -6,12 +6,12 @@
 | 0x04    | 4      | int      | Directory Offset |                 |
 | 0x08    | 4      | int      | Directory Size   |                 |
 |         |        |          | Data             |                 |
-|         |        |          | Directory        |                 |
+|         |        |          | Directory        | A sequence of n [Directory Entries](#directory)                |
 
 ### Directory Entry
 
 | Offset  | Length | Type     | Description       | Notes |
 |---------|--------|----------|-------------------|-------|
 | 0x00    | 56     | string   | Filename          |       |
-| 0x04    | 4      | int      | File Offset       |       |
-| 0x08    | 4      | int      | File Size         |       |
+| 0x36    | 4      | int      | File Offset       |       |
+| 0x3A    | 4      | int      | File Size         |       |
