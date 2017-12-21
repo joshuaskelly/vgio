@@ -24,11 +24,11 @@ The directory is conventionally placed at the end of the pack file, but this is 
 ## Directory Entry
 | Offset        | Length        | Type     | Description       | Notes |
 |-------------- |---------------|----------|-------------------|-------|
-| 0x00          | 4             | int      | File Offset       |       |
-| 0x04          | 4             | int      | Disk Size         |       |
-| 0x08          | 4             | int      | File Size         |       |
+| 0x00          | 4             | int      | File Offset       | Offset of the local file from the start of the pack file. |
+| 0x04          | 4             | int      | Disk Size         | Size of local file.                                       |
+| 0x08          | 4             | int      | File Size         | Uncompressed size of the local file.                      |
 | 0x0C          | 1             | char     | File Type         |       |
-| 0x0D          | 1             | char     | File Compresssion |       |
+| 0x0D          | 1             | char     | File Compression  |       |
 | 0x0E          | 1             | char     | File Padding      |       |
 | 0x0F          | 1             | char     | File Padding      |       |
-| 0x10          | 16            | string   | File Name         |       |
+| 0x10          | 16            | char[16] | File Name         | Name of the file as a null-byte padded string. |
