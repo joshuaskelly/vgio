@@ -16,7 +16,7 @@ The Wad file is an archive used to store resource files for the video game Quake
 | 0x08   | 4      | int      | Directory Offset      | Offset of the directory from the start of the wad file. |
 
 ## Directory
-The directory is a sequence of directory entries. The size of the directory is given by ```Number of Entries * 0x20```.
+The directory is a consecutive sequence of directory entries. The size of the directory is given by ```Number of Entries * 0x20```.
 
 ### Note
 The directory is conventionally placed at the end of the pack file, but this is not a strict requirement.
