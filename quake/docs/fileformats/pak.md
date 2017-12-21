@@ -1,17 +1,29 @@
-## Pak
+# Pak File Format
+The Pak file is an uncompressed archive used to store resource files for the video game Quake.
 
-| Offset  | Length | Type     | Description      | Notes           |
-|---------|--------|----------|------------------|-----------------|
-| 0x00    | 4      | string   | Magic Number     | Should be 'PACK'|
-| 0x04    | 4      | int      | Directory Offset |                 |
-| 0x08    | 4      | int      | Directory Size   |                 |
-|         |        |          | Data             |                 |
-|         |        |          | Directory        | A sequence of n [Directory Entries](#directory)                |
+## Standard Pak File Layout
+| Offset | Name |
+|---|---|
+| 0x00000000 | [Header](#header) |
+| 0x0000000C | <br><br><br> Data <br><br><br><br> |
+|            | [Directory](#directory) |
 
-### Directory Entry
+## Header
+| Offset | Length | Type    | Description |
+|--------|--------|---------|-------------|
+| 0x0000 | 4      | char[4] | Identifies the PACK format. Should be 'PACK' |
+| 0x0004 | 4      | int     | Offset of the directory from start of pack file. |
+| 0x0008 | 4      | int     | Length of the directory. Equal to number of entries * 0x40 |
 
-| Offset  | Length | Type     | Description       | Notes |
-|---------|--------|----------|-------------------|-------|
-| 0x00    | 56     | string   | Filename          |       |
-| 0x36    | 4      | int      | File Offset       |       |
-| 0x3A    | 4      | int      | File Size         |       |
+## Directory
+The directory is a consecutive list of directory entries. The length of this list is given by dirlen / 0x40. The maximum number of entries supported is 2048.
+
+### Note
+The directory is conventionally placed at the end of the pack file, but this is not a strict requirement.
+
+## Directory Entry
+| Offset | Length  | Type     | Description |
+|--------|---------|----------|-------------|
+| 0x0000 | 56      | char[56] | Name of the file as a null-byte padded string. Unix-style with file extension. |
+| 0x0038 | 4       | int      | Offset of the local file from the start of the pack file. |
+| 0x003C | 4       | int      | Length of the local file |
