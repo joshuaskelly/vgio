@@ -13,7 +13,7 @@ The Pak file is an uncompressed archive used to store resource files for the vid
 |--------|--------|---------|------------------|----------------------------------------------------------|
 | 0x0000 | 4      | char[4] | Magic Number     | Identifies PAK format. Should be 'PACK'                  |
 | 0x0004 | 4      | int     | Directory Offset | Offset of the directory from start of pack file.         |
-| 0x0008 | 4      | int     | Directory Size   | Size of the directory. Equal to number of entries * 0x40 |
+| 0x0008 | 4      | int     | Directory Size   | Size of the directory.                                   |
 
 ## Directory
 The directory is a consecutive sequence of directory entries. The number of entries in this sequence is given by ```Size of Directory / 0x40```. The maximum number of entries supported is 2048.
