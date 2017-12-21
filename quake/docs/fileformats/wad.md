@@ -2,7 +2,7 @@
 
 | Offset        | Length        | Type     | Description      | Notes           |
 |---------------|---------------|----------|------------------|-----------------|
-| 0x00          | 4             | int      | Magic Number     | Should be 'WAD2'|
+| 0x00          | 4             | string   | Magic Number     | Should be 'WAD2'|
 | 0x04          | 4             | int      | File Entry Count |                 |
 | 0x08          | 4             | int      | Directory Offset |                 |
 |               |               |          | Data             |                 |
