@@ -59,7 +59,7 @@ def _check_sprfile(fp):
 
 
 def is_sprfile(filename):
-    """Quickly see if a file is a mdl file by checking the magic number.
+    """Quickly see if a file is an spr file by checking the magic number.
 
     The filename argument may be a file for file-like object.
     """
