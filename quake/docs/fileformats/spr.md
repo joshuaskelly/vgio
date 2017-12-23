@@ -30,7 +30,7 @@ The frame data chunk is a consecutive sequence of [Sprite Frames](#sprite-frame)
 | 0x04    | 8     | int[2]   | Origin            |             |
 | 0x0C    | 4     | int      | Width             | The width of the frame.            |
 | 0x10    | 4     | char     | Height            | The height of the frame.            |
-| 0x14    |       |          | Pixel Data        | A sequence of unstructured pixel data.            |
+| 0x14    |       | char[n]  | Pixel Data        | A sequence of unstructured pixel data.            |
 
 ## Sprite Group
 | Offset  | Size  | Type     | Description       | Notes       |
