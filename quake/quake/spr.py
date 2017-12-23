@@ -365,7 +365,7 @@ class Spr(object):
 
     @staticmethod
     def open(file, mode='r'):
-        """Returns an Mdl object
+        """Returns an Spr object
 
         Args:
             file: Either the path to the file, a file-like object, or bytes.
