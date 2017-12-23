@@ -2,11 +2,11 @@
 The Wad file is an archive used to store resource files for the video game Quake.
 
 ## Standard Wad File Layout
-| Offset | Name |
-|---|---|
-| 0x00000000 | [Header](#header) |
-| 0x0000000C | <br><br><br> Data <br><br><br><br> |
-|            | [Directory](#directory) |
+| Offset | Name                               |
+|--------|------------------------------------|
+| 0x00   | [Header](#header)                  |
+| 0x0C   | <br><br><br> Data <br><br><br><br> |
+|        | [Directory](#directory)            |
 
 ## Header
 | Offset | Size | Type     | Description           | Notes                                                   |
