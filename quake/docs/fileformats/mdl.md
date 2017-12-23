@@ -15,15 +15,15 @@ The Spr file contains 3D model data for the video game Quake.
 |--------|------|----------|-----------------------|----------------------------------------------|
 | 0x00   | 4    | char[4]  | Magic Number          | Identifies the Mdl format. Should be 'IDPO'  |
 | 0x04   | 4    | int      | Version Number        | Version of the spr format. Should be 6       |
-| 0x08   | 12   | float[3] | Scale                 |                                              |
+| 0x08   | 12   | float[3] | Scale                 | Scale of the model.                          |
 | 0x14   | 12   | float[3] | Origin                |                                              |
-| 0x20   | 4    | float    | Radius                |                                              |
+| 0x20   | 4    | float    | Radius                | Bounding radius of the model.                |
 | 0x24   | 12   | float[3] | Eye Position          | Offset for eye position.                     |
 | 0x30   | 4    | int      | Skin Count            | The number of Skins or Skin Groups in the Skins chunk.  |
-| 0x34   | 4    | float    | Skin Width            |                                              |
-| 0x38   | 4    | int      | Skin Height           |                                              |
-| 0x3C   | 4    | int      | Vertex Count          |                                              |
-| 0x40   | 4    | int      | Triangle Count        |                                              |
+| 0x34   | 4    | float    | Skin Width            | The width of the skins in pixels.            |
+| 0x38   | 4    | int      | Skin Height           | The height of the skins in pixels.           |
+| 0x3C   | 4    | int      | Vertex Count          | The number of vertexes per frame.            |
+| 0x40   | 4    | int      | Triangle Count        | The number of triangles for the model.       |
 | 0x44   | 4    | int      | Frame Count           |                                              |
 | 0x48   | 4    | int      | Sync Type             |                                              |
 | 0x4C   | 4    | int      | Flags                 |                                              |
