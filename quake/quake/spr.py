@@ -370,7 +370,7 @@ class Spr(object):
         Args:
             file: Either the path to the file, a file-like object, or bytes.
 
-            mode: Currently the only supported mode is 'r'
+            mode: An optional string that indicates which mode to open the file
 
         Returns:
             An Spr object constructed from the information read from the
