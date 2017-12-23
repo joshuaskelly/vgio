@@ -26,7 +26,7 @@ class BadMdlFile(Exception):
 
 
 # The mdl header structure
-header_format = '<4sl10f8lf'
+header_format = '<4si10f8lf'
 header_magic_number = b'IDPO'
 header_version = 6
 header_size = struct.calcsize(header_format)
