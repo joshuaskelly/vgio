@@ -14,7 +14,7 @@ The Spr file contains 3D model data for the video game Quake.
 | Offset | Size | Type     | Description           | Notes                                        |
 |--------|------|----------|-----------------------|----------------------------------------------|
 | 0x00   | 4    | char[4]  | Magic Number          | Identifies the Mdl format. Should be 'IDPO'  |
-| 0x04   | 4    | int      | Version Number        | Version of the spr format. Should be 6       |
+| 0x04   | 4    | int      | Version Number        | Version of the Mdl format. Should be 6       |
 | 0x08   | 12   | float[3] | Scale                 | Scale of the model.                          |
 | 0x14   | 12   | float[3] | Origin                |                                              |
 | 0x20   | 4    | float    | Radius                | Bounding radius of the model.                |
