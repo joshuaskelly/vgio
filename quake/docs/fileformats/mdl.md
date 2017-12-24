@@ -75,7 +75,7 @@ The frames chunk is a consecutive sequence of [Frames](#frame) or [Frame Groups]
 | 0x00    | 4     | int          | Frame Type        | Identifies the frame type. Should be 0 |
 | 0x04    | 16    | TriVertex[3] | Bounding Box Min  |             |
 | 0x14    | 16    | TriVertex[3] | Bounding Box Max  |             |
-| 0x24    | 16    | char[16]     | Frame Name        |             |
+| 0x24    | 16    | char[16]     | Frame Name        | Name of the frame as a null-byte padded string. |
 | 0x34    |       | TriVertex[n] | Frame Vertexes    | Consecutive sequence of n Tri Vertexes where n is the Vertex Count. |
 
 
