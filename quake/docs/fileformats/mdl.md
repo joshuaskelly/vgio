@@ -15,16 +15,16 @@ The Spr file contains 3D model data for the video game Quake.
 |--------|------|----------|-----------------------|----------------------------------------------|
 | 0x00   | 4    | char[4]  | Magic Number          | Identifies the Mdl format. Should be 'IDPO'  |
 | 0x04   | 4    | int      | Version Number        | Version of the Mdl format. Should be 6       |
-| 0x08   | 12   | float[3] | Scale                 | Scale of the model.                          |
-| 0x14   | 12   | float[3] | Origin                |                                              |
-| 0x20   | 4    | float    | Radius                | Bounding radius of the model.                |
+| 0x08   | 12   | float[3] | Scale                 | Scale of model.                              |
+| 0x14   | 12   | float[3] | Origin                | Offset for model origin.                     |
+| 0x20   | 4    | float    | Radius                | Bounding radius of model.                    |
 | 0x24   | 12   | float[3] | Eye Position          | Offset for eye position.                     |
 | 0x30   | 4    | int      | Skin Count            | The number of Skins or Skin Groups in the Skins chunk.  |
 | 0x34   | 4    | float    | Skin Width            | The width of the skins in pixels.            |
 | 0x38   | 4    | int      | Skin Height           | The height of the skins in pixels.           |
 | 0x3C   | 4    | int      | Vertex Count          | The number of vertexes per frame.            |
-| 0x40   | 4    | int      | Triangle Count        | The number of triangles for the model.       |
-| 0x44   | 4    | int      | Frame Count           |                                              |
+| 0x40   | 4    | int      | Triangle Count        | The number of triangles for model.           |
+| 0x44   | 4    | int      | Frame Count           | The number of the Frames or Frame Groups.    |
 | 0x48   | 4    | int      | Sync Type             |                                              |
 | 0x4C   | 4    | int      | Flags                 |                                              |
 | 0x50   | 4    | float    | Size                  | The average size of the triangles.           |
@@ -50,8 +50,8 @@ The skins chunk is a consecutive sequence of [Skins](#skin) or [Skin Groups](#sk
 | Offset  | Size  | Type     | Description       | Notes                                    |
 |---------|-------|----------|-------------------|------------------------------------------|
 | 0x00    | 4     | int      | On Seam           | Indicates if the ST Vertex lies on a skin boundary. 0 indicates not on boundary.|
-| 0x04    | 4     | int      | S Coordinate      |     |
-| 0x08    | 4     | int      | T Coordinate      |     |
+| 0x04    | 4     | int      | S-Coordinate      |     |
+| 0x08    | 4     | int      | T-Coordinate      |     |
 
 ## Triangles
 | Offset  | Size  | Type     | Description       | Notes                                    |
@@ -86,7 +86,7 @@ The frames chunk is a consecutive sequence of [Frames](#frame) or [Frame Groups]
 | 0x04    | 16    | TriVertex[3] | Bounding Box Min  |             |
 | 0x14    | 16    | TriVertex[3] | Bounding Box Max  |             |
 | 0x24    | 4     | int          | Group Frame Count | The number of frames inside this group.            |
-| 0x28    | 4n    | float[n]     | Intervals         |             |
+| 0x28    | 4n    | float[n]     | Intervals         | A consecutive sequence of floats for frame animation timing. |
 |         |       | Frame[n]     | Group Frame Count | A consecutive sequence of Frames where n is the Group Frame Count. |
 
 
