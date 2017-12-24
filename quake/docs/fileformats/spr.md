@@ -11,7 +11,7 @@ The Spr file contains sprite model data for the video game Quake.
 | Offset | Size | Type     | Description           | Notes                                                   |
 |--------|------|----------|-----------------------|---------------------------------------------------------|
 | 0x00   | 4    | char[4]  | Magic Number          | Identifies the Spr format. Should be 'IDSP'             |
-| 0x04   | 4    | int      | Version Number        | Version of the spr format. Should be 1                  |
+| 0x04   | 4    | int      | Version Number        | Version of the Spr format. Should be 1                  |
 | 0x08   | 4    | int      | Type                  | Type of the model. Determines orientation behavior.     |
 | 0x0C   | 4    | float    | Bounding Radius       |                                                         |
 | 0x10   | 4    | int      | Width                 | Width of the model.                                     |
