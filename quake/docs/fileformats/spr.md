@@ -33,9 +33,9 @@ The frame data chunk is a consecutive sequence of [Sprite Frames](#sprite-frame)
 | 0x14    |       | char[n]  | Pixel Data        | A sequence of unstructured pixel data.            |
 
 ## Sprite Group
-| Offset  | Size  | Type     | Description       | Notes       |
-|---------|-------|----------|-------------------|-------------|
-| 0x00    | 4     | int      | Frame Type        | Identifies the frame type. Should not be 0. |
-| 0x04    | 8     | int      | Frame Count       |             |
-| 0x08    | 4n    | float[n] | Intervals         | A sequence of n consecutive floats. |
-|         |       |          | [Sprite Frames](#sprite-frame) | A sequence of n consecutive sprite frames. |
+| Offset  | Size  | Type           | Description       | Notes       |
+|---------|-------|----------------|-------------------|-------------|
+| 0x00    | 4     | int            | Frame Type        | Identifies the frame type. Should not be 0. |
+| 0x04    | 8     | int            | Frame Count       |             |
+| 0x08    | 4n    | float[n]       | Intervals         | A sequence of n consecutive floats. |
+|         |       | SpriteFrame[n] | [Sprite Frames](#sprite-frame) | A sequence of n consecutive sprite frames. |
