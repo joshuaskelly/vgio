@@ -98,7 +98,7 @@ The planes chunk is a consecutive sequence of Planes.
 | 0x00   | 4    | int      | Plane Number      |              |
 | 0x04   | 4    | int      | Children          |              |
 | 0x08   | 12   | int[3]   | Bounding Box Min  |              |
-| 0x14   | 12   | int[3]   | Bounding Box Min  |              |
+| 0x14   | 12   | int[3]   | Bounding Box Max  |              |
 | 0x20   | 2    | short    | First Face        |              |
 | 0x22   | 2    | short    | Face Count        |              |
 
@@ -139,11 +139,38 @@ The planes chunk is a consecutive sequence of Planes.
 
 ## Leafs
 
+## Leaf
+| Offset | Size | Type           | Description        | Notes        |
+|--------|------|----------------|--------------------|--------------|
+| 0x00   | 4    | int            | Contents           |              |
+| 0x04   | 4    | int            | Visibilitiy Offset |              |
+| 0x08   | 6    | short[3]       | Bounding Box Min   |              |
+| 0x0E   | 6    | short[3]       | Bounding Box Max   |              |
+| 0x14   | 2    | unsigned short | First Mark Surface |              |
+| 0x16   | 2    | unsigned short | Mark Surface Count |              |
+| 0x18   | 4    | char[4]        | Bounding Box Min   |              |
+
 ## Mark Surfaces
 
 ## Edges
+
+## Edge
+| Offset | Size | Type           | Description        | Notes        |
+|--------|------|----------------|--------------------|--------------|
+| 0x00   | 2    | unsigned short | Vertex 0           |              |
+| 0x02   | 2    | unsigned short | Vertex 1           |              |
 
 ## Surf Edges
 
 ## Models
 
+## Model
+| Offset | Size | Type           | Description        | Notes        |
+|--------|------|----------------|--------------------|--------------|
+| 0x00   | 12   | float[3]       | Bounding Box Min   |              |
+| 0x0C   | 12   | float[3]       | Bounding Box Max   |              |
+| 0x18   | 12   | float[3]       | Origin             |              |
+| 0x24   | 16   | int[4]         | Head Node          |              |
+| 0x34   | 4    | int            | Vis Leafs          |              |
+| 0x38   | 4    | int            | First Face         |              |
+| 0x3c   | 4    | int            | Face Count         |              |
