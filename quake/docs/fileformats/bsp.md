@@ -1,5 +1,5 @@
 # Bsp File Format
-The Wad file contains level data for the video game Quake.
+The Bsp file contains level data for the video game Quake.
 
 ## Standard Bsp File Layout
 | Offset | Name                            |
