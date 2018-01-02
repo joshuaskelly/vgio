@@ -1,5 +1,5 @@
 # Mdl File Format
-The Spr file contains 3D model data for the video game Quake.
+The Mdl file contains 3D model data for the video game Quake.
 
 ## Standard Mdl File Layout
 | Offset | Name                        |
