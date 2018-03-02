@@ -1,7 +1,7 @@
 """This module provides file I/O for Duke3D GRP archive files.
 
 Example:
-    grp_file = grp.Grp.open('duke3d.grp')
+    grp_file = grp.GrpFile.open('duke3d.grp')
 
 """
 
@@ -17,7 +17,7 @@ except ImportError:
     import dummy_threading as threading
 
 
-__all__ = []
+__all__ = ['BadGrpFile', 'is_grpfile', 'GrpInfo', 'GrpFile']
 
 
 class BadGrpFile(Exception):
