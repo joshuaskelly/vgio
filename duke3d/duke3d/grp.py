@@ -25,7 +25,7 @@ class BadGrpFile(Exception):
 
 
 # The main GRP file structure
-header_struct = '<12si'
+header_struct = '<12sl'
 header_magic_number = b'KenSilverman'
 header_size = struct.calcsize(header_struct)
 
@@ -34,7 +34,7 @@ _HEADER_SIGNATURE = 0
 _HEADER_ENTRY_COUNT = 1
 
 # The local file structure
-local_file_struct = '<12si'
+local_file_struct = '<12sl'
 local_file_size = struct.calcsize(local_file_struct)
 
 # Indices for the local file structure
@@ -271,7 +271,6 @@ class _GrpWriteFile(io.BufferedIOBase):
     def close(self):
         super().close()
 
-        #self._grp_file.start_of_directory = self._fileobj.tell()
         self._grp_file._writing = False
         self._grp_file.file_list.append(self._grp_info)
         self._grp_file.NameToInfo[self._grp_info.filename] = self._grp_info
