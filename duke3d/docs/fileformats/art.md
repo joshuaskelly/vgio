@@ -22,4 +22,4 @@ The Art file is an archive used to store image files for the video game Duke Nuk
 
 ## Data
 
-The data is a sequence of images as unstructured pixel data in row major order.
+The data is a sequence of images as unstructured pixel data in column major order.
