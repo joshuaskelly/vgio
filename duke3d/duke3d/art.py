@@ -161,6 +161,7 @@ class ArtInfo(object):
         self.file_offset = file_offset
         self.file_size = file_size
 
+    # TODO: Remove the below?
     @classmethod
     def from_file(cls, filename):
         st = os.stat(filename)
@@ -503,8 +504,8 @@ class ArtFile(object):
 
         for index, dimensions in enumerate(tile_dimensions):
             local_file_size = local_file_sizes[index]
-            filename = str(self.local_tile_start + index)
-            info = ArtInfo(filename, dimensions, local_file_offset, local_file_size)
+            local_tile_index = self.local_tile_start + index
+            info = ArtInfo(local_tile_index, dimensions, local_file_offset, local_file_size)
             local_file_offset += local_file_size
 
             self.file_list.append(info)
@@ -561,16 +562,16 @@ class ArtFile(object):
 
         return info
 
-    def read(self, name):
-        """Return file bytes (as a string) for 'name'."""
+    def read(self, index):
+        """Return file bytes (as a string) for index."""
 
-        info = self.getinfo(name)
+        info = self.getinfo(index)
 
-        with self.open(name, 'r') as fp:
+        with self.open(index, 'r') as fp:
             return fp.read(info.file_size)
 
-    def open(self, name, mode='r'):
-        """Return a file-like object for 'name'."""
+    def open(self, index, mode='r'):
+        """Return a file-like object for index."""
 
         if mode not in ('r', 'w'):
             raise ValueError("open() requires mode 'r' or 'w'")
@@ -578,14 +579,14 @@ class ArtFile(object):
         if not self.fp:
             raise RuntimeError('Attempt to read ART archive that was already closed')
 
-        if isinstance(name, ArtInfo):
-            info = name
+        if isinstance(index, ArtInfo):
+            info = index
 
         elif mode == 'w':
-            info = ArtInfo.from_file(name)
+            info = ArtInfo.from_file(index)
 
         else:
-            info = self.getinfo(name)
+            info = self.getinfo(index)
 
         if mode == 'w':
             return self._open_to_write(info)

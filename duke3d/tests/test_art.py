@@ -14,13 +14,13 @@ class TestArtReadWrite(TestCase):
         art_file = art.ArtFile('./test_data/test.art', 'r')
         self.assertFalse(art_file.fp.closed, 'File should be open')
 
-        info = art_file.getinfo('0')
+        info = art_file.getinfo(0)
         self.assertIsNotNone(info, 'FileInfo should not be None')
-        self.assertEqual(info.tile_index, '0')
+        self.assertEqual(info.tile_index, 0)
         self.assertEqual(info.file_size, 0, 'FileInfo size of test file should be 0')
         self.assertEqual(info.file_offset, 24, 'FileInfo offset of test file should be 12')
 
-        file = art_file.open('0')
+        file = art_file.open(0)
         self.assertIsNotNone(file, 'File should not be None')
         file.close()
 
@@ -31,12 +31,12 @@ class TestArtReadWrite(TestCase):
 
     def test_write_bytes(self):
         w0 = art.ArtFile(self.buff, 'w')
-        w0.writebytes((2, 2), b'\x00\x00\x00\x00')
-        w0.writebytes(art.ArtInfo(0, (1, 1)), b'\x00')
+        w0.writebytes((2, 2), b'\x01\x02\x03\x04')
+        w0.writebytes(art.ArtInfo(0, (1, 1)), b'\x05')
 
         info = art.ArtInfo(0)
         info.tile_dimensions = 2, 1
-        w0.writebytes(info, io.BytesIO(b'\x00\x00'))
+        w0.writebytes(info, io.BytesIO(b'\x06\x07'))
 
         w0.close()
 
@@ -44,12 +44,12 @@ class TestArtReadWrite(TestCase):
 
         w1 = art.ArtFile(self.buff, 'r')
 
-        self.assertTrue('0' in w1.namelist(), 'Tile 0 should be in Art file')
-        self.assertTrue('1' in w1.namelist(), 'Tile 1 should be in Art file')
-        self.assertTrue('2' in w1.namelist(), 'Tile 2 should be in Art file')
-        self.assertEqual(w1.read('0'), b'\x00\x00\x00\x00', 'Tile 0 content should not change')
-        self.assertEqual(w1.read('1'), b'\x00', 'Tile 1 content should not change')
-        self.assertEqual(w1.read('2'), b'\x00\x00', 'Tile 2 content should not change')
+        self.assertTrue(0 in w1.namelist(), 'Tile 0 should be in Art file')
+        self.assertTrue(1 in w1.namelist(), 'Tile 1 should be in Art file')
+        self.assertTrue(2 in w1.namelist(), 'Tile 2 should be in Art file')
+        self.assertEqual(w1.read(0), b'\x01\x02\x03\x04', 'Tile 0 content should not change')
+        self.assertEqual(w1.read(1), b'\x05', 'Tile 1 content should not change')
+        self.assertEqual(w1.read(2), b'\x06\x07', 'Tile 2 content should not change')
 
         w1.close()
         self.buff.close()
@@ -66,7 +66,7 @@ class TestArtReadWrite(TestCase):
         buff.seek(0)
 
         art_file = art.ArtFile(buff, 'r')
-        self.assertTrue('1' in art_file.namelist(), 'Appended file should be in Art file')
+        self.assertTrue(1 in art_file.namelist(), 'Appended file should be in Art file')
 
         fp = art_file.fp
         art_file.close()
@@ -100,16 +100,15 @@ class TestArtReadWrite(TestCase):
             art_file.writebytes((0, 0), b'')
 
         self.buff.seek(0)
-        art_file
 
         with art.ArtFile(self.buff) as art_file:
-            info = art_file.getinfo('0')
+            info = art_file.getinfo(0)
             self.assertEqual(info.file_offset, 24, 'File Info offset of test file should be 24')
             self.assertEqual(info.file_size, 0, 'File Info size of test file should be 0')
             self.assertEqual(info.tile_dimensions, (0, 0), 'Tile dimensions should be 0x0 pixels')
             self.assertEqual(info.picanim, 0, 'Tile picanim attributes should be 0')
 
-            data = art_file.read('0')
+            data = art_file.read(0)
             self.assertEqual(len(data), 0, 'Length of bytes read should be zero.')
 
 
