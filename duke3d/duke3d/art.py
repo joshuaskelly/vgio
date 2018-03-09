@@ -147,15 +147,17 @@ class ArtInfo(object):
     """Class with attributes describing each entry in the art file archive."""
 
     __slots__ = (
-        'filename',
+        'tile_index',
         'tile_dimensions',
+        'picanim',
         'file_offset',
         'file_size'
     )
 
-    def __init__(self, filename, tile_dimensions=(0, 0), file_offset=0, file_size=0):
-        self.filename = filename
+    def __init__(self, tile_index, tile_dimensions=(0, 0), file_offset=0, file_size=0):
+        self.tile_index = tile_index
         self.tile_dimensions = tile_dimensions
+        self.picanim = 0
         self.file_offset = file_offset
         self.file_size = file_size
 
@@ -173,7 +175,7 @@ class ArtInfo(object):
 
         info = cls(arcname)
         info.file_size = st.st_size
-        info.filename = os.path.basename(arcname)[-12:]
+        info.tile_index = os.path.basename(arcname)[-12:]
 
         return info
 
@@ -230,7 +232,7 @@ class ArtExtFile(io.BufferedIOBase):
         self._size = art_info.file_size
 
         self.mode = mode
-        self.name = art_info.filename
+        self.name = art_info.tile_index
 
     def read(self, n=-1):
         """Read and return up to n bytes.
@@ -349,7 +351,11 @@ class _ArtWriteFile(io.BufferedIOBase):
 
         self._art_file._writing = False
         self._art_file.file_list.append(self._art_info)
-        self._art_file.NameToInfo[self._art_info.filename] = self._art_info
+        self._art_file.NameToInfo[self._art_info.tile_index] = self._art_info
+        self._art_file.tile_x_dimensions.append(self._art_info.tile_dimensions[0])
+        self._art_file.tile_y_dimensions.append(self._art_info.tile_dimensions[1])
+        self._art_file.picanims.append(self._art_info.picanim)
+        self._art_file.local_tile_end += 1
 
 
 class ArtFile(object):
@@ -378,7 +384,7 @@ class ArtFile(object):
         self.version = 7
         self.number_of_tiles = 0
         self.local_tile_start = 0
-        self.local_tile_end = 0
+        self.local_tile_end = -1
         self.tile_x_dimensions = []
         self.tile_y_dimensions = []
         self.picanims = []
@@ -406,6 +412,7 @@ class ArtFile(object):
 
             elif mode == 'w':
                 self._did_modify = True
+
                 data = struct.pack(header_struct,
                                    header_version,
                                    len(self.file_list),
@@ -414,15 +421,16 @@ class ArtFile(object):
 
                 self.fp.write(data)
 
-                data = struct.pack(_calculate_tile_dimensions_format(len(self.file_list)),
-                                   self.tile_x_dimensions + self.tile_y_dimensions)
+                if self.file_list:
+                    data = struct.pack(_calculate_tile_dimensions_format(len(self.file_list)),
+                                       self.tile_x_dimensions + self.tile_y_dimensions)
 
-                self.fp.write(data)
+                    self.fp.write(data)
 
-                data = struct.pack(_calculate_picanim_format(len(self.file_list)),
-                                   self.picanims)
+                    data = struct.pack(_calculate_picanim_format(len(self.file_list)),
+                                       self.picanims)
 
-                self.fp.write(data)
+                    self.fp.write(data)
 
             elif mode == 'a':
                 try:
@@ -468,8 +476,8 @@ class ArtFile(object):
         tile_dimensions_size = struct.calcsize(tile_dimensions_format)
         tile_dimensions = fp.read(tile_dimensions_size)
         tile_dimensions = struct.unpack(tile_dimensions_format, tile_dimensions)
-        self.tile_x_dimensions = tile_dimensions[:self.number_of_tiles]
-        self.tile_y_dimensions = tile_dimensions[self.number_of_tiles:]
+        self.tile_x_dimensions = list(tile_dimensions[:self.number_of_tiles])
+        self.tile_y_dimensions = list(tile_dimensions[self.number_of_tiles:])
         tile_dimensions = tuple(zip(self.tile_x_dimensions, self.tile_y_dimensions))
 
         if self.number_of_tiles != len(tile_dimensions):
@@ -479,7 +487,7 @@ class ArtFile(object):
         picanims_format = _calculate_picanim_format(self.number_of_tiles)
         picanims_size = struct.calcsize(picanims_format)
         picanims = fp.read(picanims_size)
-        picanims = struct.unpack(picanims_format, picanims)
+        picanims = list(struct.unpack(picanims_format, picanims))
         self.picanims = picanims
 
         self.start_of_data = fp.tell()
@@ -500,7 +508,7 @@ class ArtFile(object):
             local_file_offset += local_file_size
 
             self.file_list.append(info)
-            self.NameToInfo[info.filename] = info
+            self.NameToInfo[info.tile_index] = info
 
         if mode == 'a':
             self.data_buffer = io.BytesIO(self.fp.read())
@@ -521,21 +529,21 @@ class ArtFile(object):
         # Write tile dimensions
         tile_dimensions_format = _calculate_tile_dimensions_format(count)
         tile_dimensions_data = struct.pack(tile_dimensions_format,
-                                           self.tile_x_dimensions + self.tile_y_dimensions)
+                                           *(self.tile_x_dimensions + self.tile_y_dimensions))
 
         self.fp.write(tile_dimensions_data)
 
         # Write picanim data
         picanims_format = _calculate_picanim_format(count)
         picanims_data = struct.pack(picanims_format,
-                                    self.picanims)
+                                    *self.picanims)
 
         self.fp.write(picanims_data)
 
     def namelist(self):
         """Return a list of file names in the art file."""
 
-        return [data.filename for data in self.file_list]
+        return [data.tile_index for data in self.file_list]
 
     def infolist(self):
         """Return a list of ArtInfo instances for all of the files in the
@@ -700,16 +708,15 @@ class ArtFile(object):
 
         return target_path
 
-    def write(self, filename, arcname=None):
-        """Puts bytes from filename into the art file under the name arcname.
+    def writebytes(self, info_or_dimensions, data):
+        """Puts bytes from data into the art file.
 
         Args:
-            filename:
+            info_or_dimensions: Either an ArtInfo object or Tile dimensions as
+                a two-tuple.
 
-            arcname: Optional. Name of the info object. If omitted filename
-                will be used.
+            data: Pixel data as unstructured bytes in column major order.
         """
-
         if not self.fp:
             raise ValueError('Attempting to write to ART archive that was'
                              ' already closed')
@@ -717,37 +724,23 @@ class ArtFile(object):
             raise ValueError("Can't write to ART archive while an open writing"
                              " handle exists")
 
-        info = ArtInfo.from_file(filename)
-        info.file_offset = self.fp.tell()
+        tile_index = self.local_tile_start + len(self.file_list)
 
-        if arcname:
-            info.filename = arcname
-
-        if filename[-1] == '/':
-            raise RuntimeError('ArtFile expects a file, got a directory')
+        if not isinstance(info_or_dimensions, ArtInfo):
+            info = ArtInfo(tile_index, tile_dimensions=info_or_dimensions)
 
         else:
-            with open(filename, 'rb') as src, self.open(info, 'w') as dest:
-                shutil.copyfileobj(src, dest, 8*1024)
-
-    def writestr(self, info_or_arcname, data):
-        if not self.fp:
-            raise ValueError('Attempting to write to ART archive that was'
-                             ' already closed')
-        if self._writing:
-            raise ValueError("Can't write to ART archive while an open writing"
-                             " handle exists")
-
-        if not isinstance(info_or_arcname, ArtInfo):
-            info = ArtInfo(info_or_arcname)
-
-        else:
-            info = info_or_arcname
+            info = info_or_dimensions
+            info.tile_index = tile_index
 
         info.file_offset = self.fp.tell()
 
         if not info.file_size:
-            info.file_size = len(data)
+            if isinstance(data, io.BytesIO):
+                info.file_size = data.getbuffer().nbytes
+
+            else:
+                info.file_size = len(data)
 
         should_close = False
 
@@ -759,7 +752,7 @@ class ArtFile(object):
             should_close = True
 
         if not hasattr(data, 'read'):
-            raise BadArtFile('Invalid data type. Art.writestr expects a string or bytes')
+            raise BadArtFile('Invalid data type. Art.writebytes expects a string or bytes')
 
         with data as src, self.open(info, 'w') as dest:
             shutil.copyfileobj(src, dest, 8*1024)
@@ -779,7 +772,7 @@ class ArtFile(object):
                              "before closing the art.")
 
         try:
-            if self.mode in ('w', 'x', 'a') and self._did_modify and hasattr(self, 'start_of_directory'):
+            if self.mode in ('w', 'x', 'a') and self._did_modify:
                 with self._lock:
                     self._write_directory()
 

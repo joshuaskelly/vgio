@@ -81,7 +81,7 @@ with art.ArtFile(args.file) as art_file:
         palette += p
 
     for item in art_file.infolist():
-        filename = item.filename
+        filename = item.tile_index
         size = item.tile_dimensions
         width, height = size
         fullpath = os.path.join(args.dest, filename)
