@@ -161,25 +161,6 @@ class ArtInfo(object):
         self.file_offset = file_offset
         self.file_size = file_size
 
-    # TODO: Remove the below?
-    @classmethod
-    def from_file(cls, filename):
-        st = os.stat(filename)
-        isdir = stat.S_ISDIR(st.st_mode)
-        arcname = os.path.normpath(os.path.splitdrive(filename)[1])[-12:]
-
-        while arcname[0] in (os.sep, os.altsep):
-            arcname = arcname[1:]
-
-        if isdir:
-            raise RuntimeError('ArtFile expects a file, got a directory')
-
-        info = cls(arcname)
-        info.file_size = st.st_size
-        info.tile_index = os.path.basename(arcname)[-12:]
-
-        return info
-
 
 class _SharedFile:
     def __init__(self, file, position, size, close, lock):
