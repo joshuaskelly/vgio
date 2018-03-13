@@ -152,6 +152,10 @@ class Sector(object):
 
         floor_z: The z-coordinate of the floor at the first point of sector.
 
+        ceiling_stat: A bitmasked field of properties.
+
+        floor_stat: A bitmasked field of properties.
+
         ceiling_picnum: Texture index into Art file
 
         ceiling_heinum: Slope value. 0 is parallel to the floor, 4096 is 45 degrees.
