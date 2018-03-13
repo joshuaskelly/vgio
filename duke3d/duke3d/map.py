@@ -33,7 +33,7 @@ _HEADER_START_ANGLE = 4
 _HEADER_START_SECTOR = 5
 
 # Sector structure
-sector_format = '<2h2l4hb3c2hb5c3h'
+sector_format = '<2h2l4h4b2h6b3h'
 sector_size = struct.calcsize(sector_format)
 
 # Indices of Sector structure
@@ -62,7 +62,7 @@ _SECTOR_HITAG = 21
 _SECTOR_EXTRA = 22
 
 # Wall structure
-wall_format = '<2l6hb5c3h'
+wall_format = '<2l6hb5b3h'
 wall_size = struct.calcsize(wall_format)
 
 _WALL_X = 0
@@ -84,31 +84,32 @@ _WALL_HITAG = 15
 _WALL_EXTRA = 16
 
 # Sprite structure
-sprite_format = '<3l2h2b3h2B2b'
+sprite_format = '<3l2hb3b2B2b10h'
 sprite_size = struct.calcsize(sprite_format)
 
 _SPRITE_X = 0
 _SPRITE_Y = 1
 _SPRITE_Z = 2
 _SPRITE_CSTAT = 3
-_SPRITE_SHADE = 4
-_SPRITE_PALETTE = 5
-_SPRITE_CLIP_DISTANCE = 6
-_SPRITE_FILLER = 7
-_SPRITE_X_REPEAT = 8
-_SPRITE_Y_REPEAT = 9
-_SPRITE_X_OFFSET = 10
-_SPRITE_Y_OFFSET = 11
-_SPRITE_SECTOR_NUMBER = 12
-_SPRITE_STAT_NUMBER = 13
-_SPRITE_ANGLE = 14
-_SPRITE_OWNER = 15
-_SPRITE_X_VELOCITY = 16
-_SPRITE_Y_VELOCITY = 17
-_SPRITE_Z_VELOCITY = 18
-_SPRITE_LOTAG = 19
-_SPRITE_HITAG = 20
-_SPRITE_EXTRA = 21
+_SPRITE_PICNUM = 4
+_SPRITE_SHADE = 5
+_SPRITE_PALETTE = 6
+_SPRITE_CLIP_DISTANCE = 7
+_SPRITE_FILLER = 8
+_SPRITE_X_REPEAT = 9
+_SPRITE_Y_REPEAT = 10
+_SPRITE_X_OFFSET = 11
+_SPRITE_Y_OFFSET = 12
+_SPRITE_SECTOR_NUMBER = 13
+_SPRITE_STAT_NUMBER = 14
+_SPRITE_ANGLE = 15
+_SPRITE_OWNER = 16
+_SPRITE_X_VELOCITY = 17
+_SPRITE_Y_VELOCITY = 18
+_SPRITE_Z_VELOCITY = 19
+_SPRITE_LOTAG = 20
+_SPRITE_HITAG = 21
+_SPRITE_EXTRA = 22
 
 
 def _check_mapfile(fp):
@@ -240,6 +241,8 @@ class Sector(object):
                                   sector.wall_number,
                                   sector.ceiling_z,
                                   sector.floor_z,
+                                  sector.ceiling_stat,
+                                  sector.floor_stat,
                                   sector.ceiling_picnum,
                                   sector.ceiling_heinum,
                                   sector.ceiling_shade,
@@ -473,6 +476,7 @@ class Sprite(object):
         'y',
         'z',
         'cstat',
+        'picnum',
         'shade',
         'palette',
         'clip_distance',
@@ -497,6 +501,7 @@ class Sprite(object):
         self.y = None
         self.z = None
         self.cstat = None
+        self.picnum = None
         self.shade = None
         self.palette = None
         self.clip_distance = None
@@ -522,6 +527,7 @@ class Sprite(object):
                                   sprite.y,
                                   sprite.z,
                                   sprite.cstat,
+                                  sprite.picnum,
                                   sprite.shade,
                                   sprite.palette,
                                   sprite.clip_distance,
@@ -552,6 +558,7 @@ class Sprite(object):
         sprite.y = sprite_struct[_SPRITE_Y]
         sprite.z = sprite_struct[_SPRITE_Z]
         sprite.cstat = sprite_struct[_SPRITE_CSTAT]
+        sprite.picnum = sprite_struct[_SPRITE_PICNUM]
         sprite.shade = sprite_struct[_SPRITE_SHADE]
         sprite.palette = sprite_struct[_SPRITE_PALETTE]
         sprite.clip_distance = sprite_struct[_SPRITE_CLIP_DISTANCE]
@@ -702,7 +709,7 @@ class Map(object):
         number_of_sprites = struct.unpack('<h', file.read(2))[0]
         for _ in range(number_of_sprites):
             sprite = Sprite.read(file)
-            map.walls.append(sprite)
+            map.sprites.append(sprite)
 
         return map
 
