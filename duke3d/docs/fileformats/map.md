@@ -75,3 +75,34 @@ The walls chunk is a sequence of consecutive [Walls](#wall). The first two bytes
 | 0x1A   | 2    | short    | Lotag                 | Game specific data.                                |
 | 0x1C   | 2    | short    | Hitag                 | Game specific data.                                |
 | 0x1E   | 2    | short    | Extra                 | Game specific data.                                |
+
+
+## Sprites
+The sprites chunk is a sequence of consecutive [Sprites](#sprite). The first two bytes give the number of following sprites.
+
+### Sprite
+| Offset | Size | Type     | Description           | Notes                                              |
+|--------|------|----------|-----------------------|----------------------------------------------------|
+| 0x00   | 4    | int      | X                     | The x-coordinate of the sprite.                    |
+| 0x04   | 4    | int      | Y                     | The y-coordinate of the sprite.                    |
+| 0x08   | 4    | int      | Z                     | The z-coordinate of the sprite.                    |
+| 0x0C   | 2    | short    | Cstat                 | A bitmasked field of attributes.                   |
+| 0x0E   | 2    | short    | Picnum                | Texture index into the Art file.                   |
+| 0x10   | 1    | char     | Shade                 | Shade offset of sprite.                            |
+| 0x11   | 1    | char     | Palette               | Palette lookup number. 0 is the standard palette.  |
+| 0x12   | 1    | char     | Clip Distance         | Size of the movement clipping square.              |
+| 0x13   | 1    | char     | Filler                | Padding byte.                                      |
+| 0x14   | 1    | char     | X Repeat              | Used to stretch texture.                           |
+| 0x15   | 1    | char     | Y Repeat              | Used to stretch texture.                           |
+| 0x16   | 1    | char     | X Offset              | Used to center texture.                            |
+| 0x17   | 1    | char     | Y Offset              | Used to center texture.                            |
+| 0x18   | 2    | short    | Sector Number         | Current sector number.                             |
+| 0x1A   | 2    | short    | Status Number         | Current status of sprite.                          |
+| 0x1C   | 2    | short    | Angle                 | Angle the sprite is facing.                        |
+| 0x1E   | 2    | short    | Owner                 | Game specific data.                                |
+| 0x20   | 2    | short    | X Velocity            | Game specific data.                                |
+| 0x22   | 2    | short    | Y Velocity            | Game specific data.                                |
+| 0x24   | 2    | short    | Z Velocity            | Game specific data.                                |
+| 0x26   | 2    | short    | Lotag                 | Game specific data.                                |
+| 0x28   | 2    | short    | Hitag                 | Game specific data.                                |
+| 0x2A   | 2    | short    | Extra                 | Game specific data.                                |
