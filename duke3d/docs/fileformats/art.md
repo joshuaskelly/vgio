@@ -2,10 +2,10 @@
 The Art file is an archive used to store image files for the video game Duke Nukem 3D.
 
 ## Art Structure
-| Offset | Size | Type     | Description           | Notes            |
-|--------|------|----------|-----------------------|------------------|
-| 0x00   |      | Header   | Header                |                  |
-|        |      | bytes    | Data                  | The data is a sequence of images as unstructured pixel data in column major order. |
+| Offset | Size | Type              | Description | Notes            |
+|--------|------|-------------------|-------------|------------------|
+| 0x00   |      | [Header](#header) | Header      |                  |
+|        |      | bytes             | Data        | The data is a sequence of images as unstructured pixel data in column major order. |
 
 
 ## Header
