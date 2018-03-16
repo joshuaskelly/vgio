@@ -1,22 +1,24 @@
 # Map File Format
 The Map file contains level data for the video game Duke Nukem 3D.
 
-## Standard Bsp File Layout
-| Offset | Name                            |
-|--------|---------------------------------|
-| 0x00   | [Header](#header)               |
-|        | [Sectors](#sectors)             |
-|        | [Walls](#walls)                 |
-|        | [Sprites](#sprites)             |
-
+## Standard Map Structure
+| Offset | Size | Type                  | Description           | Notes   |
+|--------|------|-----------------------|-----------------------|---------|
+| 0x00   | 14   | [Header](#header)     | Header                |         |
+| 0x14   | 2    | short                 | Sector Count          |         |
+| 0x16   | 40n  | [Sector[n]](#sectors) | Sector Chunk          |         |
+|        | 2    | short                 | Wall Count            |         |
+|        | 32n  | [Wall[n]](#walls)     | Wall Chunk            |         |
+|        | 2    | short                 | Sprite Count          |         |
+|        | 44n  | [Sprite[n]](#sprites) | Sprite Chunk          |         |
 
 ## Header
 | Offset | Size | Type     | Description           | Notes                                     |
 |--------|------|----------|-----------------------|-------------------------------------------|
 | 0x00   | 4    | int      | Version Number        | Version of the Map format. Should be 7    |
 | 0x04   | 4    | int      | Position X            | Player starting position x-coordinate.    |
-| 0x08   | 4    | int      | Position Y            | Player starting position x-coordinate.    |
-| 0x0C   | 4    | int      | Position Z            | Player starting position x-coordinate.    |
+| 0x08   | 4    | int      | Position Y            | Player starting position y-coordinate.    |
+| 0x0C   | 4    | int      | Position Z            | Player starting position z-coordinate.    |
 | 0x10   | 2    | short    | Angle                 | Player staring angle.                     |
 | 0x12   | 2    | short    | Current Sector Number | Staring sector number.                    |
 
