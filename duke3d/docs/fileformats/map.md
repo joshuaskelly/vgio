@@ -1,7 +1,7 @@
 # Map File Format
 The Map file contains level data for the video game Duke Nukem 3D.
 
-## Standard Map Structure
+## Map Structure
 | Offset | Size | Type                  | Description           | Notes   |
 |--------|------|-----------------------|-----------------------|---------|
 | 0x00   | 14   | [Header](#header)     | Header                |         |
