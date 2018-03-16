@@ -6,11 +6,11 @@ The Map file contains level data for the video game Duke Nukem 3D.
 |--------|------|-----------------------|-----------------------|---------|
 | 0x00   | 14   | [Header](#header)     | Header                |         |
 | 0x14   | 2    | short                 | Sector Count          |         |
-| 0x16   | 40n  | [Sector[n]](#sectors) | Sector Chunk          |         |
+| 0x16   | 40n  | [Sector[n]](#sectors) | Sectors               |         |
 |        | 2    | short                 | Wall Count            |         |
-|        | 32n  | [Wall[n]](#walls)     | Wall Chunk            |         |
+|        | 32n  | [Wall[n]](#walls)     | Walls                 |         |
 |        | 2    | short                 | Sprite Count          |         |
-|        | 44n  | [Sprite[n]](#sprites) | Sprite Chunk          |         |
+|        | 44n  | [Sprite[n]](#sprites) | Sprites               |         |
 
 ## Header
 | Offset | Size | Type     | Description           | Notes                                     |
