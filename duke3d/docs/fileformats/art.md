@@ -5,7 +5,7 @@ The Art file is an archive used to store image files for the video game Duke Nuk
 | Offset | Size | Type     | Description           | Notes            |
 |--------|------|----------|-----------------------|------------------|
 | 0x00   |      | Header   | Header                |                  |
-| 0x00   |      | bytes    | Data                  | The data is a sequence of images as unstructured pixel data in column major order. |
+|        |      | bytes    | Data                  | The data is a sequence of images as unstructured pixel data in column major order. |
 
 
 ## Header
