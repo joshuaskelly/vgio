@@ -24,7 +24,7 @@ The Map file contains level data for the video game Duke Nukem 3D.
 
 
 ## Sectors
-The sectors chunk is a sequence of consecutive [Sectors](#sector). The first two bytes give the number of following sectors.
+The sectors chunk is a sequence of consecutive [Sectors](#sector).
 
 ### Sector
 | Offset | Size | Type     | Description           | Notes                                                   |
@@ -55,7 +55,7 @@ The sectors chunk is a sequence of consecutive [Sectors](#sector). The first two
 
 
 ## Walls
-The walls chunk is a sequence of consecutive [Walls](#wall). The first two bytes give the number of following walls.
+The walls chunk is a sequence of consecutive [Walls](#wall).
 
 ### Wall
 | Offset | Size | Type     | Description           | Notes                                              |
@@ -80,7 +80,7 @@ The walls chunk is a sequence of consecutive [Walls](#wall). The first two bytes
 
 
 ## Sprites
-The sprites chunk is a sequence of consecutive [Sprites](#sprite). The first two bytes give the number of following sprites.
+The sprites chunk is a sequence of consecutive [Sprites](#sprite).
 
 ### Sprite
 | Offset | Size | Type     | Description           | Notes                                              |
