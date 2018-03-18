@@ -1,4 +1,4 @@
-"""This module provides file I/O for Duke3D Map archive files.
+"""This module provides file I/O for Duke3D Map files.
 
 Example:
     map_file = map.Map.open('e1l1.map')

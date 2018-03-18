@@ -33,20 +33,20 @@ class Parser(argparse.ArgumentParser):
 
 
 parser = Parser(prog='art',
-                description='Default action is to add or replace art files '
-                            'entries from list.\nIf list is omitted, art will '
+                description='Default action is to add or replace tiles into '
+                            'art files entries from list.\nIf list is omitted, art will '
                             'use stdin.',
-                epilog='example: art {0} {1} => adds {1} to {0}'.format('tex.art', 'image.png'))
+                epilog='example: art {0} {1} => appends {1} to {0}'.format('tex.art', 'image.png'))
 
 parser.add_argument('file',
                     metavar='file.art',
                     action=ResolvePathAction,
-                    help='art file to ')
+                    help='art file to add tiles to')
 
 parser.add_argument('list',
                     nargs='*',
                     action=ResolvePathAction,
-                    )#default=[t.strip('\n') for t in sys.stdin] if not sys.stdin.isatty() else None)
+                    default=[t.strip('\n') for t in sys.stdin] if not sys.stdin.isatty() else None)
 
 parser.add_argument('-q',
                     dest='quiet',
