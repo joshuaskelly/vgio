@@ -1,7 +1,7 @@
 # Dmo File Format
 The Dmo file contains demo data for the video game Duke Nukem 3D.
 
-## Map Structure
+## Dmo Structure
 | Offset | Size | Type              | Description | Notes                                 |
 |--------|------|-------------------|-------------|---------------------------------------|
 | 0x00   |      | [Header](#header) | Header      |                                       |
@@ -26,7 +26,9 @@ The Dmo file contains demo data for the video game Duke Nukem 3D.
 | 0x01E  | 512  | char[16][32] | Player Names      | A sequence of 16 player names as length 32 null-byte padded strings. |
 | 0x21E  | 4    | int          | Dummy             |                                                                      |
 | 0x222  | 128  | char[128]    | Map Filename      |                                                                      |
-| 0x2A2  | 4[n] | int[n]       | Player Aim Mode   |                                                                      |
+| 0x2A2  | n    | char[n]      | Player Aim Mode   |                                                                      |
+| 0x2A3  | 2    | short        | leng              | Length of compressed data?                                                             |
+
 
 ## Data
 | Offset | Size | Type     | Description    | Notes                                     |
