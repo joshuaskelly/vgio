@@ -26,9 +26,27 @@ header_size = struct.calcsize(header_format)
 def compress(data):
     return b''
 
+class ctype_pointer(object):
+    def __init__(self, format, buff):
+        self.format = format
+        self.buff = buff
+        self._size = struct.calcsize(self.format)
 
-def decompress(lzwinbuf):
-    strtot = 0
+    def __getitem__(self, item):
+        index = item * self._size
+        raw = self.buff[index:index+self._size]
+
+        if len(raw) != self._size:
+            # TODO: Fix this? Does vanilla Duke read outside the bounds of the buffer?
+            diff = self._size - len(raw)
+            pad = b'0' * diff
+            raw += pad
+
+        return struct.unpack(self.format, raw)[0]
+
+
+def uncompress(lzwinbuf):
+    strtot = struct.unpack('<h', lzwinbuf[2:4])[0]
     currstr = 256
     numbits = 8
     oneupnumbits = 1 << 8
@@ -37,21 +55,23 @@ def decompress(lzwinbuf):
     bitcnt = 4 << 3
     outbytecnt = 0
     longptr = None
-    shortptr = None
+    shortptr = ctype_pointer('<h', lzwinbuf)
+    strtot = shortptr[1]
+    uncompleng = shortptr[0]
 
     lzwbuf1 = {}
     lzwbuf2 = {}
     lzwbuf3 = {}
 
-    lzwoutbuff = {}
+    lzwoutbuff = [0 for _ in range(uncompleng)]
 
     for i in range(256):
         lzwbuf2[i] = i
         lzwbuf3[i] = i
 
     while currstr < strtot:
-        longptr = lzwinbuf[bitcnt >> 3]
-        dat = longptr >> (bitcnt & 7) & (oneupnumbits - 1)
+        longptr = ctype_pointer('<l', lzwinbuf[bitcnt >> 3:])
+        dat = longptr[0] >> (bitcnt & 7) & (oneupnumbits - 1)
         bitcnt += numbits
 
         if dat & ((oneupnumbits >> 1) - 1) > ((currstr - 1) & ((oneupnumbits >> 1) - 1)):
@@ -61,7 +81,7 @@ def decompress(lzwinbuf):
         lzwbuf3[currstr] = dat
 
         leng = 0
-        while dat > 256:
+        while dat >= 256:
             lzwbuf1[leng] = lzwbuf2[dat]
             leng += 1
             dat = lzwbuf3[dat]
@@ -69,7 +89,7 @@ def decompress(lzwinbuf):
         lzwoutbuff[outbytecnt] = dat
         outbytecnt += 1
 
-        i = leng
+        i = leng - 1
         while i >= 0:
             lzwoutbuff[outbytecnt] = lzwbuf1[i]
             outbytecnt += 1
@@ -83,22 +103,27 @@ def decompress(lzwinbuf):
             numbits += 1
             oneupnumbits <<= 1
 
-    return lzwoutbuff
+    return bytes(lzwoutbuff)
 
 
 def decompress(compressed):
     """Decompress a list of output ks to a string."""
+
     # Build the dictionary.
     dict_size = 256
-    dictionary = {i: bytes([i]) for i in range(dict_size)}
+    dictionary = {i: chr(i) for i in range(dict_size)}
 
-    compressed = io.BytesIO(compressed)
+    def pop():
+        nonlocal compressed
+        result = compressed[0]
+        compressed = compressed[1:]
+
+        return result
 
     # use StringIO, otherwise this becomes O(N^2)
     # due to string concatenation in a loop
-    result = io.BytesIO()
-    w = compressed.read(1)
-    ws = struct.unpack('<B', w)[0]
+    result = io.StringIO()
+    w = chr(pop())
     result.write(w)
     for k in compressed:
         if k in dictionary:
@@ -116,8 +141,8 @@ def decompress(compressed):
         w = entry
     return result.getvalue()
 
-print(os.path.exists('C:\\Users\\Joshua\\Desktop\\DEMO1.DMO'))
-with open('C:\\Users\\Joshua\\Desktop\\DEMO1.DMO', 'rb') as file:
+
+with open('/Users/Joshua/Desktop/out/DEMO1.DMO', 'rb') as file:
     header_data = file.read(header_size)
     header_struct = struct.unpack(header_format, header_data)
     aimmode = file.read(1)
@@ -125,6 +150,7 @@ with open('C:\\Users\\Joshua\\Desktop\\DEMO1.DMO', 'rb') as file:
     while file.peek(1) != b'':
         leng = struct.unpack('<h', file.read(2))[0]
         buff = file.read(leng)
-        d = decompress(buff)
+        d = decompress(buff[4:])
+        print('Done?')
 
     print()
