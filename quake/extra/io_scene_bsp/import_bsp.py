@@ -1,17 +1,28 @@
 import bpy
 import bmesh
+from mathutils import Matrix, Vector
 
 from .quake.bsp import Bsp, is_bspfile
+from .quake import map as Map
 
 
-def load(operator, context, filepath):
+def load(operator, context, filepath='',
+         global_scale=1.0,
+         use_worldspawn_entity=True,
+         use_brush_entities=True,
+         use_point_entities=True):
 
     if not is_bspfile(filepath):
-        # TODO: Error out
-        return {'FINISHED'}
+        operator.report(
+            {'ERROR'},
+            '{} not a recognized BSP file'.format(filepath)
+        )
+        return {'CANCELLED'}
 
     bsp = Bsp.open(filepath)
     bsp.close()
+
+    point_entities = Map.loads(bsp.entities)
 
     # Create materials
     images = bsp.images()
@@ -52,14 +63,35 @@ def load(operator, context, filepath):
             tex_slot.texture = tex
             tex_slot.texture_coords = 'UV'
 
+    global_matrix  = Matrix.Scale(global_scale, 4)
+
+    # Create point entities
+    if use_point_entities:
+        for entity in [_ for _ in point_entities if hasattr(_, 'origin')]:
+            vec = tuple(map(int, entity.origin.split(' ')))
+            ob = bpy.data.objects.new(entity.classname + '.000', None)
+            ob.location = Vector(vec) * global_scale
+            ob.empty_draw_size = 16 * global_scale
+            ob.empty_draw_type = 'CUBE'
+            bpy.context.scene.objects.link(ob)
+
     # Create meshes
-    for i, mesh in enumerate(bsp.meshes()):
-        me = bpy.data.meshes.new("model %d" % i)
+    for mesh_index, mesh in enumerate(bsp.meshes()):
+        # Worldspawn is always mesh 0
+        if mesh_index == 0 and not use_worldspawn_entity:
+            continue
+
+        # Brush entities are the remaining meshes
+        if mesh_index > 0 and not use_brush_entities:
+            break
+
+        me = bpy.data.meshes.new('model %d' % mesh_index)
         bm = bmesh.new()
 
-        for i, vertex in enumerate(mesh.vertices):
+        for vertex_index, vertex in enumerate(mesh.vertices):
             v0 = bm.verts.new(vertex)
-            v0.normal = mesh.normals[i]
+            v0.normal = mesh.normals[vertex_index]
+            v0.co = global_matrix * v0.co
 
         bm.verts.ensure_lookup_table()
         uv_layer = bm.loops.layers.uv.new()
@@ -82,11 +114,11 @@ def load(operator, context, filepath):
 
         bm.faces.ensure_lookup_table()
 
-        for i, sub_mesh in enumerate(mesh.sub_meshes):
+        for sub_mesh_index, sub_mesh in enumerate(mesh.sub_meshes):
             if not sub_mesh:
                 continue
 
-            name = bsp.miptextures[i].name
+            name = bsp.miptextures[sub_mesh_index].name
             mat = bpy.data.materials.find(name)
 
             for triangle in sub_mesh:
@@ -95,10 +127,15 @@ def load(operator, context, filepath):
         bm.to_mesh(me)
         bm.free()
 
-        ob = bpy.data.objects.new("bsp object", me)
+        mesh_name = 'brush_entity.000'
 
-        for i in range(len(bsp.miptextures)):
-            ob.data.materials.append(bpy.data.materials[i])
+        if mesh_index == 0:
+            mesh_name = 'worldspawn'
+
+        ob = bpy.data.objects.new(mesh_name, me)
+
+        for miptexture_index in range(len(bsp.miptextures)):
+            ob.data.materials.append(bpy.data.materials[miptexture_index])
 
         bpy.context.scene.objects.link(ob)
 
