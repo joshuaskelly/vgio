@@ -1045,7 +1045,7 @@ class Bsp(object):
         self._did_modify = False
 
         self.version = header_version
-        self.entities = b""
+        self.entities = ""
         self.planes = []
         self.miptextures = []
         self.vertexes = []
@@ -1133,7 +1133,14 @@ class Bsp(object):
         entities_size = bsp_struct[_HEADER_ENTITIES_SIZE]
 
         file.seek(entities_offset)
-        bsp.entities = file.read(entities_size)
+        entities_data = file.read(entities_size)
+
+        # Sanitize any Quake color codes
+        entities_data = bytearray(entities_data)
+        entities_data = bytes(map(lambda x: x % 128, entities_data))
+
+        entities = struct.unpack('<{}s'.format(entities_size), entities_data)[0].decode('ascii').strip('\x00')
+        bsp.entities = entities
 
         # Planes
         planes_offset = bsp_struct[_HEADER_PLANES_OFFSET]
@@ -1287,7 +1294,7 @@ class Bsp(object):
 
         # Entities
         entities_offset = file.tell()
-        file.write(bsp.entities)
+        file.write(str.encode(bsp.entities))
         entities_size = file.tell() - entities_offset
 
         # Planes
