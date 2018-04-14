@@ -139,4 +139,17 @@ def load(operator, context, filepath='',
 
         bpy.context.scene.objects.link(ob)
 
+    # Apply textures to faces
+    for ob in [o for o in bpy.data.objects if o.type == 'MESH']:
+        bm = bmesh.new()
+        bm.from_mesh(ob.data)
+        bm.faces.ensure_lookup_table()
+
+        for mi, m in enumerate(ob.data.uv_textures[0].data):
+            face = bm.faces[mi]
+            mat_index = face.material_index
+            mat = bpy.data.materials[mat_index]
+            tex = mat.texture_slots[0].texture
+            m.image = tex.image
+
     return {'FINISHED'}

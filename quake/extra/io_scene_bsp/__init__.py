@@ -51,7 +51,7 @@ class ImportBSP(bpy.types.Operator, ImportHelper):
     global_scale = FloatProperty(
             name='Scale',
             min=0.001, max=1000.0,
-            default=1.0 / 64.0,
+            default=1.0 / 32.0,
             )
 
     use_worldspawn_entity = BoolProperty(
