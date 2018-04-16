@@ -28,16 +28,12 @@ from bpy.props import (
 from bpy_extras.io_utils import (
     ImportHelper,
     ExportHelper,
-    orientation_helper_factory,
-    path_reference_mode,
 )
-
-
-IOBSPOrientationHelper = orientation_helper_factory('IOBSPOrientationHelper', axis_forward='-X', axis_up="Z")
 
 
 class ImportBSP(bpy.types.Operator, ImportHelper):
     """Load a Quake BSP File"""
+
     bl_idname = 'import_scene.bsp'
     bl_label = 'Import BSP'
     bl_options = {'UNDO', 'PRESET'}
@@ -80,7 +76,6 @@ class ImportBSP(bpy.types.Operator, ImportHelper):
 
     def draw(self, context):
         layout = self.layout
-
         layout.prop(self, 'global_scale')
         layout.prop(self, 'use_worldspawn_entity')
         layout.prop(self, 'use_brush_entities')
@@ -100,8 +95,6 @@ class ExportBSP(bpy.types.Operator, ExportHelper):
         options={'HIDDEN'},
     )
 
-    path_mode = path_reference_mode
-
     check_extension = True
 
     def execute(self, context):
@@ -112,7 +105,6 @@ class ExportBSP(bpy.types.Operator, ExportHelper):
                                             'global_scale',
                                             'check_existing',
                                             'filter_glob',
-                                            'path_mode',
                                             ))
 
         return export_bsp.save(self, context, **keywords)
