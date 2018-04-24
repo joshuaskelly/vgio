@@ -26,58 +26,59 @@ class Parser(argparse.ArgumentParser):
         sys.exit(1)
 
 
-parser = Parser(prog='ungrp',
-                description='Default action is to extract files to xdir.',
-                epilog='example: ungrp duke3d.grp -d {0} => extract all files to {0}'.format(os.path.expanduser('./extracted')))
+if __name__ == '__main__':
+    parser = Parser(prog='ungrp',
+                    description='Default action is to extract files to xdir.',
+                    epilog='example: ungrp duke3d.grp -d {0} => extract all files to {0}'.format(os.path.expanduser('./extracted')))
 
-parser.add_argument('file', metavar='file.grp', action=ResolvePathAction)
-parser.add_argument('-l', '--list', action='store_true', help='list files')
-parser.add_argument('-d', metavar='xdir', default=os.getcwd(), dest='dest', action=ResolvePathAction, help='extract files into xdir')
-parser.add_argument('-q', dest='quiet', action='store_true', help='quiet mode')
+    parser.add_argument('file', metavar='file.grp', action=ResolvePathAction)
+    parser.add_argument('-l', '--list', action='store_true', help='list files')
+    parser.add_argument('-d', metavar='xdir', default=os.getcwd(), dest='dest', action=ResolvePathAction, help='extract files into xdir')
+    parser.add_argument('-q', dest='quiet', action='store_true', help='quiet mode')
 
-args = parser.parse_args()
+    args = parser.parse_args()
 
-if not grp.is_grpfile(args.file):
-    print('{0}: cannot find or open {1}'.format(parser.prog, args.file), file=sys.stderr)
-    sys.exit(1)
+    if not grp.is_grpfile(args.file):
+        print('{0}: cannot find or open {1}'.format(parser.prog, args.file), file=sys.stderr)
+        sys.exit(1)
 
-if args.list:
+    if args.list:
+        with grp.GrpFile(args.file) as grp_file:
+            info_list = sorted(grp_file.infolist(), key=lambda i: i.filename)
+
+            headers = ['Length', 'Name']
+            table = [[i.file_size, i.filename] for i in info_list]
+            length = sum([i.file_size for i in info_list])
+            count = len(info_list)
+            table.append([length, '', '%d file%s' % (count, 's' if count > 1 else '')])
+
+            separator = []
+            for i in range(len(headers)):
+                t = max(len(str(length)), len(headers[i]) + 2)
+                separator.append('-' * t)
+
+            table.insert(-1, separator)
+
+            print('Archive: %s' % os.path.basename(args.file))
+            print(tabulate(table, headers=headers))
+
+            sys.exit(0)
+
+    if not os.path.exists(args.dest):
+        os.makedirs(args.dest)
+
     with grp.GrpFile(args.file) as grp_file:
-        info_list = sorted(grp_file.infolist(), key=lambda i: i.filename)
-
-        headers = ['Length', 'Name']
-        table = [[i.file_size, i.filename] for i in info_list]
-        length = sum([i.file_size for i in info_list])
-        count = len(info_list)
-        table.append([length, '', '%d file%s' % (count, 's' if count > 1 else '')])
-
-        separator = []
-        for i in range(len(headers)):
-            t = max(len(str(length)), len(headers[i]) + 2)
-            separator.append('-' * t)
-
-        table.insert(-1, separator)
-
-        print('Archive: %s' % os.path.basename(args.file))
-        print(tabulate(table, headers=headers))
-
-        sys.exit(0)
-
-if not os.path.exists(args.dest):
-    os.makedirs(args.dest)
-
-with grp.GrpFile(args.file) as grp_file:
-    if not args.quiet:
-        print('Archive: %s' % os.path.basename(args.file))
-
-    for item in grp_file.infolist():
-        filename = item.filename
-        fullpath = os.path.join(args.dest, filename)
-
-        # Extract as raw file
-        grp_file.extract(filename, args.dest)
-
         if not args.quiet:
-            print(' extracting: %s' % fullpath)
+            print('Archive: %s' % os.path.basename(args.file))
 
-sys.exit(0)
+        for item in grp_file.infolist():
+            filename = item.filename
+            fullpath = os.path.join(args.dest, filename)
+
+            # Extract as raw file
+            grp_file.extract(filename, args.dest)
+
+            if not args.quiet:
+                print(' extracting: %s' % fullpath)
+
+    sys.exit(0)

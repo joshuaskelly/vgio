@@ -30,66 +30,67 @@ class Parser(argparse.ArgumentParser):
         sys.exit(1)
 
 
-parser = Parser(prog='bsp2wad',
-                description='Default action is to create a wad archive from '
-                            'miptextures extracted from the given bsp file.',
-                epilog='example: bsp2wad {0} => creates the wad file {1}'.format('e1m1.bsp', 'e1m1.wad'))
+if __name__ == '__main__':
+    parser = Parser(prog='bsp2wad',
+                    description='Default action is to create a wad archive from '
+                                'miptextures extracted from the given bsp file.',
+                    epilog='example: bsp2wad {0} => creates the wad file {1}'.format('e1m1.bsp', 'e1m1.wad'))
 
-parser.add_argument('file',
-                    metavar='file.bsp',
-                    action=ResolvePathAction,
-                    help='bsp file to extract from')
+    parser.add_argument('file',
+                        metavar='file.bsp',
+                        action=ResolvePathAction,
+                        help='bsp file to extract from')
 
-parser.add_argument('-d',
-                    metavar='file.wad',
-                    dest='dest',
-                    default=os.getcwd(),
-                    action=ResolvePathAction,
-                    help='wad file to create')
+    parser.add_argument('-d',
+                        metavar='file.wad',
+                        dest='dest',
+                        default=os.getcwd(),
+                        action=ResolvePathAction,
+                        help='wad file to create')
 
-parser.add_argument('-q',
-                    dest='quiet',
-                    action='store_true',
-                    help='quiet mode')
+    parser.add_argument('-q',
+                        dest='quiet',
+                        action='store_true',
+                        help='quiet mode')
 
-args = parser.parse_args()
+    args = parser.parse_args()
 
-print(args.file)
+    print(args.file)
 
-if not bsp.is_bspfile(args.file):
-    print('{0}: cannot find or open {1}'.format(parser.prog, args.file),
-          file=sys.stderr)
-    sys.exit(1)
+    if not bsp.is_bspfile(args.file):
+        print('{0}: cannot find or open {1}'.format(parser.prog, args.file),
+              file=sys.stderr)
+        sys.exit(1)
 
-bsp_file = bsp.Bsp.open(args.file)
+    bsp_file = bsp.Bsp.open(args.file)
 
-if args.dest == os.getcwd():
-    wad_path = os.path.dirname(args.file)
-    wad_name = os.path.basename(args.file).split('.')[0] + '.wad'
-    args.dest = os.path.join(wad_path, wad_name)
+    if args.dest == os.getcwd():
+        wad_path = os.path.dirname(args.file)
+        wad_name = os.path.basename(args.file).split('.')[0] + '.wad'
+        args.dest = os.path.join(wad_path, wad_name)
 
-dir = os.path.dirname(args.dest) or '.'
-if not os.path.exists(dir):
-    os.makedirs(dir)
+    dir = os.path.dirname(args.dest) or '.'
+    if not os.path.exists(dir):
+        os.makedirs(dir)
 
-with wad.WadFile(args.dest, mode='w') as wad_file:
-    if not args.quiet:
-        print('Archive: %s' % os.path.basename(args.file))
-
-    for miptex in bsp_file.miptextures:
-        buff = io.BytesIO()
-        bsp.Miptexture.write(buff, miptex)
-        buff.seek(0)
-
-        info = wad.WadInfo(miptex.name)
-        info.file_size = 40 + len(miptex.pixels)
-        info.disk_size = info.file_size
-        info.compression = wad.CMP_NONE
-        info.type = wad.TYPE_MIPTEX
-
+    with wad.WadFile(args.dest, mode='w') as wad_file:
         if not args.quiet:
-            print(' adding: %s' % info.filename)
+            print('Archive: %s' % os.path.basename(args.file))
 
-        wad_file.writestr(info, buff)
+        for miptex in bsp_file.miptextures:
+            buff = io.BytesIO()
+            bsp.Miptexture.write(buff, miptex)
+            buff.seek(0)
 
-sys.exit(0)
+            info = wad.WadInfo(miptex.name)
+            info.file_size = 40 + len(miptex.pixels)
+            info.disk_size = info.file_size
+            info.compression = wad.CMP_NONE
+            info.type = wad.TYPE_MIPTEX
+
+            if not args.quiet:
+                print(' adding: %s' % info.filename)
+
+            wad_file.writestr(info, buff)
+
+    sys.exit(0)
