@@ -6,6 +6,7 @@
 .vscode
 .vs
 /vs
+*.pyproj
 
 # Ignore OS artifacts
 .DS_Store
@@ -15,3 +16,7 @@
 
 # No compiled Python artifacts
 *.pyc
+
+# No Blender addon package symlinks
+*/extra/*/quake
+*/extra/*/duke3d
