@@ -4,6 +4,8 @@ Supported Games:
     - QUAKE
 """
 
+__version__ = '1.0.0'
+
 import array
 import argparse
 import os
@@ -34,11 +36,37 @@ if __name__ == '__main__':
                     description='Default action is to convert files to png format and extract to xdir.',
                     epilog='example: unwad gfx.wad -d {0} => extract all files to {0}'.format(os.path.expanduser('./extracted')))
 
-    parser.add_argument('file', metavar='file.wad', action=ResolvePathAction)
-    parser.add_argument('-l', '--list', action='store_true', help='list files')
-    parser.add_argument('-d', metavar='xdir', default=os.getcwd(), dest='dest', action=ResolvePathAction, help='extract files into xdir')
-    parser.add_argument('-q', dest='quiet', action='store_true', help='quiet mode')
-    parser.add_argument('-f', dest='format', default='png', choices=['bmp','gif','png','tga'], help='image format to convert to')
+    parser.add_argument('file',
+                        metavar='file.wad',
+                        action=ResolvePathAction)
+
+    parser.add_argument('-l', '--list',
+                        action='store_true',
+                        help='list files')
+
+    parser.add_argument('-d',
+                        metavar='xdir',
+                        default=os.getcwd(),
+                        dest='dest',
+                        action=ResolvePathAction,
+                        help='extract files into xdir')
+
+    parser.add_argument('-q',
+                        dest='quiet',
+                        action='store_true',
+                        help='quiet mode')
+
+    parser.add_argument('-f',
+                        dest='format',
+                        default='png',
+                        choices=['bmp','gif','png','tga'],
+                        help='image format to convert to')
+
+    parser.add_argument('-v', '--version',
+                        dest='version',
+                        action='version',
+                        help=argparse.SUPPRESS,
+                        version='{} version {}'.format(parser.prog, __version__))
 
     args = parser.parse_args()
 

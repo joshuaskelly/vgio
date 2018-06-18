@@ -14,6 +14,8 @@ Notes:
         if S_ISDIR(st.st_mode) and os.access(path, os.R_OK):
 """
 
+__version__ = '1.0.0'
+
 import argparse
 import os
 import shutil
@@ -227,10 +229,16 @@ if __name__ == '__main__':
                         action='store_true',
                         help='opens a file browser once mounted')
 
-    parser.add_argument('-v', '--verbose',
+    parser.add_argument('--verbose',
                         dest='verbose',
                         action='store_true',
                         help='verbose mode')
+
+    parser.add_argument('-v', '--version',
+                        dest='version',
+                        action='version',
+                        help=argparse.SUPPRESS,
+                        version='{} version {}'.format(parser.prog, __version__))
 
     args = parser.parse_args()
 

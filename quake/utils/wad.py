@@ -4,6 +4,8 @@ Supported Games:
     - QUAKE
 """
 
+__version__ = '1.0.0'
+
 import argparse
 import io
 import os
@@ -59,6 +61,12 @@ if __name__ == '__main__':
                         dest='quiet',
                         action='store_true',
                         help='quiet mode')
+
+    parser.add_argument('-v', '--version',
+                        dest='version',
+                        action='version',
+                        help=argparse.SUPPRESS,
+                        version='{} version {}'.format(parser.prog, __version__))
 
     args = parser.parse_args()
 
