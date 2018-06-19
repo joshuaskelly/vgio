@@ -4,7 +4,7 @@ Supported Games:
     - QUAKE
 """
 
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 import argparse
 import io
@@ -86,6 +86,9 @@ if __name__ == '__main__':
             print('Archive: %s' % os.path.basename(args.file))
 
         for miptex in bsp_file.miptextures:
+            if not miptex:
+                continue
+
             buff = io.BytesIO()
             bsp.Miptexture.write(buff, miptex)
             buff.seek(0)
