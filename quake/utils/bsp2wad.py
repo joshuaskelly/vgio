@@ -4,7 +4,7 @@ Supported Games:
     - QUAKE
 """
 
-__version__ = '1.0.1'
+__version__ = '1.1.0'
 
 import argparse
 import io
@@ -35,13 +35,14 @@ class Parser(argparse.ArgumentParser):
 if __name__ == '__main__':
     parser = Parser(prog='bsp2wad',
                     description='Default action is to create a wad archive from '
-                                'miptextures extracted from the given bsp file.',
+                                'miptextures extracted from the given bsp file.'
+                                '\nIf list is omitted, pak will use stdin.',
                     epilog='example: bsp2wad {0} => creates the wad file {1}'.format('e1m1.bsp', 'e1m1.wad'))
 
-    parser.add_argument('file',
-                        metavar='file.bsp',
+    parser.add_argument('list',
+                        nargs='*',
                         action=ResolvePathAction,
-                        help='bsp file to extract from')
+                        default=[t.strip('\n') for t in sys.stdin] if not sys.stdin.isatty() else None)
 
     parser.add_argument('-d',
                         metavar='file.wad',
@@ -63,18 +64,23 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    print(args.file)
+    if not args.list:
+        parser.error('the following arguments are required: list')
 
-    if not bsp.is_bspfile(args.file):
-        print('{0}: cannot find or open {1}'.format(parser.prog, args.file),
-              file=sys.stderr)
-        sys.exit(1)
+    miptextures = []
 
-    bsp_file = bsp.Bsp.open(args.file)
+    for file in args.list:
+        if not bsp.is_bspfile(file):
+            print('{0}: cannot find or open {1}'.format(parser.prog, file),
+                  file=sys.stderr)
+            continue
+
+        bsp_file = bsp.Bsp.open(file)
+        miptextures += bsp_file.miptextures[:]
 
     if args.dest == os.getcwd():
-        wad_path = os.path.dirname(args.file)
-        wad_name = os.path.basename(args.file).split('.')[0] + '.wad'
+        wad_path = os.path.dirname(file)
+        wad_name = os.path.basename(file).split('.')[0] + '.wad'
         args.dest = os.path.join(wad_path, wad_name)
 
     dir = os.path.dirname(args.dest) or '.'
@@ -83,9 +89,10 @@ if __name__ == '__main__':
 
     with wad.WadFile(args.dest, mode='w') as wad_file:
         if not args.quiet:
-            print('Archive: %s' % os.path.basename(args.file))
+            pass
+            #print('Archive: %s' % os.path.basename(args.file))
 
-        for miptex in bsp_file.miptextures:
+        for miptex in miptextures:
             if not miptex:
                 continue
 
