@@ -19,7 +19,7 @@ The Map file contains level data for the video game Duke Nukem 3D.
 | 0x04   | 4    | int      | Position X            | Player starting position x-coordinate.    |
 | 0x08   | 4    | int      | Position Y            | Player starting position y-coordinate.    |
 | 0x0C   | 4    | int      | Position Z            | Player starting position z-coordinate.    |
-| 0x10   | 2    | short    | Angle                 | Player staring angle.                     |
+| 0x10   | 2    | short    | Angle                 | Player starting angle.                     |
 | 0x12   | 2    | short    | Current Sector Number | Staring sector number.                    |
 
 
