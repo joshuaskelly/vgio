@@ -41,7 +41,7 @@ if __name__ == '__main__':
     parser.add_argument('file',
                         metavar='file.pak',
                         action=ResolvePathAction,
-                        help='pak file to ')
+                        help='pak file to create')
 
     parser.add_argument('list',
                         nargs='*',
