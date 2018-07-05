@@ -51,7 +51,7 @@ if __name__ == '__main__':
                         nargs='*',
                         metavar='file.gif',
                         action=ResolvePathAction,
-                        #default=[t.strip('\n') for t in sys.stdin] if not sys.stdin.isatty() else None,
+                        default=[t.strip('\n') for t in sys.stdin] if not sys.stdin.isatty() else None,
                         help='image source file')
 
     parser.add_argument('-q',
