@@ -92,8 +92,18 @@ if __name__ == '__main__':
         try:
             while True:
                 if source_image.mode != 'P':
+                    alpha = source_image.split()[-1]
+
                     # Set all alpha pixels to a known color
-                    source_image = source_image.convert('P', colors=256)
+                    source_image = source_image.convert('RGB')
+
+                    mask = Image.eval(alpha, lambda a: 255 if a <=128 else 0)
+                    transparent_color = tuple(quake_palette[-3:])
+                    source_image.paste(transparent_color, mask)
+                    source_image.info['transparency'] = 255
+
+                    source_image = source_image.quantize(palette=quake_palette_image)
+                    source_image.putpalette(bytes(quake_palette))
 
                 # Set the current palette's transparent color to Quake's
                 local_transparency = source_image.info.get('transparency')
@@ -103,7 +113,7 @@ if __name__ == '__main__':
                 if local_transparency:
                     source_palette[local_transparency * 3:local_transparency * 3 + 3] = spr.default_palette[-1]
 
-                if global_transparency:
+                if global_transparency and global_transparency != local_transparency:
                     source_palette[global_transparency * 3:global_transparency * 3 + 3] = spr.default_palette[-1]
 
                 source_palette = bytes(source_palette)
