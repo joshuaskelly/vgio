@@ -121,7 +121,10 @@ if __name__ == '__main__':
                 # Create new image from current frame
                 data = source_image.tobytes()
                 sub_image = Image.frombytes('P', size, data, 'raw', 'P', 0, 1)
-                sub_image.info['transparency'] = local_transparency
+
+                if local_transparency:
+                    sub_image.info['transparency'] = local_transparency
+
                 sub_image.putpalette(source_palette)
 
                 # Convert from indexed color to RGB color then quantize to Quake's palette
@@ -138,6 +141,29 @@ if __name__ == '__main__':
     if not images:
         print('{0}: no usable source images given'.format(parser.prog), file=sys.stderr)
         sys.exit(1)
+
+    # Normalize image sizes
+    if len(images) > 1:
+        sizes = [image.size for image in images]
+
+        images_all_same_size = all([size[0] == size for size in sizes])
+
+        if not images_all_same_size:
+            resized_images = []
+            max_width = max([size[0] for size in sizes])
+            max_height = max([size[1] for size in sizes])
+
+            for image in images:
+                resized_image = Image.new('P', (max_width, max_height), 255)
+                resized_image.putpalette(bytes(quake_palette))
+
+                top = (max_height - image.size[1]) // 2
+                left = (max_width - image.size[0]) // 2
+                top_left = top, left
+                resized_image.paste(image, box=top_left)
+                resized_images.append(resized_image)
+
+            images = resized_images
 
     # Build Quake sprite
     with spr.Spr.open(args.dest_file, 'w') as spr_file:
