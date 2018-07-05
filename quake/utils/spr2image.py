@@ -113,7 +113,7 @@ if __name__ == '__main__':
                          duration=default_duration,
                          loop=0,
                          optimize=False,
-                         transparency=255,
+                         #transparency=255,
                          palette=palette)
 
     else:
@@ -123,7 +123,7 @@ if __name__ == '__main__':
             filename = '{}_{}.{}'.format(image_name, image_index, image_extension)
             image.save(os.path.join(image_directory, filename),
                        optimize=False,
-                       transparency=255,
+                       #transparency=255,
                        palette=palette)
 
     sys.exit(0)
