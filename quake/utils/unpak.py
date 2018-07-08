@@ -4,7 +4,7 @@ Supported Games:
     - QUAKE
 """
 
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 import argparse
 import os
@@ -12,21 +12,7 @@ import sys
 from tabulate import tabulate
 
 from quake import pak
-
-
-class ResolvePathAction(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        fullpath = os.path.expanduser(values)
-        setattr(namespace, self.dest, fullpath)
-
-
-class Parser(argparse.ArgumentParser):
-    """Simple wrapper class to provide help on error"""
-    def error(self, message):
-        sys.stderr.write('error: %s\n' % message)
-        self.print_help()
-        sys.exit(1)
-
+from common import Parser, ResolvePathAction
 
 if __name__ == '__main__':
     parser = Parser(prog='unpak',

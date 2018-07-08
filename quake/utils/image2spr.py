@@ -15,25 +15,7 @@ import sys
 from PIL import Image
 
 from quake import spr
-
-
-class ResolvePathAction(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        if isinstance(values, list):
-            fullpath = [os.path.expanduser(v) for v in values]
-        else:
-            fullpath = os.path.expanduser(values)
-
-        setattr(namespace, self.dest, fullpath)
-
-
-class Parser(argparse.ArgumentParser):
-    """Simple wrapper class to provide help on error"""
-    def error(self, message):
-        sys.stderr.write('error: %s\n' % message)
-        self.print_help()
-        sys.exit(1)
-
+from common import Parser, ResolvePathAction, read_from_stdin
 
 if __name__ == '__main__':
     parser = Parser(prog='image2spr',
@@ -51,7 +33,7 @@ if __name__ == '__main__':
                         nargs='*',
                         metavar='file.gif',
                         action=ResolvePathAction,
-                        default=[t.strip('\n') for t in sys.stdin] if not sys.stdin.isatty() else None,
+                        default=read_from_stdin(),
                         help='image source file')
 
     parser.add_argument('-q',

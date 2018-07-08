@@ -1,6 +1,6 @@
 .PHONY: build bsp2wad pak unpak wad unwad qmount image2spr spr2image install_dependencies install_dev_dependencies clean
 
-build: bsp2wad pak unpak wad unwad qmount
+build: bsp2wad pak unpak wad unwad qmount image2spr spr2image
 
 bsp2wad:
 	pyinstaller --onefile bsp2wad.py

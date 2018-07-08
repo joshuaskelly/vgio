@@ -14,21 +14,7 @@ import sys
 from PIL import Image
 
 from quake import spr
-
-
-class ResolvePathAction(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        fullpath = os.path.expanduser(values)
-        setattr(namespace, self.dest, fullpath)
-
-
-class Parser(argparse.ArgumentParser):
-    """Simple wrapper class to provide help on error"""
-    def error(self, message):
-        sys.stderr.write('error: %s\n' % message)
-        self.print_help()
-        sys.exit(1)
-
+from common import Parser, ResolvePathAction
 
 if __name__ == '__main__':
     parser = Parser(prog='spr2image',
