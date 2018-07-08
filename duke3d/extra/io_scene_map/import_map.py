@@ -33,16 +33,18 @@ def load(operator, context, filepath='',
     global_matrix = Matrix.Scale(global_scale, 4)
 
     for sector_index, sector in enumerate(map_file.sectors):
-        print('Processing sector: {}'.format(sector_index))
         me = bpy.data.meshes.new('sector.{}'.format(sector_index))
         bm = bmesh.new()
         bedges = []
 
         for il, loop in enumerate(sector.loops):
-            print('  Processing loop: {}'.format(il))
             # Build vertices
             points = [(*p, sector.floor_z(p)) for p in loop.points]
-            bverts = [bm.verts.new(p) for p in points[:-2]]
+            bverts = [bm.verts.new(p) for p in points[:-1]]
+
+            for bvert in bverts:
+                bvert.co = global_matrix * bvert.co
+
             bm.verts.ensure_lookup_table()
 
             # Build edges
@@ -50,7 +52,6 @@ def load(operator, context, filepath='',
             #edges = [bm.edges.new(e) for e in edges]
             bes = []
             for ie, e in enumerate(edges):
-                print('    Processing edge: {} {}'.format(ie, e))
                 bes.append(bm.edges.new(e))
             edges = bes
 

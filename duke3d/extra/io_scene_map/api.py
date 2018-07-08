@@ -1,3 +1,6 @@
+import math
+import numpy
+
 from .duke3d.map import Map as MapFile, is_mapfile
 
 
@@ -8,7 +11,20 @@ class Sector(object):
         self.walls = [self._map.walls[w] for w in range(self._struct.wall_pointer,self._struct.wall_pointer+self._struct.wall_number)]
 
     def floor_z(self, point):
-        return -(self._struct.floor_z >> 4)
+        first_wall = self.walls[-1]
+        a = first_wall.point
+        b = first_wall.next_wall.point
+        wall_vec = numpy.subtract(b, a)
+        wall_vec = wall_vec / numpy.linalg.norm(wall_vec)
+        point_vec = numpy.subtract(point, a)
+        distance_from_wall = numpy.dot(wall_vec, point_vec)
+
+        floor_angle = self._struct.floor_heinum / 4096 * -45
+        theta = math.radians(floor_angle)
+        v = distance_from_wall / math.cos(theta)
+        z = -(v * math.sin(theta) + (self._struct.floor_z >> 4))
+
+        return z #-(self._struct.floor_z >> 4)
 
     def ceiling_z(self, point):
         return -(self._struct.ceiling_z >> 4)
