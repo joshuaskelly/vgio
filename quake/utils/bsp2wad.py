@@ -4,7 +4,7 @@ Supported Games:
     - QUAKE
 """
 
-__version__ = '1.1.1'
+__version__ = '1.2.0'
 
 import argparse
 import io
@@ -58,7 +58,7 @@ if __name__ == '__main__':
             continue
 
         bsp_file = bsp.Bsp.open(file)
-        miptextures += bsp_file.miptextures[:]
+        miptextures += [mip for mip in bsp_file.miptextures if mip and mip.name not in [n.name for n in miptextures]]
 
     if args.dest == os.getcwd():
         wad_path = os.path.dirname(file)
@@ -71,8 +71,7 @@ if __name__ == '__main__':
 
     with wad.WadFile(args.dest, mode='w') as wad_file:
         if not args.quiet:
-            pass
-            #print('Archive: %s' % os.path.basename(args.file))
+            print('Archive: %s' % os.path.basename(args.dest))
 
         for miptex in miptextures:
             if not miptex:
