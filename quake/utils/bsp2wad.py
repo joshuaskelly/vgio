@@ -62,7 +62,12 @@ if __name__ == '__main__':
 
     if args.dest == os.getcwd():
         wad_path = os.path.dirname(file)
-        wad_name = os.path.basename(file).split('.')[0] + '.wad'
+
+        if len(args.list) == 1:
+            wad_name = os.path.basename(file).split('.')[0] + '.wad'
+        else:
+            wad_name = 'out.wad'
+
         args.dest = os.path.join(wad_path, wad_name)
 
     dir = os.path.dirname(args.dest) or '.'
