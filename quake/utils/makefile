@@ -1,3 +1,5 @@
+OS := $(shell python -c 'import sys; print(sys.platform)')
+
 .PHONY: build bsp2wad pak unpak wad unwad qmount image2spr spr2image install_dependencies install_dev_dependencies clean
 
 build: bsp2wad pak unpak wad unwad qmount image2spr spr2image
@@ -31,6 +33,11 @@ install_dependencies:
 
 install_dev_dependencies:
 	pip install -r dev-requirements.txt
+
+package:
+	cd ./dist && \
+	ls | zip -@ quake-tools_$(OS).zip && \
+	cd ..
 
 clean:
 	rm -rf ./dist
