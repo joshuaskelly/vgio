@@ -1,4 +1,4 @@
-OS := $(shell python -c 'import sys; print(sys.platform)')
+OS := $(shell python -c 'import sys; print({"win32": "windows", "darwin": "osx"}.get(sys.platform, sys.platform))')
 
 .PHONY: build bsp2wad pak unpak wad unwad qmount image2spr spr2image install_dependencies install_dev_dependencies clean
 
@@ -38,6 +38,10 @@ package:
 	cd ./dist && \
 	ls | zip -@ quake-tools_$(OS).zip && \
 	cd ..
+
+publish:
+	cd ./dist && \
+	butler push joshua/quake-tools_$(OS)-universal
 
 clean:
 	rm -rf ./dist
