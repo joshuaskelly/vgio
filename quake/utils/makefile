@@ -41,7 +41,7 @@ package:
 
 publish:
 	cd ./dist && \
-	butler push joshua/quake-tools_$(OS)-universal && \
+	butler push quake-tools_$(OS).zip joshua/quake-tools:$(OS) && \
 	cd ..
 
 clean:
