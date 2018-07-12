@@ -41,7 +41,8 @@ package:
 
 publish:
 	cd ./dist && \
-	butler push joshua/quake-tools_$(OS)-universal
+	butler push joshua/quake-tools_$(OS)-universal && \
+	cd ..
 
 clean:
 	rm -rf ./dist
