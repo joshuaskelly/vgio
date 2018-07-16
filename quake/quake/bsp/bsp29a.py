@@ -27,7 +27,7 @@ class BadBspFile(Exception):
 
 # The bsp header structure
 header_format = '<31l'
-header_version = 29
+header_version = b'BSP2'
 header_size = struct.calcsize(header_format)
 
 # Indexes of header structure
@@ -101,7 +101,7 @@ visibility_format = None
 visibility_size = None
 
 # Node structure
-node_format = '<i8h2H'
+node_format = '<i8i2I'
 node_size = struct.calcsize(node_format)
 
 # Indexes of Node structure
@@ -125,7 +125,7 @@ _TEXTURE_INFO_MIPTEXTURE_NUMBER = 8
 _TEXTURE_INFO_FLAGS = 9
 
 # Face structure
-face_format = '<2hi2h4Bi'
+face_format = '<2ii2i4Bi'
 face_size = struct.calcsize(face_format)
 
 # Indexes of Face structure
@@ -147,7 +147,7 @@ lighting_format = None
 lighting_size = None
 
 # Clip_node structure
-clip_node_format = '<i2h'
+clip_node_format = '<i2i'
 clip_node_size = struct.calcsize(clip_node_format)
 
 # Indexes of Clip_node structure
@@ -155,7 +155,7 @@ _CLIP_NODE_PLANE_NUMBER = 0
 _CLIP_NODE_CHILDREN = 1
 
 # Leaf structure
-leaf_format = '<2i6h2H4B'
+leaf_format = '<2i6i2I4B'
 leaf_size = struct.calcsize(leaf_format)
 
 # Indexes of Leaf structure
@@ -177,7 +177,7 @@ mark_surface_format = None
 mark_surface_size = None
 
 # Edge structure
-edge_format = '<2H'
+edge_format = '<2I'
 edge_size = struct.calcsize(edge_format)
 
 
@@ -205,14 +205,14 @@ _MODEL_NUMBER_OF_FACES = 15
 
 def _check_bspfile(fp):
     fp.seek(0)
-    data = fp.read(struct.calcsize('<1l'))
-    version = struct.unpack('<1l', data)[0]
+    data = fp.read(struct.calcsize('<4s'))
+    version = struct.unpack('<4s', data)[0]
 
     return version == header_version
 
 
 def is_bspfile(filename):
-    """Quickly see if a file is a mdl file by checking the magic number.
+    """Quickly see if a file is a bsp file by checking the magic number.
 
     The filename argument may be a file for file-like object.
     """
