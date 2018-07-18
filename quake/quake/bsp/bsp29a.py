@@ -1569,6 +1569,10 @@ class Bsp(object):
                 if v1 != verts[0]:
                     verts.append(v1)
 
+            # Ignore degenerate faces
+            if len(verts) < 3:
+                continue
+
             # Convert Vertexes to three-tuples and reverse their order
             verts = [tuple(self.vertexes[i][:]) for i in reversed(verts)]
 
