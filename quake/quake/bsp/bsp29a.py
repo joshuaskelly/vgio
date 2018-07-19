@@ -329,7 +329,7 @@ class Bsp(object):
         self.surf_edges = []
         self.models = []
 
-    @classmethod
+    @staticmethod
     def open(file, mode='r'):
         """Returns a Bsp object
 
@@ -384,7 +384,7 @@ class Bsp(object):
 
             return bsp
 
-    @classmethod
+    @staticmethod
     def _read_file(file, mode):
         bsp = Bsp()
         bsp.mode = mode
@@ -551,7 +551,7 @@ class Bsp(object):
 
         return bsp
 
-    @classmethod
+    @staticmethod
     def _write_file(file, bsp):
         # Stub out header info
         header_data = struct.pack(header_format,
