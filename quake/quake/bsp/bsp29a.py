@@ -1,16 +1,7 @@
-"""This module provides file I/O for Quake BSP map files.
+"""This module provides file I/O for Quake BSP2 map files.
 
 Example:
     bsp_file = bsp.Bsp.open('e1m1.bsp')
-
-References:
-    Quake Source
-    - id Software
-    - https://github.com/id-Software/Quake
-
-    Quake Documentation Version 3.4
-    - Olivier Montanuy, et al.
-    - http://www.gamers.org/dEngine/quake/spec/quake-spec34/qkspec_4.htm
 """
 
 import io
@@ -992,13 +983,13 @@ class Image(object):
 
 
 class Bsp(object):
-    """Class for working with Bsp files
+    """Class for working with Bsp2 files
 
     Example:
         b = Bsp.open(file)
 
     Attributes:
-        version: Version of the map file. Vanilla Quake is 29.
+        version: Version of the map file. Bsp2 is b'BSP2'
 
         entities: A string containing the entity definitions.
 
