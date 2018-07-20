@@ -48,6 +48,7 @@ def load(operator, context, filepath='',
         if texture_index < 0:
             tex = bpy.data.textures.new(name, 'IMAGE')
             tex.image = img
+            tex.use_mipmap = False
         else:
             tex = bpy.data.textures[texture_index]
 
@@ -58,6 +59,9 @@ def load(operator, context, filepath='',
             mat.diffuse_color = 1, 1, 1
             mat.specular_intensity = 0
             mat.use_shadeless = True
+
+            if name.startswith('{'):
+                mat.use_transparency = True
 
             tex_slot = mat.texture_slots.add()
             tex_slot.texture = tex
