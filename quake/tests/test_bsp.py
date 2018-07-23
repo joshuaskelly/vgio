@@ -1,7 +1,7 @@
 import unittest
 
 from tests.basecase import TestCase
-from quake import bsp
+from quake.bsp import bsp29 as bsp
 
 significant_digits = 5
 
@@ -17,10 +17,13 @@ class TestBspReadWrite(TestCase):
         self.assertFalse(bsp.is_bspfile('./test_data/test.wad'))
 
     def test_plane(self):
-        p0 = bsp.Plane()
-        p0.normal = 0.0, 0.0, 1.0
-        p0.distance = 1.0
-        p0.type = 0
+        normal = 0.0, 0.0, 1.0
+        distance = 1.0
+        type = 0
+
+        p0 = bsp.Plane(*normal,
+                       distance,
+                       type)
 
         bsp.Plane.write(self.buff, p0)
         self.buff.seek(0)
@@ -51,10 +54,7 @@ class TestBspReadWrite(TestCase):
         self.assertEqual(m0.pixels, m1.pixels, 'Pixel data should be equal')
 
     def test_vertex(self):
-        v0 = bsp.Vertex()
-        v0.x = 1.0
-        v0.y = -0.5
-        v0.z = 1.25
+        v0 = bsp.Vertex(1.0, -0.5, 1.25)
 
         bsp.Vertex.write(self.buff, v0)
         self.buff.seek(0)
@@ -66,13 +66,19 @@ class TestBspReadWrite(TestCase):
         self.assertAlmostEqual(v0.z, v1.z, significant_digits, 'Z coordinates should be equal')
 
     def test_node(self):
-        n0 = bsp.Node()
-        n0.plane_number = 0
-        n0.children = 1, 2
-        n0.bounding_box_min = -32767, -32767, -32767
-        n0.bounding_box_max = 32767, 32767, 32767
-        n0.first_face = 0
-        n0.number_of_faces = 4
+        plane_number = 0
+        children = 1, 2
+        bounding_box_min = -32767, -32767, -32767
+        bounding_box_max = 32767, 32767, 32767
+        first_face = 0
+        number_of_faces = 4
+
+        n0 = bsp.Node(plane_number,
+                      *children,
+                      *bounding_box_min,
+                      *bounding_box_max,
+                      first_face,
+                      number_of_faces)
 
         bsp.Node.write(self.buff, n0)
         self.buff.seek(0)
@@ -87,13 +93,19 @@ class TestBspReadWrite(TestCase):
         self.assertEqual(n0.number_of_faces, n1.number_of_faces, 'Number of faces should be equal')
 
     def test_textureinfo(self):
-        t0 = bsp.TextureInfo()
-        t0.s = 1.0, -1.0, 0
-        t0.s_offset = 1.25
-        t0.t = -5.0, 6.0, 7.75
-        t0.t_offset = 0.0
-        t0.miptexture_number = 0
-        t0.flags = 8
+        s = 1.0, -1.0, 0
+        s_offset = 1.25
+        t = -5.0, 6.0, 7.75
+        t_offset = 0.0
+        miptexture_number = 0
+        flags = 8
+
+        t0 = bsp.TextureInfo(*s,
+                             s_offset,
+                             *t,
+                             t_offset,
+                             miptexture_number,
+                             flags)
 
         bsp.TextureInfo.write(self.buff, t0)
         self.buff.seek(0)
@@ -108,14 +120,21 @@ class TestBspReadWrite(TestCase):
         self.assertEqual(t0.flags, t1.flags, 'Flags should be equal')
 
     def test_face(self):
-        f0 = bsp.Face()
-        f0.plane_number = 0
-        f0.side = 0
-        f0.first_edge = 0
-        f0.number_of_edges = 8
-        f0.texture_info = 0
-        f0.styles = 0, 1, 2, 3
-        f0.light_offset = 0
+        plane_number = 0
+        side = 0
+        first_edge = 0
+        number_of_edges = 8
+        texture_info = 0
+        styles = 0, 1, 2, 3
+        light_offset = 0
+
+        f0 = bsp.Face(plane_number,
+                      side,
+                      first_edge,
+                      number_of_edges,
+                      texture_info,
+                      *styles,
+                      light_offset)
 
         bsp.Face.write(self.buff, f0)
         self.buff.seek(0)
@@ -131,9 +150,11 @@ class TestBspReadWrite(TestCase):
         self.assertEqual(f0.light_offset, f1.light_offset, 'Light offset should be equal')
 
     def test_clipnode(self):
-        c0 = bsp.ClipNode()
-        c0.plane_number = 0
-        c0.children = 0, 1
+        plane_number = 0
+        children = 0, 1
+
+        c0 = bsp.ClipNode(plane_number,
+                          *children)
 
         bsp.ClipNode.write(self.buff, c0)
         self.buff.seek(0)
@@ -144,14 +165,21 @@ class TestBspReadWrite(TestCase):
         self.assertEqual(c0.children, c1.children, 'Children should equal')
 
     def test_leaf(self):
-        l0 = bsp.Leaf()
-        l0.contents = 0
-        l0.visibilitiy_offset = 0
-        l0.bounding_box_min = -32767, -32767, -32767
-        l0.bounding_box_max = 32767, 32767, 32767
-        l0.first_mark_surface = 0
-        l0.number_of_marked_surfaces = 4
-        l0.ambient_level = 0, 1, 2, 4
+        contents = 0
+        visibilitiy_offset = 0
+        bounding_box_min = -32767, -32767, -32767
+        bounding_box_max = 32767, 32767, 32767
+        first_mark_surface = 0
+        number_of_marked_surfaces = 4
+        ambient_level = 0, 1, 2, 4
+
+        l0 = bsp.Leaf(contents,
+                      visibilitiy_offset,
+                      *bounding_box_min,
+                      *bounding_box_max,
+                      first_mark_surface,
+                      number_of_marked_surfaces,
+                      *ambient_level)
 
         bsp.Leaf.write(self.buff, l0)
         self.buff.seek(0)
@@ -167,8 +195,8 @@ class TestBspReadWrite(TestCase):
         self.assertEqual(l0.ambient_level, l1.ambient_level, 'ambient_level should be equal')
 
     def test_edge(self):
-        e0 = bsp.Edge()
-        e0.vertexes = 0, 1
+        vertexes = 0, 1
+        e0 = bsp.Edge(*vertexes)
 
         bsp.Edge.write(self.buff, e0)
         self.buff.seek(0)
@@ -178,14 +206,21 @@ class TestBspReadWrite(TestCase):
         self.assertEqual(e0.vertexes, e1.vertexes, 'Vertexes should equal')
 
     def test_model(self):
-        m0 = bsp.Model()
-        m0.bounding_box_min = -32767, -32767, -32767
-        m0.bounding_box_max = 32767, 32767, 32767
-        m0.origin = 0, 0, 0
-        m0.head_node = 0, 1, 2, 0
-        m0.visleafs = 0
-        m0.first_face = 0
-        m0.number_of_faces = 8
+        bounding_box_min = -32767, -32767, -32767
+        bounding_box_max = 32767, 32767, 32767
+        origin = 0, 0, 0
+        head_node = 0, 1, 2, 0
+        visleafs = 0
+        first_face = 0
+        number_of_faces = 8
+
+        m0 = bsp.Model(*bounding_box_min,
+                       *bounding_box_max,
+                       *origin,
+                       *head_node,
+                       visleafs,
+                       first_face,
+                       number_of_faces)
 
         bsp.Model.write(self.buff, m0)
         self.buff.seek(0)

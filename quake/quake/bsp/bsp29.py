@@ -218,10 +218,16 @@ class Plane(object):
         'type'
     )
 
-    def __init__(self):
-        self.normal = None
-        self.distance = None
-        self.type = None
+    def __init__(self,
+                 normal_x,
+                 normal_y,
+                 normal_z,
+                 distance,
+                 type):
+
+        self.normal = normal_x, normal_y, normal_z
+        self.distance = distance
+        self.type = type
 
     @classmethod
     def write(cls, file, plane):
@@ -234,14 +240,10 @@ class Plane(object):
 
     @classmethod
     def read(cls, file):
-        plane = Plane()
         plane_data = file.read(cls.size)
         plane_struct = struct.unpack(cls.format, plane_data)
-        plane.normal = plane_struct[0:3]
-        plane.distance = plane_struct[3]
-        plane.type = plane_struct[4]
 
-        return plane
+        return Plane(*plane_struct)
 
 
 class Miptexture(object):
@@ -349,10 +351,10 @@ class Vertex(object):
         'z'
     )
 
-    def __init__(self):
-        self.x = None
-        self.y = None
-        self.z = None
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
 
     def __getitem__(self, item):
         if type(item) is int:
@@ -375,15 +377,10 @@ class Vertex(object):
 
     @classmethod
     def read(cls, file):
-        vertex = Vertex()
         vertex_data = file.read(cls.size)
         vertex_struct = struct.unpack(cls.format, vertex_data)
 
-        vertex.x = vertex_struct[0]
-        vertex.y = vertex_struct[1]
-        vertex.z = vertex_struct[2]
-
-        return vertex
+        return Vertex(*vertex_struct)
 
 
 class Node(object):
@@ -427,13 +424,25 @@ class Node(object):
         'number_of_faces'
     )
 
-    def __init__(self):
-        self.plane_number = None
-        self.children = None
-        self.bounding_box_min = None
-        self.bounding_box_max = None
-        self.first_face = None
-        self.number_of_faces = None
+    def __init__(self,
+                 plane_number,
+                 child_front,
+                 child_back,
+                 bounding_box_min_x,
+                 bounding_box_min_y,
+                 bounding_box_min_z,
+                 bounding_box_max_x,
+                 bounding_box_max_y,
+                 bounding_box_max_z,
+                 first_face,
+                 number_of_faces):
+
+        self.plane_number = plane_number
+        self.children = child_front, child_back
+        self.bounding_box_min = bounding_box_min_x, bounding_box_min_y, bounding_box_min_z
+        self.bounding_box_max = bounding_box_max_x, bounding_box_max_y, bounding_box_max_z
+        self.first_face = first_face
+        self.number_of_faces = number_of_faces
 
     @classmethod
     def write(cls, file, node):
@@ -449,18 +458,10 @@ class Node(object):
 
     @classmethod
     def read(cls, file):
-        node = Node()
         node_data = file.read(cls.size)
         node_struct = struct.unpack(cls.format, node_data)
 
-        node.plane_number = node_struct[0]
-        node.children = node_struct[1:3]
-        node.bounding_box_min = node_struct[3:6]
-        node.bounding_box_max = node_struct[6:9]
-        node.first_face = node_struct[9]
-        node.number_of_faces = node_struct[10]
-
-        return node
+        return Node(*node_struct)
 
 
 class TextureInfo(object):
@@ -492,13 +493,24 @@ class TextureInfo(object):
         'flags'
     )
 
-    def __init__(self):
-        self.s = None
-        self.s_offset = None
-        self.t = None
-        self.t_offset = None
-        self.miptexture_number = None
-        self.flags = None
+    def __init__(self,
+                 s_x,
+                 s_y,
+                 s_z,
+                 s_offset,
+                 t_x,
+                 t_y,
+                 t_z,
+                 t_offset,
+                 miptexture_number,
+                 flags):
+
+        self.s = s_x, s_y, s_z
+        self.s_offset = s_offset
+        self.t = t_x, t_y, t_z
+        self.t_offset = t_offset
+        self.miptexture_number = miptexture_number
+        self.flags = flags
 
     @classmethod
     def write(cls, file, texture_info):
@@ -513,18 +525,10 @@ class TextureInfo(object):
 
     @classmethod
     def read(cls, file):
-        texture_info = TextureInfo()
         texture_info_data = file.read(cls.size)
         texture_info_struct = struct.unpack(cls.format, texture_info_data)
 
-        texture_info.s = texture_info_struct[0:3]
-        texture_info.s_offset = texture_info_struct[3]
-        texture_info.t = texture_info_struct[4:7]
-        texture_info.t_offset = texture_info_struct[7]
-        texture_info.miptexture_number = texture_info_struct[8]
-        texture_info.flags = texture_info_struct[9]
-
-        return texture_info
+        return TextureInfo(*texture_info_struct)
 
 
 class Face(object):
@@ -562,14 +566,25 @@ class Face(object):
         'light_offset'
     )
 
-    def __init__(self):
-        self.plane_number = None
-        self.side = None
-        self.first_edge = None
-        self.number_of_edges = None
-        self.texture_info = None
-        self.styles = None
-        self.light_offset = None
+    def __init__(self,
+                 plane_number,
+                 side,
+                 first_edge,
+                 number_of_edges,
+                 texture_info,
+                 style_0,
+                 style_1,
+                 style_2,
+                 style_3,
+                 light_offset):
+
+        self.plane_number = plane_number
+        self.side = side
+        self.first_edge = first_edge
+        self.number_of_edges = number_of_edges
+        self.texture_info = texture_info
+        self.styles = style_0, style_1, style_2, style_3
+        self.light_offset = light_offset
 
     @classmethod
     def write(cls, file, plane):
@@ -586,19 +601,10 @@ class Face(object):
 
     @classmethod
     def read(cls, file):
-        face = Face()
         face_data = file.read(cls.size)
         face_struct = struct.unpack(cls.format, face_data)
 
-        face.plane_number = face_struct[0]
-        face.side = face_struct[1]
-        face.first_edge = face_struct[2]
-        face.number_of_edges = face_struct[3]
-        face.texture_info = face_struct[4]
-        face.styles = face_struct[5:9]
-        face.light_offset = face_struct[9]
-
-        return face
+        return Face(*face_struct)
 
 
 class ClipNode(object):
@@ -621,9 +627,13 @@ class ClipNode(object):
         'children'
     )
 
-    def __init__(self):
-        self.plane_number = None
-        self.children = None
+    def __init__(self,
+                 plane_number,
+                 child_front,
+                 child_back):
+
+        self.plane_number = plane_number
+        self.children = child_front, child_back
 
     @classmethod
     def write(cls, file, clip_node):
@@ -635,14 +645,10 @@ class ClipNode(object):
 
     @classmethod
     def read(cls, file):
-        clip_node = ClipNode()
         clip_node_data = file.read(cls.size)
         clip_node_struct = struct.unpack(cls.format, clip_node_data)
 
-        clip_node.plane_number = clip_node_struct[0]
-        clip_node.children = clip_node_struct[1:]
-
-        return clip_node
+        return ClipNode(*clip_node_struct)
 
 
 CONTENTS_EMPTY = -1
@@ -695,14 +701,29 @@ class Leaf(object):
         'ambient_level'
     )
 
-    def __init__(self):
-        self.contents = None
-        self.visibilitiy_offset = None
-        self.bounding_box_min = None
-        self.bounding_box_max = None
-        self.first_mark_surface = None
-        self.number_of_marked_surfaces = None
-        self.ambient_level = None
+    def __init__(self,
+                 contents,
+                 visibilitiy_offset,
+                 bounding_box_min_x,
+                 bounding_box_min_y,
+                 bounding_box_min_z,
+                 bounding_box_max_x,
+                 bounding_box_max_y,
+                 bounding_box_max_z,
+                 first_mark_surface,
+                 number_of_marked_surfaces,
+                 ambient_level_0,
+                 ambient_level_1,
+                 ambient_level_2,
+                 ambient_level_3):
+
+        self.contents = contents
+        self.visibilitiy_offset = visibilitiy_offset
+        self.bounding_box_min = bounding_box_min_x, bounding_box_min_y, bounding_box_min_z
+        self.bounding_box_max = bounding_box_max_x, bounding_box_max_y, bounding_box_max_z
+        self.first_mark_surface = first_mark_surface
+        self.number_of_marked_surfaces = number_of_marked_surfaces
+        self.ambient_level = ambient_level_0, ambient_level_1, ambient_level_2, ambient_level_3
 
     @classmethod
     def write(cls, file, leaf):
@@ -719,19 +740,10 @@ class Leaf(object):
 
     @classmethod
     def read(cls, file):
-        leaf = Leaf()
         leaf_data = file.read(cls.size)
         leaf_struct = struct.unpack(cls.format, leaf_data)
 
-        leaf.contents = leaf_struct[0]
-        leaf.visibilitiy_offset = leaf_struct[1]
-        leaf.bounding_box_min = leaf_struct[2:5]
-        leaf.bounding_box_max = leaf_struct[5:8]
-        leaf.first_mark_surface = leaf_struct[8]
-        leaf.number_of_marked_surfaces = leaf_struct[9]
-        leaf.ambient_level = leaf_struct[10:]
-
-        return leaf
+        return Leaf(*leaf_struct)
 
 
 class Edge(object):
@@ -749,8 +761,8 @@ class Edge(object):
         'vertexes'
     )
 
-    def __init__(self):
-        self.vertexes = None
+    def __init__(self, vertex_0, vertex_1):
+        self.vertexes = vertex_0, vertex_1
 
     def __getitem__(self, item):
         if item > 1:
@@ -767,13 +779,10 @@ class Edge(object):
 
     @classmethod
     def read(cls, file):
-        edge = Edge()
         edge_data = file.read(cls.size)
         edge_struct = struct.unpack(cls.format, edge_data)
 
-        edge.vertexes = edge_struct[:]
-
-        return edge
+        return Edge(*edge_struct)
 
 
 class Model(object):
@@ -812,14 +821,31 @@ class Model(object):
         'number_of_faces'
     )
 
-    def __init__(self):
-        self.bounding_box_min = None
-        self.bounding_box_max = None
-        self.origin = None
-        self.head_node = None
-        self.visleafs = None
-        self.first_face = None
-        self.number_of_faces = None
+    def __init__(self,
+                 bounding_box_min_x,
+                 bounding_box_min_y,
+                 bounding_box_min_z,
+                 bounding_box_max_x,
+                 bounding_box_max_y,
+                 bounding_box_max_z,
+                 origin_x,
+                 origin_y,
+                 origin_z,
+                 head_node_0,
+                 head_node_1,
+                 head_node_2,
+                 head_node_3,
+                 visleafs,
+                 first_face,
+                 number_of_faces):
+
+        self.bounding_box_min = bounding_box_min_x, bounding_box_min_y, bounding_box_min_z
+        self.bounding_box_max = bounding_box_max_x, bounding_box_max_y, bounding_box_max_z
+        self.origin = origin_x, origin_y, origin_z
+        self.head_node = head_node_0, head_node_1, head_node_2, head_node_3
+        self.visleafs = visleafs
+        self.first_face = first_face
+        self.number_of_faces = number_of_faces
 
     @classmethod
     def write(cls, file, model):
@@ -836,19 +862,10 @@ class Model(object):
 
     @classmethod
     def read(cls, file):
-        model = Model()
         model_data = file.read(cls.size)
         model_struct = struct.unpack(cls.format, model_data)
 
-        model.bounding_box_min = model_struct[0:3]
-        model.bounding_box_max = model_struct[3:6]
-        model.origin = model_struct[6:9]
-        model.head_node = model_struct[9:13]
-        model.visleafs = model_struct[13]
-        model.first_face = model_struct[14]
-        model.number_of_faces = model_struct[15]
-
-        return model
+        return Model(*model_struct)
 
 
 class Mesh(object):
@@ -1057,12 +1074,7 @@ class Bsp(object):
 
         file.seek(entities_offset)
         entities_data = file.read(entities_size)
-
-        # Sanitize any Quake color codes
-        entities_data = bytearray(entities_data)
-        entities_data = bytes(map(lambda x: x % 128, entities_data))
-
-        entities = struct.unpack('<{}s'.format(entities_size), entities_data)[0].decode('ascii').strip('\x00')
+        entities = struct.unpack('<{}s'.format(entities_size), entities_data)[0].decode('cp437').strip('\x00')
         bsp.entities = entities
 
         # Planes
@@ -1163,14 +1175,9 @@ class Bsp(object):
     @staticmethod
     def _read_chunk(file, chunk_entry, cls):
         chunk_offset, chunk_size = chunk_entry
-        count = chunk_size // cls.size
-        result = []
         file.seek(chunk_offset)
 
-        for _ in range(count):
-            result.append(cls.read(file))
-
-        return result
+        return [cls(*s) for s in struct.iter_unpack(cls.format, file.read(chunk_size))]
 
     @staticmethod
     def _write_file(file, bsp):
