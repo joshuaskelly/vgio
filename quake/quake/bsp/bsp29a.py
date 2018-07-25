@@ -1,27 +1,11 @@
 """This module provides file I/O for Quake BSP2 map files.
 
 Example:
-    bsp_file = bsp.Bsp.open('e1m1.bsp')
+    bsp_file = bsp.Bsp.open('ad_sepulcher.bsp')
 """
 
 import io
 import struct
-
-from .bsp29 import (
-    default_palette,
-    Plane,
-    Miptexture,
-    Vertex,
-    Node,
-    TextureInfo,
-    Face,
-    ClipNode,
-    Leaf,
-    Edge,
-    Model,
-    Mesh,
-    Image
-)
 
 __all__ = ['BadBspFile', 'is_bspfile', 'Plane', 'Miptexture',
            'Vertex', 'Node', 'TextureInfo', 'Face', 'ClipNode',
@@ -131,7 +115,266 @@ def is_bspfile(filename):
     return result
 
 
-class Node(Node):
+default_palette = (
+    (0x00,0x00,0x00),(0x0f,0x0f,0x0f),(0x1f,0x1f,0x1f),(0x2f,0x2f,0x2f),
+    (0x3f,0x3f,0x3f),(0x4b,0x4b,0x4b),(0x5b,0x5b,0x5b),(0x6b,0x6b,0x6b),
+    (0x7b,0x7b,0x7b),(0x8b,0x8b,0x8b),(0x9b,0x9b,0x9b),(0xab,0xab,0xab),
+    (0xbb,0xbb,0xbb),(0xcb,0xcb,0xcb),(0xdb,0xdb,0xdb),(0xeb,0xeb,0xeb),
+    (0x0f,0x0b,0x07),(0x17,0x0f,0x0b),(0x1f,0x17,0x0b),(0x27,0x1b,0x0f),
+    (0x2f,0x23,0x13),(0x37,0x2b,0x17),(0x3f,0x2f,0x17),(0x4b,0x37,0x1b),
+    (0x53,0x3b,0x1b),(0x5b,0x43,0x1f),(0x63,0x4b,0x1f),(0x6b,0x53,0x1f),
+    (0x73,0x57,0x1f),(0x7b,0x5f,0x23),(0x83,0x67,0x23),(0x8f,0x6f,0x23),
+    (0x0b,0x0b,0x0f),(0x13,0x13,0x1b),(0x1b,0x1b,0x27),(0x27,0x27,0x33),
+    (0x2f,0x2f,0x3f),(0x37,0x37,0x4b),(0x3f,0x3f,0x57),(0x47,0x47,0x67),
+    (0x4f,0x4f,0x73),(0x5b,0x5b,0x7f),(0x63,0x63,0x8b),(0x6b,0x6b,0x97),
+    (0x73,0x73,0xa3),(0x7b,0x7b,0xaf),(0x83,0x83,0xbb),(0x8b,0x8b,0xcb),
+    (0x00,0x00,0x00),(0x07,0x07,0x00),(0x0b,0x0b,0x00),(0x13,0x13,0x00),
+    (0x1b,0x1b,0x00),(0x23,0x23,0x00),(0x2b,0x2b,0x07),(0x2f,0x2f,0x07),
+    (0x37,0x37,0x07),(0x3f,0x3f,0x07),(0x47,0x47,0x07),(0x4b,0x4b,0x0b),
+    (0x53,0x53,0x0b),(0x5b,0x5b,0x0b),(0x63,0x63,0x0b),(0x6b,0x6b,0x0f),
+    (0x07,0x00,0x00),(0x0f,0x00,0x00),(0x17,0x00,0x00),(0x1f,0x00,0x00),
+    (0x27,0x00,0x00),(0x2f,0x00,0x00),(0x37,0x00,0x00),(0x3f,0x00,0x00),
+    (0x47,0x00,0x00),(0x4f,0x00,0x00),(0x57,0x00,0x00),(0x5f,0x00,0x00),
+    (0x67,0x00,0x00),(0x6f,0x00,0x00),(0x77,0x00,0x00),(0x7f,0x00,0x00),
+    (0x13,0x13,0x00),(0x1b,0x1b,0x00),(0x23,0x23,0x00),(0x2f,0x2b,0x00),
+    (0x37,0x2f,0x00),(0x43,0x37,0x00),(0x4b,0x3b,0x07),(0x57,0x43,0x07),
+    (0x5f,0x47,0x07),(0x6b,0x4b,0x0b),(0x77,0x53,0x0f),(0x83,0x57,0x13),
+    (0x8b,0x5b,0x13),(0x97,0x5f,0x1b),(0xa3,0x63,0x1f),(0xaf,0x67,0x23),
+    (0x23,0x13,0x07),(0x2f,0x17,0x0b),(0x3b,0x1f,0x0f),(0x4b,0x23,0x13),
+    (0x57,0x2b,0x17),(0x63,0x2f,0x1f),(0x73,0x37,0x23),(0x7f,0x3b,0x2b),
+    (0x8f,0x43,0x33),(0x9f,0x4f,0x33),(0xaf,0x63,0x2f),(0xbf,0x77,0x2f),
+    (0xcf,0x8f,0x2b),(0xdf,0xab,0x27),(0xef,0xcb,0x1f),(0xff,0xf3,0x1b),
+    (0x0b,0x07,0x00),(0x1b,0x13,0x00),(0x2b,0x23,0x0f),(0x37,0x2b,0x13),
+    (0x47,0x33,0x1b),(0x53,0x37,0x23),(0x63,0x3f,0x2b),(0x6f,0x47,0x33),
+    (0x7f,0x53,0x3f),(0x8b,0x5f,0x47),(0x9b,0x6b,0x53),(0xa7,0x7b,0x5f),
+    (0xb7,0x87,0x6b),(0xc3,0x93,0x7b),(0xd3,0xa3,0x8b),(0xe3,0xb3,0x97),
+    (0xab,0x8b,0xa3),(0x9f,0x7f,0x97),(0x93,0x73,0x87),(0x8b,0x67,0x7b),
+    (0x7f,0x5b,0x6f),(0x77,0x53,0x63),(0x6b,0x4b,0x57),(0x5f,0x3f,0x4b),
+    (0x57,0x37,0x43),(0x4b,0x2f,0x37),(0x43,0x27,0x2f),(0x37,0x1f,0x23),
+    (0x2b,0x17,0x1b),(0x23,0x13,0x13),(0x17,0x0b,0x0b),(0x0f,0x07,0x07),
+    (0xbb,0x73,0x9f),(0xaf,0x6b,0x8f),(0xa3,0x5f,0x83),(0x97,0x57,0x77),
+    (0x8b,0x4f,0x6b),(0x7f,0x4b,0x5f),(0x73,0x43,0x53),(0x6b,0x3b,0x4b),
+    (0x5f,0x33,0x3f),(0x53,0x2b,0x37),(0x47,0x23,0x2b),(0x3b,0x1f,0x23),
+    (0x2f,0x17,0x1b),(0x23,0x13,0x13),(0x17,0x0b,0x0b),(0x0f,0x07,0x07),
+    (0xdb,0xc3,0xbb),(0xcb,0xb3,0xa7),(0xbf,0xa3,0x9b),(0xaf,0x97,0x8b),
+    (0xa3,0x87,0x7b),(0x97,0x7b,0x6f),(0x87,0x6f,0x5f),(0x7b,0x63,0x53),
+    (0x6b,0x57,0x47),(0x5f,0x4b,0x3b),(0x53,0x3f,0x33),(0x43,0x33,0x27),
+    (0x37,0x2b,0x1f),(0x27,0x1f,0x17),(0x1b,0x13,0x0f),(0x0f,0x0b,0x07),
+    (0x6f,0x83,0x7b),(0x67,0x7b,0x6f),(0x5f,0x73,0x67),(0x57,0x6b,0x5f),
+    (0x4f,0x63,0x57),(0x47,0x5b,0x4f),(0x3f,0x53,0x47),(0x37,0x4b,0x3f),
+    (0x2f,0x43,0x37),(0x2b,0x3b,0x2f),(0x23,0x33,0x27),(0x1f,0x2b,0x1f),
+    (0x17,0x23,0x17),(0x0f,0x1b,0x13),(0x0b,0x13,0x0b),(0x07,0x0b,0x07),
+    (0xff,0xf3,0x1b),(0xef,0xdf,0x17),(0xdb,0xcb,0x13),(0xcb,0xb7,0x0f),
+    (0xbb,0xa7,0x0f),(0xab,0x97,0x0b),(0x9b,0x83,0x07),(0x8b,0x73,0x07),
+    (0x7b,0x63,0x07),(0x6b,0x53,0x00),(0x5b,0x47,0x00),(0x4b,0x37,0x00),
+    (0x3b,0x2b,0x00),(0x2b,0x1f,0x00),(0x1b,0x0f,0x00),(0x0b,0x07,0x00),
+    (0x00,0x00,0xff),(0x0b,0x0b,0xef),(0x13,0x13,0xdf),(0x1b,0x1b,0xcf),
+    (0x23,0x23,0xbf),(0x2b,0x2b,0xaf),(0x2f,0x2f,0x9f),(0x2f,0x2f,0x8f),
+    (0x2f,0x2f,0x7f),(0x2f,0x2f,0x6f),(0x2f,0x2f,0x5f),(0x2b,0x2b,0x4f),
+    (0x23,0x23,0x3f),(0x1b,0x1b,0x2f),(0x13,0x13,0x1f),(0x0b,0x0b,0x0f),
+    (0x2b,0x00,0x00),(0x3b,0x00,0x00),(0x4b,0x07,0x00),(0x5f,0x07,0x00),
+    (0x6f,0x0f,0x00),(0x7f,0x17,0x07),(0x93,0x1f,0x07),(0xa3,0x27,0x0b),
+    (0xb7,0x33,0x0f),(0xc3,0x4b,0x1b),(0xcf,0x63,0x2b),(0xdb,0x7f,0x3b),
+    (0xe3,0x97,0x4f),(0xe7,0xab,0x5f),(0xef,0xbf,0x77),(0xf7,0xd3,0x8b),
+    (0xa7,0x7b,0x3b),(0xb7,0x9b,0x37),(0xc7,0xc3,0x37),(0xe7,0xe3,0x57),
+    (0x7f,0xbf,0xff),(0xab,0xe7,0xff),(0xd7,0xff,0xff),(0x67,0x00,0x00),
+    (0x8b,0x00,0x00),(0xb3,0x00,0x00),(0xd7,0x00,0x00),(0xff,0x00,0x00),
+    (0xff,0xf3,0x93),(0xff,0xf7,0xc7),(0xff,0xff,0xff),(0x9f,0x5b,0x53),
+)
+
+
+class Plane(object):
+    """Class for representing a bsp plane
+
+    Attributes:
+        normal: The normal vector to the plane.
+
+        distance: The distance from world (0, 0, 0) to a point on the plane
+
+        type: Planes are classified as follows:
+            0: Axial plane aligned to the x-axis.
+            1: Axial plane aligned to the y-axis.
+            2: Axial plane aligned to the z-axis.
+            3: Non-axial plane roughly aligned to the x-axis.
+            4: Non-axial plane roughly aligned to the y-axis.
+            5: Non-axial plane roughly aligned to the z-axis.
+    """
+
+    format = '<4fi'
+    size = struct.calcsize(format)
+
+    __slots__ = (
+        'normal',
+        'distance',
+        'type'
+    )
+
+    def __init__(self,
+                 normal_x,
+                 normal_y,
+                 normal_z,
+                 distance,
+                 type):
+
+        self.normal = normal_x, normal_y, normal_z
+        self.distance = distance
+        self.type = type
+
+    @classmethod
+    def write(cls, file, plane):
+        plane_data = struct.pack(cls.format,
+                                 *plane.normal,
+                                 plane.distance,
+                                 plane.type)
+
+        file.write(plane_data)
+
+    @classmethod
+    def read(cls, file):
+        plane_data = file.read(cls.size)
+        plane_struct = struct.unpack(cls.format, plane_data)
+
+        return Plane(*plane_struct)
+
+
+class Miptexture(object):
+    """Class for representing a miptexture
+
+    A miptexture is an indexed image mip map embedded within the map. Maps
+    usually have many miptextures, and the miptexture lump is treated like a
+    small wad file.
+
+    Attributes:
+        name: The name of the miptexture.
+
+        width: The width of the miptexture.
+            Note: this is the width at mipmap level 0.
+
+        height: The height of the miptexture.
+            Note: this is the height at mipmap level 0.
+
+        offsets: The offsets for each of the mipmaps. This is a tuple of size
+            four (this is the number of mipmap levels).
+
+        pixels: A tuple of unstructured pixel data represented as integers. A
+            palette must be used to obtain RGB data.
+
+            Note: this is the pixel data for all four mip levels. The size is
+            calculated using the simplified form of the geometric series where
+            r = 1/4 and n = 4.
+
+            The size of this tuple is:
+
+            miptexture.width * miptexture.height * 85 / 64
+    """
+
+    format = '<16s6I'
+    size = struct.calcsize(format)
+
+    __slots__ = (
+        'name',
+        'width',
+        'height',
+        'offsets',
+        'pixels'
+    )
+
+    def __init__(self):
+        self.name = None
+        self.width = None
+        self.height = None
+        self.offsets = None
+        self.pixels = None
+
+    @classmethod
+    def write(cls, file, miptexture):
+        miptexture_data = struct.pack(cls.format,
+                                      miptexture.name.encode('ascii'),
+                                      miptexture.width,
+                                      miptexture.height,
+                                      *miptexture.offsets)
+
+        pixels_size = miptexture.width * miptexture.height * 85 // 64
+        pixels_format = '<%dB' % pixels_size
+        pixels_data = struct.pack(pixels_format, *miptexture.pixels)
+
+        file.write(miptexture_data)
+        file.write(pixels_data)
+
+    @classmethod
+    def read(cls, file):
+        miptexture = Miptexture()
+        miptexture_data = file.read(cls.size)
+        miptexture_struct = struct.unpack(cls.format, miptexture_data)
+        miptexture.name = miptexture_struct[0].split(b'\00')[0].decode('ascii')
+        miptexture.width = miptexture_struct[1]
+        miptexture.height = miptexture_struct[2]
+        miptexture.offsets = miptexture_struct[3:]
+
+        pixels_size = miptexture.width * miptexture.height * 85 // 64
+        pixels_format = '<%dB' % pixels_size
+        pixels_data = struct.unpack(pixels_format, file.read(pixels_size))
+
+        miptexture.pixels = pixels_data
+
+        return miptexture
+
+
+class Vertex(object):
+    """Class for representing a vertex
+
+    A Vertex is an XYZ triple.
+
+    Attributes:
+        x: The x-coordinate
+
+        y: The y-coordinate
+
+        z: The z-coordinate
+    """
+
+    format = '<3f'
+    size = struct.calcsize(format)
+
+    __slots__ = (
+        'x',
+        'y',
+        'z'
+    )
+
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+
+    def __getitem__(self, item):
+        if type(item) is int:
+            return [self.x, self.y, self.z][item]
+
+        elif type(item) is slice:
+            start = item.start or 0
+            stop = item.stop or 3
+
+            return [self.x, self.y, self.z][start:stop]
+
+    @classmethod
+    def write(cls, file, vertex):
+        vertex_data = struct.pack(cls.format,
+                                  vertex.x,
+                                  vertex.y,
+                                  vertex.z)
+
+        file.write(vertex_data)
+
+    @classmethod
+    def read(cls, file):
+        vertex_data = file.read(cls.size)
+        vertex_struct = struct.unpack(cls.format, vertex_data)
+
+        return Vertex(*vertex_struct)
+
+
+class Node(object):
     """Class for representing a node
 
     A Node is a data structure used to compose a bsp tree data structure. A
@@ -163,8 +406,123 @@ class Node(Node):
     format = '<i8i2I'
     size = struct.calcsize(format)
 
+    __slots__ = (
+        'plane_number',
+        'children',
+        'bounding_box_min',
+        'bounding_box_max',
+        'first_face',
+        'number_of_faces'
+    )
 
-class Face(Face):
+    def __init__(self,
+                 plane_number,
+                 child_front,
+                 child_back,
+                 bounding_box_min_x,
+                 bounding_box_min_y,
+                 bounding_box_min_z,
+                 bounding_box_max_x,
+                 bounding_box_max_y,
+                 bounding_box_max_z,
+                 first_face,
+                 number_of_faces):
+
+        self.plane_number = plane_number
+        self.children = child_front, child_back
+        self.bounding_box_min = bounding_box_min_x, bounding_box_min_y, bounding_box_min_z
+        self.bounding_box_max = bounding_box_max_x, bounding_box_max_y, bounding_box_max_z
+        self.first_face = first_face
+        self.number_of_faces = number_of_faces
+
+    @classmethod
+    def write(cls, file, node):
+        node_data = struct.pack(cls.format,
+                                node.plane_number,
+                                *node.children,
+                                *node.bounding_box_min,
+                                *node.bounding_box_max,
+                                node.first_face,
+                                node.number_of_faces)
+
+        file.write(node_data)
+
+    @classmethod
+    def read(cls, file):
+        node_data = file.read(cls.size)
+        node_struct = struct.unpack(cls.format, node_data)
+
+        return Node(*node_struct)
+
+
+class TextureInfo(object):
+    """Class for representing a texture info
+
+    Attributes:
+        s: The s vector in texture space represented as an XYZ three-tuple.
+
+        s_offset: Horizontal offset in texture space.
+
+        t: The t vector in texture space represented as an XYZ three-tuple.
+
+        t_offset: Vertical offset in texture space.
+
+        miptexture_number: The index of the miptexture.
+
+        flags: If set to 1 the texture will be animated like water.
+    """
+
+    format = '<8f2i'
+    size = struct.calcsize(format)
+
+    __slots__ = (
+        's',
+        's_offset',
+        't',
+        't_offset',
+        'miptexture_number',
+        'flags'
+    )
+
+    def __init__(self,
+                 s_x,
+                 s_y,
+                 s_z,
+                 s_offset,
+                 t_x,
+                 t_y,
+                 t_z,
+                 t_offset,
+                 miptexture_number,
+                 flags):
+
+        self.s = s_x, s_y, s_z
+        self.s_offset = s_offset
+        self.t = t_x, t_y, t_z
+        self.t_offset = t_offset
+        self.miptexture_number = miptexture_number
+        self.flags = flags
+
+    @classmethod
+    def write(cls, file, texture_info):
+        texture_info_data = struct.pack(cls.format,
+                                        *texture_info.s,
+                                        texture_info.s_offset,
+                                        *texture_info.t,
+                                        texture_info.t_offset,
+                                        texture_info.miptexture_number,
+                                        texture_info.flags)
+        file.write(texture_info_data)
+
+    @classmethod
+    def read(cls, file):
+        texture_info_data = file.read(cls.size)
+        texture_info_struct = struct.unpack(cls.format, texture_info_data)
+
+        return TextureInfo(*texture_info_struct)
+
+
+class Face(object):
     """Class for representing a face
 
     Attributes:
@@ -189,8 +547,58 @@ class Face(Face):
     format = '<2ii2i4Bi'
     size = struct.calcsize(format)
 
+    __slots__ = (
+        'plane_number',
+        'side',
+        'first_edge',
+        'number_of_edges',
+        'texture_info',
+        'styles',
+        'light_offset'
+    )
 
-class ClipNode(ClipNode):
+    def __init__(self,
+                 plane_number,
+                 side,
+                 first_edge,
+                 number_of_edges,
+                 texture_info,
+                 style_0,
+                 style_1,
+                 style_2,
+                 style_3,
+                 light_offset):
+
+        self.plane_number = plane_number
+        self.side = side
+        self.first_edge = first_edge
+        self.number_of_edges = number_of_edges
+        self.texture_info = texture_info
+        self.styles = style_0, style_1, style_2, style_3
+        self.light_offset = light_offset
+
+    @classmethod
+    def write(cls, file, plane):
+        face_data = struct.pack(cls.format,
+                                plane.plane_number,
+                                plane.side,
+                                plane.first_edge,
+                                plane.number_of_edges,
+                                plane.texture_info,
+                                *plane.styles,
+                                plane.light_offset)
+
+        file.write(face_data)
+
+    @classmethod
+    def read(cls, file):
+        face_data = file.read(cls.size)
+        face_struct = struct.unpack(cls.format, face_data)
+
+        return Face(*face_struct)
+
+
+class ClipNode(object):
     """Class for representing a clip node
 
     Attributes:
@@ -205,6 +613,33 @@ class ClipNode(ClipNode):
     format = '<i2i'
     size = struct.calcsize(format)
 
+    __slots__ = (
+        'plane_number',
+        'children'
+    )
+
+    def __init__(self,
+                 plane_number,
+                 child_front,
+                 child_back):
+
+        self.plane_number = plane_number
+        self.children = child_front, child_back
+
+    @classmethod
+    def write(cls, file, clip_node):
+        clip_node_data = struct.pack(cls.format,
+                                     clip_node.plane_number,
+                                     *clip_node.children)
+
+        file.write(clip_node_data)
+
+    @classmethod
+    def read(cls, file):
+        clip_node_data = file.read(cls.size)
+        clip_node_struct = struct.unpack(cls.format, clip_node_data)
+
+        return ClipNode(*clip_node_struct)
 
 CONTENTS_EMPTY = -1
 CONTENTS_SOLID = -2
@@ -219,7 +654,7 @@ AMBIENT_SLIME = 2
 AMBIENT_LAVA = 3
 
 
-class Leaf(Leaf):
+class Leaf(object):
     """Class for representing a leaf
 
     Attributes:
@@ -246,8 +681,62 @@ class Leaf(Leaf):
     format = '<2i6i2I4B'
     size = struct.calcsize(format)
 
+    __slots__ = (
+        'contents',
+        'visibilitiy_offset',
+        'bounding_box_min',
+        'bounding_box_max',
+        'first_mark_surface',
+        'number_of_marked_surfaces',
+        'ambient_level'
+    )
 
-class Edge(Edge):
+    def __init__(self,
+                 contents,
+                 visibilitiy_offset,
+                 bounding_box_min_x,
+                 bounding_box_min_y,
+                 bounding_box_min_z,
+                 bounding_box_max_x,
+                 bounding_box_max_y,
+                 bounding_box_max_z,
+                 first_mark_surface,
+                 number_of_marked_surfaces,
+                 ambient_level_0,
+                 ambient_level_1,
+                 ambient_level_2,
+                 ambient_level_3):
+
+        self.contents = contents
+        self.visibilitiy_offset = visibilitiy_offset
+        self.bounding_box_min = bounding_box_min_x, bounding_box_min_y, bounding_box_min_z
+        self.bounding_box_max = bounding_box_max_x, bounding_box_max_y, bounding_box_max_z
+        self.first_mark_surface = first_mark_surface
+        self.number_of_marked_surfaces = number_of_marked_surfaces
+        self.ambient_level = ambient_level_0, ambient_level_1, ambient_level_2, ambient_level_3
+
+    @classmethod
+    def write(cls, file, leaf):
+        leaf_data = struct.pack(cls.format,
+                                leaf.contents,
+                                leaf.visibilitiy_offset,
+                                *leaf.bounding_box_min,
+                                *leaf.bounding_box_max,
+                                leaf.first_mark_surface,
+                                leaf.number_of_marked_surfaces,
+                                *leaf.ambient_level)
+
+        file.write(leaf_data)
+
+    @classmethod
+    def read(cls, file):
+        leaf_data = file.read(cls.size)
+        leaf_struct = struct.unpack(cls.format, leaf_data)
+
+        return Leaf(*leaf_struct)
+
+
+class Edge(object):
     """Class for representing a edge
 
     Attributes:
@@ -258,6 +747,178 @@ class Edge(Edge):
     format = '<2I'
     size = struct.calcsize(format)
 
+    __slots__ = (
+        'vertexes'
+    )
+
+    def __init__(self, vertex_0, vertex_1):
+        self.vertexes = vertex_0, vertex_1
+
+    def __getitem__(self, item):
+        if item > 1:
+            raise IndexError('list index of out of range')
+
+        return self.vertexes[item]
+
+    @classmethod
+    def write(cls, file, edge):
+        edge_data = struct.pack(cls.format,
+                                *edge.vertexes)
+
+        file.write(edge_data)
+
+    @classmethod
+    def read(cls, file):
+        edge_data = file.read(cls.size)
+        edge_struct = struct.unpack(cls.format, edge_data)
+
+        return Edge(*edge_struct)
+
+
+class Model(object):
+    """Class for representing a model
+
+    Attributes:
+        bounding_box_min: The minimum coordinate of the bounding box containing
+            the model.
+
+        bounding_box_max: The maximum coordinate of the bounding box containing
+            the model.
+
+        origin: The origin of the model.
+
+        head_node: A four-tuple of indexes. Corresponds to number of map hulls.
+
+        visleafs: The number of leaves in the bsp tree?
+
+        first_face: The number of the first face in Bsp.mark_surfaces.
+
+        number_of_faces: The number of faces contained in the node. These
+            are stored in consecutive order in Bsp.mark_surfaces starting at
+            Model.first_face.
+    """
+
+    format = '<9f7i'
+    size = struct.calcsize(format)
+
+    __slots__ = (
+        'bounding_box_min',
+        'bounding_box_max',
+        'origin',
+        'head_node',
+        'visleafs',
+        'first_face',
+        'number_of_faces'
+    )
+
+    def __init__(self,
+                 bounding_box_min_x,
+                 bounding_box_min_y,
+                 bounding_box_min_z,
+                 bounding_box_max_x,
+                 bounding_box_max_y,
+                 bounding_box_max_z,
+                 origin_x,
+                 origin_y,
+                 origin_z,
+                 head_node_0,
+                 head_node_1,
+                 head_node_2,
+                 head_node_3,
+                 visleafs,
+                 first_face,
+                 number_of_faces):
+        self.bounding_box_min = bounding_box_min_x, bounding_box_min_y, bounding_box_min_z
+        self.bounding_box_max = bounding_box_max_x, bounding_box_max_y, bounding_box_max_z
+        self.origin = origin_x, origin_y, origin_z
+        self.head_node = head_node_0, head_node_1, head_node_2, head_node_3
+        self.visleafs = visleafs
+        self.first_face = first_face
+        self.number_of_faces = number_of_faces
+
+    @classmethod
+    def write(cls, file, model):
+        model_data = struct.pack(cls.format,
+                                 *model.bounding_box_min,
+                                 *model.bounding_box_max,
+                                 *model.origin,
+                                 *model.head_node,
+                                 model.visleafs,
+                                 model.first_face,
+                                 model.number_of_faces)
+
+        file.write(model_data)
+
+    @classmethod
+    def read(cls, file):
+        model_data = file.read(cls.size)
+        model_struct = struct.unpack(cls.format, model_data)
+
+        return Model(*model_struct)
+
+
+class Mesh(object):
+    """Class for representing mesh data
+
+    Attributes:
+        vertices: A list of vertex data represented as XYZ three-tuples.
+
+        triangles: A list of triangle data represented by a three-tuple of
+            vertex indexes.
+
+        uvs: A list of uv coordinates represented as UV tuples.
+
+        normals: A list of vertex normal data represented as XYZ three-tuples.
+
+        sub_meshes: A list of triangle index lists.
+    """
+
+    __slots = (
+        'vertices',
+        'triangles',
+        'uvs',
+        'normals',
+        'sub_meshes'
+    )
+
+    def __init__(self):
+        self.vertices = []
+        self.triangles = []
+        self.uvs = []
+        self.normals = []
+        self.sub_meshes = []
+
+
+class Image(object):
+    """Class for representing pixel data
+
+    Attributes:
+        width: The width of the image.
+
+        height: The height of the image.
+
+        format: A string describing the format of the color data. Usually 'RGB'
+            or 'RGBA'
+
+        pixels: The raw pixel data of the image.
+            The length of this attribute is:
+
+            width * height * len(format)
+    """
+
+    __slots__ = (
+        'width',
+        'height',
+        'format',
+        'pixels'
+    )
+
+    def __init__(self):
+        self.width = 0
+        self.height = 0
+        self.format = 'RGBA'
+        self.pixels = None
+
 
 class Bsp(object):
     """Class for working with Bsp files
@@ -266,7 +927,7 @@ class Bsp(object):
         b = Bsp.open(file)
 
     Attributes:
-        version: Version of the map file. Vanilla Quake is 29.
+        version: Version of the map file. Quake BSP2 is b'BSP2'.
 
         entities: A string containing the entity definitions.
 
