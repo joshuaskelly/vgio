@@ -1,16 +1,7 @@
-"""This module provides file I/O for Quake BSP map files.
+"""This module provides file I/O for Quake BSP2 map files.
 
 Example:
-    bsp_file = bsp.Bsp.open('e1m1.bsp')
-
-References:
-    Quake Source
-    - id Software
-    - https://github.com/id-Software/Quake
-
-    Quake Documentation Version 3.4
-    - Olivier Montanuy, et al.
-    - http://www.gamers.org/dEngine/quake/spec/quake-spec34/qkspec_4.htm
+    bsp_file = bsp.Bsp.open('ad_sepulcher.bsp')
 """
 
 import io
@@ -27,7 +18,7 @@ class BadBspFile(Exception):
 
 # The bsp header structure
 header_format = '<31l'
-header_version = 29
+header_version = b'BSP2'
 header_size = struct.calcsize(header_format)
 
 # Indexes of header structure
@@ -63,156 +54,49 @@ _HEADER_SURF_EDGES_SIZE = 28
 _HEADER_MODELS_OFFSET = 29
 _HEADER_MODELS_SIZE = 30
 
-# Plane structure
-plane_format = '<4fi'
-plane_size = struct.calcsize(plane_format)
-
-# Indexes of Plane structure
-_PLANE_NORMAL = 0
-_PLANE_DISTANCE = 3
-_PLANE_TYPE = 4
-
-# Miptexture structure
-miptexture_format = '<16s6I'
-miptexture_size = struct.calcsize(miptexture_format)
-
-# Indexes of Miptexture structure
-_MIPTEXTURE_NAME = 0
-_MIPTEXTURE_WIDTH = 1
-_MIPTEXTURE_HEIGHT = 2
-_MIPTEXTURE_OFFSETS = 3
-
-# Vertex structure
-vertex_format = '<3f'
-vertex_size = struct.calcsize(vertex_format)
-
-# Indexes of Vertex structure
-_VERTEX_X = 0
-_VERTEX_Y = 1
-_VERTEX_Z = 2
-
 
 # Visibility structure
 def _calculate_visibility_format(size):
     return '<%dB' % size
 
-
 visibility_format = None
 visibility_size = None
-
-# Node structure
-node_format = '<i8h2H'
-node_size = struct.calcsize(node_format)
-
-# Indexes of Node structure
-_NODE_PLANE_NUMBER = 0
-_NODE_CHILDREN = 1
-_NODE_BOUNDING_BOX_MIN = 3
-_NODE_BOUNDING_BOX_MAX = 6
-_NODE_FIRST_FACE = 9
-_NODE_NUMBER_OF_FACES = 10
-
-# Texture Info structure
-texture_info_format = '<8f2i'
-texture_info_size = struct.calcsize(texture_info_format)
-
-# Indexes of Texture Info structure
-_TEXTURE_INFO_S = 0
-_TEXTURE_INFO_S_OFFSET = 3
-_TEXTURE_INFO_T = 4
-_TEXTURE_INFO_T_OFFSET = 7
-_TEXTURE_INFO_MIPTEXTURE_NUMBER = 8
-_TEXTURE_INFO_FLAGS = 9
-
-# Face structure
-face_format = '<2hi2h4Bi'
-face_size = struct.calcsize(face_format)
-
-# Indexes of Face structure
-_FACE_PLANE_NUMBER = 0
-_FACE_SIDE = 1
-_FACE_FIRST_EDGE = 2
-_FACE_NUMBER_OF_EDGES = 3
-_FACE_TEXTURE_INFO = 4
-_FACE_STYLES = 5
-_FACE_LIGHT_OFFSET = 9
 
 
 # Lighting structure
 def _calculate_lighting_format(size):
     return '<%dB' % size
 
-
 lighting_format = None
 lighting_size = None
-
-# Clip_node structure
-clip_node_format = '<i2h'
-clip_node_size = struct.calcsize(clip_node_format)
-
-# Indexes of Clip_node structure
-_CLIP_NODE_PLANE_NUMBER = 0
-_CLIP_NODE_CHILDREN = 1
-
-# Leaf structure
-leaf_format = '<2i6h2H4B'
-leaf_size = struct.calcsize(leaf_format)
-
-# Indexes of Leaf structure
-_LEAF_CONTENTS = 0
-_LEAF_VISIBILITIY_OFFSET = 1
-_LEAF_BOUNDING_BOX_MIN = 2
-_LEAF_BOUNDING_BOX_MAX = 5
-_LEAF_FIRST_MARK_SURFACE = 8
-_LEAF_NUMBER_OF_MARKED_SURFACES = 9
-_LEAF_AMBIENT_LEVEL = 10
 
 
 # Mark Surface structure
 def _calculate_mark_surface_format(size):
     return '<%dB' % size
 
-
 mark_surface_format = None
 mark_surface_size = None
-
-# Edge structure
-edge_format = '<2H'
-edge_size = struct.calcsize(edge_format)
 
 
 # Surf Edge structure
 def _calculate_surf_edge_format(size):
     return '<%di' % (size // 4)
 
-
 surf_edge_format = None
 surf_edge_size = None
-
-# Model structure
-model_format = '<9f7i'
-model_size = struct.calcsize(model_format)
-
-# Indexes of Model structure
-_MODEL_BOUNDING_BOX_MIN = 0
-_MODEL_BOUNDING_BOX_MAX = 3
-_MODEL_ORIGIN = 6
-_MODEL_HEAD_NODE = 9
-_MODEL_VISLEAFS = 13
-_MODEL_FIRST_FACE = 14
-_MODEL_NUMBER_OF_FACES = 15
 
 
 def _check_bspfile(fp):
     fp.seek(0)
-    data = fp.read(struct.calcsize('<1l'))
-    version = struct.unpack('<1l', data)[0]
+    data = fp.read(struct.calcsize('<4s'))
+    version = struct.unpack('<4s', data)[0]
 
     return version == header_version
 
 
 def is_bspfile(filename):
-    """Quickly see if a file is a mdl file by checking the magic number.
+    """Quickly see if a file is a bsp file by checking the magic number.
 
     The filename argument may be a file for file-like object.
     """
@@ -316,36 +200,41 @@ class Plane(object):
             5: Non-axial plane roughly aligned to the z-axis.
     """
 
+    format = '<4fi'
+    size = struct.calcsize(format)
+
     __slots__ = (
         'normal',
         'distance',
         'type'
     )
 
-    def __init__(self):
-        self.normal = None
-        self.distance = None
-        self.type = None
+    def __init__(self,
+                 normal_x,
+                 normal_y,
+                 normal_z,
+                 distance,
+                 type):
 
-    @staticmethod
-    def write(file, plane):
-        plane_data = struct.pack(plane_format,
+        self.normal = normal_x, normal_y, normal_z
+        self.distance = distance
+        self.type = type
+
+    @classmethod
+    def write(cls, file, plane):
+        plane_data = struct.pack(cls.format,
                                  *plane.normal,
                                  plane.distance,
                                  plane.type)
 
         file.write(plane_data)
 
-    @staticmethod
-    def read(file):
-        plane = Plane()
-        plane_data = file.read(plane_size)
-        plane_struct = struct.unpack(plane_format, plane_data)
-        plane.normal = plane_struct[_PLANE_NORMAL:_PLANE_DISTANCE]
-        plane.distance = plane_struct[_PLANE_DISTANCE]
-        plane.type = plane_struct[_PLANE_TYPE]
+    @classmethod
+    def read(cls, file):
+        plane_data = file.read(cls.size)
+        plane_struct = struct.unpack(cls.format, plane_data)
 
-        return plane
+        return Plane(*plane_struct)
 
 
 class Miptexture(object):
@@ -379,6 +268,9 @@ class Miptexture(object):
             miptexture.width * miptexture.height * 85 / 64
     """
 
+    format = '<16s6I'
+    size = struct.calcsize(format)
+
     __slots__ = (
         'name',
         'width',
@@ -394,9 +286,9 @@ class Miptexture(object):
         self.offsets = None
         self.pixels = None
 
-    @staticmethod
-    def write(file, miptexture):
-        miptexture_data = struct.pack(miptexture_format,
+    @classmethod
+    def write(cls, file, miptexture):
+        miptexture_data = struct.pack(cls.format,
                                       miptexture.name.encode('ascii'),
                                       miptexture.width,
                                       miptexture.height,
@@ -409,15 +301,15 @@ class Miptexture(object):
         file.write(miptexture_data)
         file.write(pixels_data)
 
-    @staticmethod
-    def read(file):
+    @classmethod
+    def read(cls, file):
         miptexture = Miptexture()
-        miptexture_data = file.read(miptexture_size)
-        miptexture_struct = struct.unpack(miptexture_format, miptexture_data)
-        miptexture.name = miptexture_struct[_MIPTEXTURE_NAME].split(b'\00')[0].decode('ascii')
-        miptexture.width = miptexture_struct[_MIPTEXTURE_WIDTH]
-        miptexture.height = miptexture_struct[_MIPTEXTURE_HEIGHT]
-        miptexture.offsets = miptexture_struct[_MIPTEXTURE_OFFSETS:]
+        miptexture_data = file.read(cls.size)
+        miptexture_struct = struct.unpack(cls.format, miptexture_data)
+        miptexture.name = miptexture_struct[0].split(b'\00')[0].decode('ascii')
+        miptexture.width = miptexture_struct[1]
+        miptexture.height = miptexture_struct[2]
+        miptexture.offsets = miptexture_struct[3:]
 
         pixels_size = miptexture.width * miptexture.height * 85 // 64
         pixels_format = '<%dB' % pixels_size
@@ -441,16 +333,19 @@ class Vertex(object):
         z: The z-coordinate
     """
 
+    format = '<3f'
+    size = struct.calcsize(format)
+
     __slots__ = (
         'x',
         'y',
         'z'
     )
 
-    def __init__(self):
-        self.x = None
-        self.y = None
-        self.z = None
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
 
     def __getitem__(self, item):
         if type(item) is int:
@@ -462,26 +357,21 @@ class Vertex(object):
 
             return [self.x, self.y, self.z][start:stop]
 
-    @staticmethod
-    def write(file, vertex):
-        vertex_data = struct.pack(vertex_format,
+    @classmethod
+    def write(cls, file, vertex):
+        vertex_data = struct.pack(cls.format,
                                   vertex.x,
                                   vertex.y,
                                   vertex.z)
 
         file.write(vertex_data)
 
-    @staticmethod
-    def read(file):
-        vertex = Vertex()
-        vertex_data = file.read(vertex_size)
-        vertex_struct = struct.unpack(vertex_format, vertex_data)
+    @classmethod
+    def read(cls, file):
+        vertex_data = file.read(cls.size)
+        vertex_struct = struct.unpack(cls.format, vertex_data)
 
-        vertex.x = vertex_struct[_VERTEX_X]
-        vertex.y = vertex_struct[_VERTEX_Y]
-        vertex.z = vertex_struct[_VERTEX_Z]
-
-        return vertex
+        return Vertex(*vertex_struct)
 
 
 class Node(object):
@@ -513,6 +403,9 @@ class Node(object):
             Node.first_face.
     """
 
+    format = '<i8i2I'
+    size = struct.calcsize(format)
+
     __slots__ = (
         'plane_number',
         'children',
@@ -522,17 +415,29 @@ class Node(object):
         'number_of_faces'
     )
 
-    def __init__(self):
-        self.plane_number = None
-        self.children = None
-        self.bounding_box_min = None
-        self.bounding_box_max = None
-        self.first_face = None
-        self.number_of_faces = None
+    def __init__(self,
+                 plane_number,
+                 child_front,
+                 child_back,
+                 bounding_box_min_x,
+                 bounding_box_min_y,
+                 bounding_box_min_z,
+                 bounding_box_max_x,
+                 bounding_box_max_y,
+                 bounding_box_max_z,
+                 first_face,
+                 number_of_faces):
 
-    @staticmethod
-    def write(file, node):
-        node_data = struct.pack(node_format,
+        self.plane_number = plane_number
+        self.children = child_front, child_back
+        self.bounding_box_min = bounding_box_min_x, bounding_box_min_y, bounding_box_min_z
+        self.bounding_box_max = bounding_box_max_x, bounding_box_max_y, bounding_box_max_z
+        self.first_face = first_face
+        self.number_of_faces = number_of_faces
+
+    @classmethod
+    def write(cls, file, node):
+        node_data = struct.pack(cls.format,
                                 node.plane_number,
                                 *node.children,
                                 *node.bounding_box_min,
@@ -542,20 +447,12 @@ class Node(object):
 
         file.write(node_data)
 
-    @staticmethod
-    def read(file):
-        node = Node()
-        node_data = file.read(node_size)
-        node_struct = struct.unpack(node_format, node_data)
+    @classmethod
+    def read(cls, file):
+        node_data = file.read(cls.size)
+        node_struct = struct.unpack(cls.format, node_data)
 
-        node.plane_number = node_struct[_NODE_PLANE_NUMBER]
-        node.children = node_struct[_NODE_CHILDREN:_NODE_BOUNDING_BOX_MIN]
-        node.bounding_box_min = node_struct[_NODE_BOUNDING_BOX_MIN:_NODE_BOUNDING_BOX_MAX]
-        node.bounding_box_max = node_struct[_NODE_BOUNDING_BOX_MAX:_NODE_FIRST_FACE]
-        node.first_face = node_struct[_NODE_FIRST_FACE]
-        node.number_of_faces = node_struct[_NODE_NUMBER_OF_FACES]
-
-        return node
+        return Node(*node_struct)
 
 
 class TextureInfo(object):
@@ -575,6 +472,9 @@ class TextureInfo(object):
         flags: If set to 1 the texture will be animated like water.
     """
 
+    format = '<8f2i'
+    size = struct.calcsize(format)
+
     __slots__ = (
         's',
         's_offset',
@@ -584,17 +484,28 @@ class TextureInfo(object):
         'flags'
     )
 
-    def __init__(self):
-        self.s = None
-        self.s_offset = None
-        self.t = None
-        self.t_offset = None
-        self.miptexture_number = None
-        self.flags = None
+    def __init__(self,
+                 s_x,
+                 s_y,
+                 s_z,
+                 s_offset,
+                 t_x,
+                 t_y,
+                 t_z,
+                 t_offset,
+                 miptexture_number,
+                 flags):
 
-    @staticmethod
-    def write(file, texture_info):
-        texture_info_data = struct.pack(texture_info_format,
+        self.s = s_x, s_y, s_z
+        self.s_offset = s_offset
+        self.t = t_x, t_y, t_z
+        self.t_offset = t_offset
+        self.miptexture_number = miptexture_number
+        self.flags = flags
+
+    @classmethod
+    def write(cls, file, texture_info):
+        texture_info_data = struct.pack(cls.format,
                                         *texture_info.s,
                                         texture_info.s_offset,
                                         *texture_info.t,
@@ -603,20 +514,12 @@ class TextureInfo(object):
                                         texture_info.flags)
         file.write(texture_info_data)
 
-    @staticmethod
-    def read(file):
-        texture_info = TextureInfo()
-        texture_info_data = file.read(texture_info_size)
-        texture_info_struct = struct.unpack(texture_info_format, texture_info_data)
+    @classmethod
+    def read(cls, file):
+        texture_info_data = file.read(cls.size)
+        texture_info_struct = struct.unpack(cls.format, texture_info_data)
 
-        texture_info.s = texture_info_struct[_TEXTURE_INFO_S:_TEXTURE_INFO_S_OFFSET]
-        texture_info.s_offset = texture_info_struct[_TEXTURE_INFO_S_OFFSET]
-        texture_info.t = texture_info_struct[_TEXTURE_INFO_T:_TEXTURE_INFO_T_OFFSET]
-        texture_info.t_offset = texture_info_struct[_TEXTURE_INFO_T_OFFSET]
-        texture_info.miptexture_number = texture_info_struct[_TEXTURE_INFO_MIPTEXTURE_NUMBER]
-        texture_info.flags = texture_info_struct[_TEXTURE_INFO_FLAGS]
-
-        return texture_info
+        return TextureInfo(*texture_info_struct)
 
 
 class Face(object):
@@ -641,6 +544,9 @@ class Face(object):
         light_offset: The offset into the lighting data.
     """
 
+    format = '<2ii2i4Bi'
+    size = struct.calcsize(format)
+
     __slots__ = (
         'plane_number',
         'side',
@@ -651,18 +557,29 @@ class Face(object):
         'light_offset'
     )
 
-    def __init__(self):
-        self.plane_number = None
-        self.side = None
-        self.first_edge = None
-        self.number_of_edges = None
-        self.texture_info = None
-        self.styles = None
-        self.light_offset = None
+    def __init__(self,
+                 plane_number,
+                 side,
+                 first_edge,
+                 number_of_edges,
+                 texture_info,
+                 style_0,
+                 style_1,
+                 style_2,
+                 style_3,
+                 light_offset):
 
-    @staticmethod
-    def write(file, plane):
-        face_data = struct.pack(face_format,
+        self.plane_number = plane_number
+        self.side = side
+        self.first_edge = first_edge
+        self.number_of_edges = number_of_edges
+        self.texture_info = texture_info
+        self.styles = style_0, style_1, style_2, style_3
+        self.light_offset = light_offset
+
+    @classmethod
+    def write(cls, file, plane):
+        face_data = struct.pack(cls.format,
                                 plane.plane_number,
                                 plane.side,
                                 plane.first_edge,
@@ -673,21 +590,12 @@ class Face(object):
 
         file.write(face_data)
 
-    @staticmethod
-    def read(file):
-        face = Face()
-        face_data = file.read(face_size)
-        face_struct = struct.unpack(face_format, face_data)
+    @classmethod
+    def read(cls, file):
+        face_data = file.read(cls.size)
+        face_struct = struct.unpack(cls.format, face_data)
 
-        face.plane_number = face_struct[_FACE_PLANE_NUMBER]
-        face.side = face_struct[_FACE_SIDE]
-        face.first_edge = face_struct[_FACE_FIRST_EDGE]
-        face.number_of_edges = face_struct[_FACE_NUMBER_OF_EDGES]
-        face.texture_info = face_struct[_FACE_TEXTURE_INFO]
-        face.styles = face_struct[_FACE_STYLES:_FACE_LIGHT_OFFSET]
-        face.light_offset = face_struct[_FACE_LIGHT_OFFSET]
-
-        return face
+        return Face(*face_struct)
 
 
 class ClipNode(object):
@@ -702,34 +610,36 @@ class ClipNode(object):
             Note: Child 0 is the front sub-space, and 1 is the back sub-space.
     """
 
+    format = '<i2i'
+    size = struct.calcsize(format)
+
     __slots__ = (
         'plane_number',
         'children'
     )
 
-    def __init__(self):
-        self.plane_number = None
-        self.children = None
+    def __init__(self,
+                 plane_number,
+                 child_front,
+                 child_back):
 
-    @staticmethod
-    def write(file, clip_node):
-        clip_node_data = struct.pack(clip_node_format,
+        self.plane_number = plane_number
+        self.children = child_front, child_back
+
+    @classmethod
+    def write(cls, file, clip_node):
+        clip_node_data = struct.pack(cls.format,
                                      clip_node.plane_number,
                                      *clip_node.children)
 
         file.write(clip_node_data)
 
-    @staticmethod
-    def read(file):
-        clip_node = ClipNode()
-        clip_node_data = file.read(clip_node_size)
-        clip_node_struct = struct.unpack(clip_node_format, clip_node_data)
+    @classmethod
+    def read(cls, file):
+        clip_node_data = file.read(cls.size)
+        clip_node_struct = struct.unpack(cls.format, clip_node_data)
 
-        clip_node.plane_number = clip_node_struct[_CLIP_NODE_PLANE_NUMBER]
-        clip_node.children = clip_node_struct[_CLIP_NODE_CHILDREN:]
-
-        return clip_node
-
+        return ClipNode(*clip_node_struct)
 
 CONTENTS_EMPTY = -1
 CONTENTS_SOLID = -2
@@ -768,6 +678,9 @@ class Leaf(object):
             ambient sounds.
     """
 
+    format = '<2i6i2I4B'
+    size = struct.calcsize(format)
+
     __slots__ = (
         'contents',
         'visibilitiy_offset',
@@ -778,43 +691,49 @@ class Leaf(object):
         'ambient_level'
     )
 
-    def __init__(self):
-        self.contents = None
-        self.visibilitiy_offset = None
-        self.bounding_box_min = None
-        self.bounding_box_max = None
-        self.first_mark_surface = None
-        self.number_of_marked_surfaces = None
-        self.ambient_level = None
+    def __init__(self,
+                 contents,
+                 visibilitiy_offset,
+                 bounding_box_min_x,
+                 bounding_box_min_y,
+                 bounding_box_min_z,
+                 bounding_box_max_x,
+                 bounding_box_max_y,
+                 bounding_box_max_z,
+                 first_mark_surface,
+                 number_of_marked_surfaces,
+                 ambient_level_0,
+                 ambient_level_1,
+                 ambient_level_2,
+                 ambient_level_3):
 
-    @staticmethod
-    def write(file, leaf):
-        leaf_data = struct.pack(leaf_format,
-                                    leaf.contents,
-                                    leaf.visibilitiy_offset,
-                                    *leaf.bounding_box_min,
-                                    *leaf.bounding_box_max,
-                                    leaf.first_mark_surface,
-                                    leaf.number_of_marked_surfaces,
-                                    *leaf.ambient_level)
+        self.contents = contents
+        self.visibilitiy_offset = visibilitiy_offset
+        self.bounding_box_min = bounding_box_min_x, bounding_box_min_y, bounding_box_min_z
+        self.bounding_box_max = bounding_box_max_x, bounding_box_max_y, bounding_box_max_z
+        self.first_mark_surface = first_mark_surface
+        self.number_of_marked_surfaces = number_of_marked_surfaces
+        self.ambient_level = ambient_level_0, ambient_level_1, ambient_level_2, ambient_level_3
+
+    @classmethod
+    def write(cls, file, leaf):
+        leaf_data = struct.pack(cls.format,
+                                leaf.contents,
+                                leaf.visibilitiy_offset,
+                                *leaf.bounding_box_min,
+                                *leaf.bounding_box_max,
+                                leaf.first_mark_surface,
+                                leaf.number_of_marked_surfaces,
+                                *leaf.ambient_level)
 
         file.write(leaf_data)
 
-    @staticmethod
-    def read(file):
-        leaf = Leaf()
-        leaf_data = file.read(leaf_size)
-        leaf_struct = struct.unpack(leaf_format, leaf_data)
+    @classmethod
+    def read(cls, file):
+        leaf_data = file.read(cls.size)
+        leaf_struct = struct.unpack(cls.format, leaf_data)
 
-        leaf.contents = leaf_struct[_LEAF_CONTENTS]
-        leaf.visibilitiy_offset = leaf_struct[_LEAF_VISIBILITIY_OFFSET]
-        leaf.bounding_box_min = leaf_struct[_LEAF_BOUNDING_BOX_MIN:_LEAF_BOUNDING_BOX_MAX]
-        leaf.bounding_box_max = leaf_struct[_LEAF_BOUNDING_BOX_MAX:_LEAF_FIRST_MARK_SURFACE]
-        leaf.first_mark_surface = leaf_struct[_LEAF_FIRST_MARK_SURFACE]
-        leaf.number_of_marked_surfaces = leaf_struct[_LEAF_NUMBER_OF_MARKED_SURFACES]
-        leaf.ambient_level = leaf_struct[_LEAF_AMBIENT_LEVEL:]
-
-        return leaf
+        return Leaf(*leaf_struct)
 
 
 class Edge(object):
@@ -825,12 +744,15 @@ class Edge(object):
             start vertex, and 1 is the end vertex.
     """
 
+    format = '<2I'
+    size = struct.calcsize(format)
+
     __slots__ = (
         'vertexes'
     )
 
-    def __init__(self):
-        self.vertexes = None
+    def __init__(self, vertex_0, vertex_1):
+        self.vertexes = vertex_0, vertex_1
 
     def __getitem__(self, item):
         if item > 1:
@@ -838,22 +760,19 @@ class Edge(object):
 
         return self.vertexes[item]
 
-    @staticmethod
-    def write(file, edge):
-        edge_data = struct.pack(edge_format,
+    @classmethod
+    def write(cls, file, edge):
+        edge_data = struct.pack(cls.format,
                                 *edge.vertexes)
 
         file.write(edge_data)
 
-    @staticmethod
-    def read(file):
-        edge = Edge()
-        edge_data = file.read(edge_size)
-        edge_struct = struct.unpack(edge_format, edge_data)
+    @classmethod
+    def read(cls, file):
+        edge_data = file.read(cls.size)
+        edge_struct = struct.unpack(cls.format, edge_data)
 
-        edge.vertexes = edge_struct[:]
-
-        return edge
+        return Edge(*edge_struct)
 
 
 class Model(object):
@@ -879,6 +798,9 @@ class Model(object):
             Model.first_face.
     """
 
+    format = '<9f7i'
+    size = struct.calcsize(format)
+
     __slots__ = (
         'bounding_box_min',
         'bounding_box_max',
@@ -889,18 +811,34 @@ class Model(object):
         'number_of_faces'
     )
 
-    def __init__(self):
-        self.bounding_box_min = None
-        self.bounding_box_max = None
-        self.origin = None
-        self.head_node = None
-        self.visleafs = None
-        self.first_face = None
-        self.number_of_faces = None
+    def __init__(self,
+                 bounding_box_min_x,
+                 bounding_box_min_y,
+                 bounding_box_min_z,
+                 bounding_box_max_x,
+                 bounding_box_max_y,
+                 bounding_box_max_z,
+                 origin_x,
+                 origin_y,
+                 origin_z,
+                 head_node_0,
+                 head_node_1,
+                 head_node_2,
+                 head_node_3,
+                 visleafs,
+                 first_face,
+                 number_of_faces):
+        self.bounding_box_min = bounding_box_min_x, bounding_box_min_y, bounding_box_min_z
+        self.bounding_box_max = bounding_box_max_x, bounding_box_max_y, bounding_box_max_z
+        self.origin = origin_x, origin_y, origin_z
+        self.head_node = head_node_0, head_node_1, head_node_2, head_node_3
+        self.visleafs = visleafs
+        self.first_face = first_face
+        self.number_of_faces = number_of_faces
 
-    @staticmethod
-    def write(file, model):
-        model_data = struct.pack(model_format,
+    @classmethod
+    def write(cls, file, model):
+        model_data = struct.pack(cls.format,
                                  *model.bounding_box_min,
                                  *model.bounding_box_max,
                                  *model.origin,
@@ -911,21 +849,12 @@ class Model(object):
 
         file.write(model_data)
 
-    @staticmethod
-    def read(file):
-        model = Model()
-        model_data = file.read(model_size)
-        model_struct = struct.unpack(model_format, model_data)
+    @classmethod
+    def read(cls, file):
+        model_data = file.read(cls.size)
+        model_struct = struct.unpack(cls.format, model_data)
 
-        model.bounding_box_min = model_struct[_MODEL_BOUNDING_BOX_MIN:_MODEL_BOUNDING_BOX_MAX]
-        model.bounding_box_max = model_struct[_MODEL_BOUNDING_BOX_MAX:_MODEL_ORIGIN]
-        model.origin = model_struct[_MODEL_ORIGIN:_MODEL_HEAD_NODE]
-        model.head_node = model_struct[_MODEL_HEAD_NODE:_MODEL_VISLEAFS]
-        model.visleafs = model_struct[_MODEL_VISLEAFS]
-        model.first_face = model_struct[_MODEL_FIRST_FACE]
-        model.number_of_faces = model_struct[_MODEL_NUMBER_OF_FACES]
-
-        return model
+        return Model(*model_struct)
 
 
 class Mesh(object):
@@ -998,7 +927,7 @@ class Bsp(object):
         b = Bsp.open(file)
 
     Attributes:
-        version: Version of the map file. Vanilla Quake is 29.
+        version: Version of the map file. Quake BSP2 is b'BSP2'.
 
         entities: A string containing the entity definitions.
 
@@ -1134,23 +1063,12 @@ class Bsp(object):
 
         file.seek(entities_offset)
         entities_data = file.read(entities_size)
-
-        # Sanitize any Quake color codes
-        entities_data = bytearray(entities_data)
-        entities_data = bytes(map(lambda x: x % 128, entities_data))
-
-        entities = struct.unpack('<{}s'.format(entities_size), entities_data)[0].decode('ascii').strip('\x00')
+        entities = struct.unpack('<{}s'.format(entities_size), entities_data)[0].decode('cp437').strip('\x00')
         bsp.entities = entities
 
         # Planes
-        planes_offset = bsp_struct[_HEADER_PLANES_OFFSET]
-        planes_size = bsp_struct[_HEADER_PLANES_SIZE]
-        number_of_planes = planes_size // plane_size
-
-        file.seek(planes_offset)
-        for _ in range(number_of_planes):
-            plane = Plane.read(file)
-            bsp.planes.append(plane)
+        planes_entry = bsp_struct[_HEADER_PLANES_OFFSET], bsp_struct[_HEADER_PLANES_SIZE]
+        bsp.planes = Bsp._read_chunk(file, planes_entry, Plane)
 
         # Miptextures
         miptextures_offset = bsp_struct[_HEADER_MIPTEXTURES_OFFSET]
@@ -1173,13 +1091,8 @@ class Bsp(object):
             bsp.miptextures.append(Miptexture.read(file))
 
         # Vertexes
-        vertexes_offset = bsp_struct[_HEADER_VERTEXES_OFFSET]
-        vertexes_size = bsp_struct[_HEADER_VERTEXES_SIZE]
-        number_of_vertexes = vertexes_size // vertex_size
-
-        file.seek(vertexes_offset)
-        for _ in range(number_of_vertexes):
-            bsp.vertexes.append(Vertex.read(file))
+        vertexes_entry = bsp_struct[_HEADER_VERTEXES_OFFSET], bsp_struct[_HEADER_VERTEXES_SIZE]
+        bsp.vertexes = Bsp._read_chunk(file, vertexes_entry, Vertex)
 
         # Visibilities
         visibilities_offset = bsp_struct[_HEADER_VISIBILITIES_OFFSET]
@@ -1191,31 +1104,16 @@ class Bsp(object):
         bsp.visibilities = struct.unpack(visibility_format, visibilities_data)
 
         # Nodes
-        nodes_offset = bsp_struct[_HEADER_NODES_OFFSET]
-        nodes_size = bsp_struct[_HEADER_NODES_SIZE]
-        number_of_nodes = nodes_size // node_size
-
-        file.seek(nodes_offset)
-        for _ in range(number_of_nodes):
-            bsp.nodes.append(Node.read(file))
+        nodes_entry = bsp_struct[_HEADER_NODES_OFFSET], bsp_struct[_HEADER_NODES_SIZE]
+        bsp.nodes = Bsp._read_chunk(file, nodes_entry, Node)
 
         # Texture Infos
-        texture_infos_offset = bsp_struct[_HEADER_TEXTURE_INFOS_OFFSET]
-        texture_infos_size = bsp_struct[_HEADER_TEXTURE_INFOS_SIZE]
-        number_of_texture_infos = texture_infos_size // texture_info_size
-
-        file.seek(texture_infos_offset)
-        for _ in range(number_of_texture_infos):
-            bsp.texture_infos.append(TextureInfo.read(file))
+        texture_infos_entry = bsp_struct[_HEADER_TEXTURE_INFOS_OFFSET], bsp_struct[_HEADER_TEXTURE_INFOS_SIZE]
+        bsp.texture_infos = Bsp._read_chunk(file, texture_infos_entry, TextureInfo)
 
         # Faces
-        faces_offset = bsp_struct[_HEADER_FACES_OFFSET]
-        faces_size = bsp_struct[_HEADER_FACES_SIZE]
-        number_of_faces = faces_size // face_size
-
-        file.seek(faces_offset)
-        for _ in range(number_of_faces):
-            bsp.faces.append(Face.read(file))
+        faces_entry = bsp_struct[_HEADER_FACES_OFFSET], bsp_struct[_HEADER_FACES_SIZE]
+        bsp.faces = Bsp._read_chunk(file, faces_entry, Face)
 
         # Lighting
         lighting_offset = bsp_struct[_HEADER_LIGHTING_OFFSET]
@@ -1227,22 +1125,12 @@ class Bsp(object):
         bsp.lighting = struct.unpack(lighting_format, lighting_data)
 
         # Clip Nodes
-        clip_nodes_offset = bsp_struct[_HEADER_CLIP_NODES_OFFSET]
-        clip_nodes_size = bsp_struct[_HEADER_CLIP_NODES_SIZE]
-        number_of_clip_nodes = clip_nodes_size // clip_node_size
-
-        file.seek(clip_nodes_offset)
-        for _ in range(number_of_clip_nodes):
-            bsp.clip_nodes.append(ClipNode.read(file))
+        clip_nodes_entry = bsp_struct[_HEADER_CLIP_NODES_OFFSET], bsp_struct[_HEADER_CLIP_NODES_SIZE]
+        bsp.clip_nodes = Bsp._read_chunk(file, clip_nodes_entry, ClipNode)
 
         # Leafs
-        leafs_offset = bsp_struct[_HEADER_LEAFS_OFFSET]
-        leafs_size = bsp_struct[_HEADER_LEAFS_SIZE]
-        number_of_leafs = leafs_size // leaf_size
-
-        file.seek(leafs_offset)
-        for _ in range(number_of_leafs):
-            bsp.leafs.append(Leaf.read(file))
+        leafs_entry = bsp_struct[_HEADER_LEAFS_OFFSET], bsp_struct[_HEADER_LEAFS_SIZE]
+        bsp.leafs = Bsp._read_chunk(file, leafs_entry, Leaf)
 
         # Mark Surfaces
         mark_surfaces_offset = bsp_struct[_HEADER_MARK_SURFACES_OFFSET]
@@ -1255,13 +1143,8 @@ class Bsp(object):
                                           mark_surfaces_data)
 
         # Edges
-        edges_offset = bsp_struct[_HEADER_EDGES_OFFSET]
-        edges_size = bsp_struct[_HEADER_EDGES_SIZE]
-        number_of_edges = edges_size // edge_size
-
-        file.seek(edges_offset)
-        for _ in range(number_of_edges):
-            bsp.edges.append(Edge.read(file))
+        edges_entry = bsp_struct[_HEADER_EDGES_OFFSET], bsp_struct[_HEADER_EDGES_SIZE]
+        bsp.edges = Bsp._read_chunk(file, edges_entry, Edge)
 
         # Surf Edges
         surf_edges_offset = bsp_struct[_HEADER_SURF_EDGES_OFFSET]
@@ -1273,15 +1156,17 @@ class Bsp(object):
         bsp.surf_edges = struct.unpack(surf_edges_format, surf_edges_data)
 
         # Models
-        models_offset = bsp_struct[_HEADER_MODELS_OFFSET]
-        models_size = bsp_struct[_HEADER_MODELS_SIZE]
-        number_of_models = models_size // model_size
-
-        file.seek(models_offset)
-        for _ in range(number_of_models):
-            bsp.models.append(Model.read(file))
+        models_entry = bsp_struct[_HEADER_MODELS_OFFSET], bsp_struct[_HEADER_MODELS_SIZE]
+        bsp.models = Bsp._read_chunk(file, models_entry, Model)
 
         return bsp
+
+    @staticmethod
+    def _read_chunk(file, chunk_entry, cls):
+        chunk_offset, chunk_size = chunk_entry
+        file.seek(chunk_offset)
+
+        return [cls(*s) for s in struct.iter_unpack(cls.format, file.read(chunk_size))]
 
     @staticmethod
     def _write_file(file, bsp):
@@ -1298,12 +1183,7 @@ class Bsp(object):
         entities_size = file.tell() - entities_offset
 
         # Planes
-        planes_offset = file.tell()
-
-        for plane in bsp.planes:
-            Plane.write(file, plane)
-
-        planes_size = file.tell() - planes_offset
+        planes_entry = Bsp._write_chunk(file, bsp.planes)
 
         # Miptextures
         miptextures_offset = file.tell()
@@ -1334,10 +1214,7 @@ class Bsp(object):
         miptextures_size = file.tell() - miptextures_offset
 
         # Vertexes
-        for vertex in bsp.vertexes:
-            Vertex.write(file, vertex)
-
-        vertexes_size = file.tell() - vertexes_offset
+        vertexes_entry = Bsp._write_chunk(file, bsp.vertexes)
 
         # Visibilities
         visibilities_offset = file.tell()
@@ -1346,28 +1223,13 @@ class Bsp(object):
         visibilities_size = file.tell() - visibilities_offset
 
         # Nodes
-        nodes_offset = file.tell()
-
-        for node in bsp.nodes:
-            Node.write(file, node)
-
-        nodes_size = file.tell() - nodes_offset
+        nodes_entry = Bsp._write_chunk(file, bsp.nodes)
 
         # Texture Infos
-        texture_infos_offset = file.tell()
-
-        for tex_info in bsp.texture_infos:
-            TextureInfo.write(file, tex_info)
-
-        texture_infos_size = file.tell() - texture_infos_offset
+        texture_infos_entry = Bsp._write_chunk(file, bsp.texture_infos)
 
         # Faces
-        faces_offset = file.tell()
-
-        for face in bsp.faces:
-            Face.write(file, face)
-
-        faces_size = file.tell() - faces_offset
+        faces_entry = Bsp._write_chunk(file, bsp.faces)
 
         # Lighting
         lighting_offset = file.tell()
@@ -1376,20 +1238,10 @@ class Bsp(object):
         lighting_size = file.tell() - lighting_offset
 
         # Clip Nodes
-        clip_nodes_offset = file.tell()
-
-        for clip_node in bsp.clip_nodes:
-            ClipNode.write(file, clip_node)
-
-        clip_nodes_size = file.tell() - clip_nodes_offset
+        clip_nodes_entry = Bsp._write_chunk(file, bsp.clip_nodes)
 
         # Leafs
-        leafs_offset = file.tell()
-
-        for leaf in bsp.leafs:
-            Leaf.write(file, leaf)
-
-        leafs_size = file.tell() - leafs_offset
+        leafs_entry = Bsp._write_chunk(file, bsp.leafs)
 
         # Mark Surfaces
         mark_surfaces_offset = file.tell()
@@ -1398,12 +1250,7 @@ class Bsp(object):
         mark_surfaces_size = file.tell() - mark_surfaces_offset
 
         # Edges
-        edges_offset = file.tell()
-
-        for edge in bsp.edges:
-            Edge.write(file, edge)
-
-        edges_size = file.tell() - edges_offset
+        edges_entry = Bsp._write_chunk(file, bsp.edges)
 
         # Surf Edges
         surf_edges_offset = file.tell()
@@ -1414,12 +1261,8 @@ class Bsp(object):
         surf_edges_size = file.tell() - surf_edges_offset
 
         # Models
-        models_offset = file.tell()
+        models_entry = Bsp._write_chunk(file, bsp.models)
 
-        for model in bsp.models:
-            Model.write(file, model)
-
-        models_size = file.tell() - models_offset
         end_of_file = file.tell()
 
         # Write header info
@@ -1428,37 +1271,42 @@ class Bsp(object):
                                   bsp.version,
                                   entities_offset,
                                   entities_size,
-                                  planes_offset,
-                                  planes_size,
+                                  *planes_entry,
                                   miptextures_offset,
                                   miptextures_size,
-                                  vertexes_offset,
-                                  vertexes_size,
+                                  *vertexes_entry,
                                   visibilities_offset,
                                   visibilities_size,
-                                  nodes_offset,
-                                  nodes_size,
-                                  texture_infos_offset,
-                                  texture_infos_size,
-                                  faces_offset,
-                                  faces_size,
+                                  *nodes_entry,
+                                  *texture_infos_entry,
+                                  *faces_entry,
                                   lighting_offset,
                                   lighting_size,
-                                  clip_nodes_offset,
-                                  clip_nodes_size,
-                                  leafs_offset,
-                                  leafs_size,
+                                  *clip_nodes_entry,
+                                  *leafs_entry,
                                   mark_surfaces_offset,
                                   mark_surfaces_size,
-                                  edges_offset,
-                                  edges_size,
+                                  *edges_entry,
                                   surf_edges_offset,
                                   surf_edges_size,
-                                  models_offset,
-                                  models_size)
+                                  *models_entry)
 
         file.write(header_data)
         file.seek(end_of_file)
+
+    @staticmethod
+    def _write_chunk(file, data):
+        offset = file.tell()
+
+        if data:
+            Class = data[0].__class__
+
+            for datum in data:
+                Class.write(file, datum)
+
+        size = file.tell() - offset
+
+        return offset, size
 
     def save(self, file):
         """Writes Bsp data to file
@@ -1568,6 +1416,10 @@ class Bsp(object):
 
                 if v1 != verts[0]:
                     verts.append(v1)
+
+            # Ignore degenerate faces
+            if len(verts) < 3:
+                continue
 
             # Convert Vertexes to three-tuples and reverse their order
             verts = [tuple(self.vertexes[i][:]) for i in reversed(verts)]
