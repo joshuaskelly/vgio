@@ -5,28 +5,28 @@ OS := $(shell python -c 'import sys; print({"win32": "windows", "darwin": "osx"}
 build: bsp2wad pak unpak wad unwad qmount image2spr spr2image
 
 bsp2wad:
-	pyinstaller --onefile bsp2wad.py
+	pyinstaller --onefile ./spec/bsp2wad.spec
 
 pak:
-	pyinstaller --onefile pak.py
+	pyinstaller --onefile ./spec/pak.spec
 
 unpak:
-	pyinstaller --onefile unpak.py
+	pyinstaller --onefile ./spec/unpak.spec
 
 wad:
-	pyinstaller --onefile wad.py
+	pyinstaller --onefile ./spec/wad.spec
 
 unwad:
-	pyinstaller --onefile unwad.py
+	pyinstaller --onefile ./spec/unwad.spec
 
 qmount:
-	pyinstaller --onefile qmount.py
+	pyinstaller --onefile ./spec/qmount.spec
 
 image2spr:
-	pyinstaller --onefile image2spr.py
+	pyinstaller --onefile ./spec/image2spr.spec
 
 spr2image:
-	pyinstaller --onefile spr2image.py
+	pyinstaller --onefile ./spec/spr2image.spec
 
 install_dependencies:
 	pip install -r requirements.txt
@@ -47,4 +47,3 @@ publish:
 clean:
 	rm -rf ./dist
 	rm -rf ./build
-	rm *.spec
