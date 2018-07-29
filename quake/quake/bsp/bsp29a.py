@@ -6,7 +6,7 @@ Example:
 
 import struct
 
-from quake.bsp.bsp29 import Bsp as Bsp29
+from .bsp29 import Bsp as Bsp29
 
 
 __all__ = ['is_bspfile', 'Bsp']
