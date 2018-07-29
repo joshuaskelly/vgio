@@ -360,55 +360,6 @@ class TestBsp29aReadWrite(TestCase):
         self.assertFalse(bsp29a.is_bspfile('./test_data/test.spr'))
         self.assertFalse(bsp29a.is_bspfile('./test_data/test.wad'))
 
-    def test_plane(self):
-        normal = 0.0, 0.0, 1.0
-        distance = 1.0
-        type = 0
-
-        p0 = bsp29a.Plane(*normal,
-                       distance,
-                       type)
-
-        bsp29a.Plane.write(self.buff, p0)
-        self.buff.seek(0)
-
-        p1 = bsp29a.Plane.read(self.buff)
-
-        self.assertAlmostEqual(p0.normal, p1.normal, significant_digits, 'Normal vectors should be equal')
-        self.assertAlmostEqual(p0.distance, p1.distance, significant_digits, 'Distances should be equal')
-        self.assertEqual(p0.type, p1.type, 'Types should equal')
-
-    def test_miptexture(self):
-        m0 = bsp29a.Miptexture()
-        m0.name = 'metal1_1'
-        m0.width = 32
-        m0.height = 32
-        m0.offsets = 40, 1064, 1320, 1384
-        m0.pixels = tuple([i % 256 for i in range(32 * 32 * 85 // 64)])
-
-        bsp29a.Miptexture.write(self.buff, m0)
-        self.buff.seek(0)
-
-        m1 = bsp29a.Miptexture.read(self.buff)
-
-        self.assertEqual(m0.name, m1.name, 'Names should be equal')
-        self.assertEqual(m0.width, m1.width, 'Widths should be equal')
-        self.assertEqual(m0.height, m1.height, 'Heights should be equal')
-        self.assertEqual(m0.offsets, m1.offsets, 'Offsets should be equal')
-        self.assertEqual(m0.pixels, m1.pixels, 'Pixel data should be equal')
-
-    def test_vertex(self):
-        v0 = bsp29a.Vertex(1.0, -0.5, 1.25)
-
-        bsp29a.Vertex.write(self.buff, v0)
-        self.buff.seek(0)
-
-        v1 = bsp29a.Vertex.read(self.buff)
-
-        self.assertAlmostEqual(v0.x, v1.x, significant_digits, 'X coordinates should be equal')
-        self.assertAlmostEqual(v0.y, v1.y, significant_digits, 'Y coordinates should be equal')
-        self.assertAlmostEqual(v0.z, v1.z, significant_digits, 'Z coordinates should be equal')
-
     def test_node(self):
         plane_number = 0
         children = 1, 2
@@ -435,33 +386,6 @@ class TestBsp29aReadWrite(TestCase):
         self.assertEqual(n0.bounding_box_max, n1.bounding_box_max, 'Bounding box maximums should be equal')
         self.assertEqual(n0.first_face, n1.first_face, 'First faces should be equal')
         self.assertEqual(n0.number_of_faces, n1.number_of_faces, 'Number of faces should be equal')
-
-    def test_textureinfo(self):
-        s = 1.0, -1.0, 0
-        s_offset = 1.25
-        t = -5.0, 6.0, 7.75
-        t_offset = 0.0
-        miptexture_number = 0
-        flags = 8
-
-        t0 = bsp29a.TextureInfo(*s,
-                             s_offset,
-                             *t,
-                             t_offset,
-                             miptexture_number,
-                             flags)
-
-        bsp29a.TextureInfo.write(self.buff, t0)
-        self.buff.seek(0)
-
-        t1 = bsp29a.TextureInfo.read(self.buff)
-
-        self.assertAlmostEqual(t0.s, t1.s, significant_digits, 's vectors should be equal')
-        self.assertAlmostEqual(t0.s_offset, t1.s_offset, significant_digits, 's offsets should be equal')
-        self.assertAlmostEqual(t0.t, t1.t, significant_digits, 't vectors should be equal')
-        self.assertAlmostEqual(t0.t_offset, t1.t_offset, significant_digits, 't offsets should be equal')
-        self.assertEqual(t0.miptexture_number, t1.miptexture_number, 'Miptexture numbers should be equal')
-        self.assertEqual(t0.flags, t1.flags, 'Flags should be equal')
 
     def test_face(self):
         plane_number = 0
@@ -548,36 +472,6 @@ class TestBsp29aReadWrite(TestCase):
         e1 = bsp29a.Edge.read(self.buff)
 
         self.assertEqual(e0.vertexes, e1.vertexes, 'Vertexes should equal')
-
-    def test_model(self):
-        bounding_box_min = -32767, -32767, -32767
-        bounding_box_max = 32767, 32767, 32767
-        origin = 0, 0, 0
-        head_node = 0, 1, 2, 0
-        visleafs = 0
-        first_face = 0
-        number_of_faces = 8
-
-        m0 = bsp29a.Model(*bounding_box_min,
-                       *bounding_box_max,
-                       *origin,
-                       *head_node,
-                       visleafs,
-                       first_face,
-                       number_of_faces)
-
-        bsp29a.Model.write(self.buff, m0)
-        self.buff.seek(0)
-
-        m1 = bsp29a.Model.read(self.buff)
-
-        self.assertEqual(m0.bounding_box_min, m1.bounding_box_min, 'Bounding box minimums should be equal')
-        self.assertEqual(m0.bounding_box_max, m1.bounding_box_max, 'Bounding box maximums should be equal')
-        self.assertEqual(m0.origin, m1.origin, 'Origins should be equal')
-        self.assertEqual(m0.head_node, m1.head_node, 'Head nodes should be equal')
-        self.assertEqual(m0.visleafs, m1.visleafs, 'Visleafs should be equal')
-        self.assertEqual(m0.first_face, m1.first_face, 'First faces should be equal')
-        self.assertEqual(m0.number_of_faces, m1.number_of_faces, 'Number of faces should be equal')
 
     def test_bsp(self):
         b0 = bsp29a.Bsp.open('./test_data/test.bsp2')

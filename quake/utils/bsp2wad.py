@@ -4,7 +4,7 @@ Supported Games:
     - QUAKE
 """
 
-__version__ = '1.2.0'
+__version__ = '1.2.1'
 
 import argparse
 import io
@@ -83,7 +83,7 @@ if __name__ == '__main__':
                 continue
 
             buff = io.BytesIO()
-            bsp.Miptexture.write(buff, miptex)
+            bsp_file.Miptexture.write(buff, miptex)
             buff.seek(0)
 
             info = wad.WadInfo(miptex.name)

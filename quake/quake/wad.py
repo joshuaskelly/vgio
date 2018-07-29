@@ -84,6 +84,89 @@ def is_wadfile(filename):
     return result
 
 
+class Miptexture(object):
+    """Class for representing a miptexture
+
+    A miptexture is an indexed image mip map embedded within the map. Maps
+    usually have many miptextures, and the miptexture lump is treated like a
+    small wad file.
+
+    Attributes:
+        name: The name of the miptexture.
+
+        width: The width of the miptexture.
+            Note: this is the width at mipmap level 0.
+
+        height: The height of the miptexture.
+            Note: this is the height at mipmap level 0.
+
+        offsets: The offsets for each of the mipmaps. This is a tuple of size
+            four (this is the number of mipmap levels).
+
+        pixels: A tuple of unstructured pixel data represented as integers. A
+            palette must be used to obtain RGB data.
+
+            Note: this is the pixel data for all four mip levels. The size is
+            calculated using the simplified form of the geometric series where
+            r = 1/4 and n = 4.
+
+            The size of this tuple is:
+
+            miptexture.width * miptexture.height * 85 / 64
+    """
+
+    format = '<16s6I'
+    size = struct.calcsize(format)
+
+    __slots__ = (
+        'name',
+        'width',
+        'height',
+        'offsets',
+        'pixels'
+    )
+
+    def __init__(self):
+        self.name = None
+        self.width = None
+        self.height = None
+        self.offsets = None
+        self.pixels = None
+
+    @classmethod
+    def write(cls, file, miptexture):
+        miptexture_data = struct.pack(cls.format,
+                                      miptexture.name.encode('ascii'),
+                                      miptexture.width,
+                                      miptexture.height,
+                                      *miptexture.offsets)
+
+        pixels_size = miptexture.width * miptexture.height * 85 // 64
+        pixels_format = '<%dB' % pixels_size
+        pixels_data = struct.pack(pixels_format, *miptexture.pixels)
+
+        file.write(miptexture_data)
+        file.write(pixels_data)
+
+    @classmethod
+    def read(cls, file):
+        miptexture = Miptexture()
+        miptexture_data = file.read(cls.size)
+        miptexture_struct = struct.unpack(cls.format, miptexture_data)
+        miptexture.name = miptexture_struct[0].split(b'\00')[0].decode('ascii')
+        miptexture.width = miptexture_struct[1]
+        miptexture.height = miptexture_struct[2]
+        miptexture.offsets = miptexture_struct[3:]
+
+        pixels_size = miptexture.width * miptexture.height * 85 // 64
+        pixels_format = '<%dB' % pixels_size
+        pixels_data = struct.unpack(pixels_format, file.read(pixels_size))
+
+        miptexture.pixels = pixels_data
+
+        return miptexture
+
+
 CMP_NONE = 0
 CMP_LZSS = 1
 

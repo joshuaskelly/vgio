@@ -4,7 +4,7 @@ Supported Games:
     - QUAKE
 """
 
-__version__ = '1.0.1'
+__version__ = '1.0.2'
 
 import argparse
 import io
@@ -118,7 +118,7 @@ if __name__ == '__main__':
 
                     name = os.path.basename(file).split('.')[0]
 
-                    mip = bsp.Miptexture()
+                    mip = wad.Miptexture()
                     mip.name = name
                     mip.width = img.width
                     mip.height = img.height
@@ -134,7 +134,7 @@ if __name__ == '__main__':
                             mip.offsets += [mip.offsets[-1] + len(data)]
 
                     buff = io.BytesIO()
-                    bsp.Miptexture.write(buff, mip)
+                    wad.Miptexture.write(buff, mip)
                     buff.seek(0)
 
                     info = wad.WadInfo(name)

@@ -4,7 +4,7 @@ Supported Games:
     - QUAKE
 """
 
-__version__ = '1.0.1'
+__version__ = '1.0.2'
 
 import array
 import argparse
@@ -14,7 +14,7 @@ from tabulate import tabulate
 
 from PIL import Image
 
-from quake import bsp, lmp, wad
+from quake import lmp, wad
 from common import Parser, ResolvePathAction
 
 if __name__ == '__main__':
@@ -138,7 +138,7 @@ if __name__ == '__main__':
                     # Miptextures
                     try:
                         with wad_file.open(filename) as mip_file:
-                            mip = bsp.Miptexture.read(mip_file)
+                            mip = wad.Miptexture.read(mip_file)
                             data = mip.pixels[:mip.width * mip.height]
                             data = array.array('B', data)
                             size = mip.width, mip.height

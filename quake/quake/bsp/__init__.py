@@ -2,6 +2,9 @@ from . import bsp29
 from . import bsp29a
 
 
+default_palette = bsp29.default_palette
+
+
 def is_bspfile(filename):
     """Quickly see if a file is a bsp file by checking the magic number.
 
