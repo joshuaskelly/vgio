@@ -1029,6 +1029,8 @@ class Bsp(object):
             RuntimeError: If the file argument is not a file-like object.
         """
 
+        Bsp = cls.Bsp
+
         if mode not in ('r', 'w', 'a'):
             raise ValueError("invalid mode: '%s'" % mode)
 
@@ -1047,11 +1049,11 @@ class Bsp(object):
 
         # Read
         if mode == 'r':
-            return cls.Bsp._read_file(file, mode)
+            return Bsp._read_file(file, mode)
 
         # Write
         elif mode == 'w':
-            bsp = cls.Bsp()
+            bsp = Bsp()
             bsp.fp = file
             bsp.mode = 'w'
             bsp._did_modify = True
@@ -1060,14 +1062,16 @@ class Bsp(object):
 
         # Append
         else:
-            bsp = cls.Bsp._read_file(file, mode)
+            bsp = Bsp._read_file(file, mode)
             bsp._did_modify = True
 
             return bsp
 
     @classmethod
     def _read_file(cls, file, mode):
-        bsp = cls.Bsp()
+        Bsp = cls.Bsp
+
+        bsp = Bsp()
         bsp.mode = mode
         bsp.fp = file
 
@@ -1088,7 +1092,7 @@ class Bsp(object):
 
         # Planes
         planes_entry = bsp_struct[_HEADER_PLANES_OFFSET], bsp_struct[_HEADER_PLANES_SIZE]
-        bsp.planes = cls.Bsp._read_chunk(file, planes_entry, bsp.Plane)
+        bsp.planes = Bsp._read_chunk(file, planes_entry, bsp.Plane)
 
         # Miptextures
         miptextures_offset = bsp_struct[_HEADER_MIPTEXTURES_OFFSET]
@@ -1112,7 +1116,7 @@ class Bsp(object):
 
         # Vertexes
         vertexes_entry = bsp_struct[_HEADER_VERTEXES_OFFSET], bsp_struct[_HEADER_VERTEXES_SIZE]
-        bsp.vertexes = cls.Bsp._read_chunk(file, vertexes_entry, bsp.Vertex)
+        bsp.vertexes = Bsp._read_chunk(file, vertexes_entry, bsp.Vertex)
 
         # Visibilities
         visibilities_offset = bsp_struct[_HEADER_VISIBILITIES_OFFSET]
@@ -1125,15 +1129,15 @@ class Bsp(object):
 
         # Nodes
         nodes_entry = bsp_struct[_HEADER_NODES_OFFSET], bsp_struct[_HEADER_NODES_SIZE]
-        bsp.nodes = cls.Bsp._read_chunk(file, nodes_entry, bsp.Node)
+        bsp.nodes = Bsp._read_chunk(file, nodes_entry, bsp.Node)
 
         # Texture Infos
         texture_infos_entry = bsp_struct[_HEADER_TEXTURE_INFOS_OFFSET], bsp_struct[_HEADER_TEXTURE_INFOS_SIZE]
-        bsp.texture_infos = cls.Bsp._read_chunk(file, texture_infos_entry, bsp.TextureInfo)
+        bsp.texture_infos = Bsp._read_chunk(file, texture_infos_entry, bsp.TextureInfo)
 
         # Faces
         faces_entry = bsp_struct[_HEADER_FACES_OFFSET], bsp_struct[_HEADER_FACES_SIZE]
-        bsp.faces = cls.Bsp._read_chunk(file, faces_entry, bsp.Face)
+        bsp.faces = Bsp._read_chunk(file, faces_entry, bsp.Face)
 
         # Lighting
         lighting_offset = bsp_struct[_HEADER_LIGHTING_OFFSET]
@@ -1146,11 +1150,11 @@ class Bsp(object):
 
         # Clip Nodes
         clip_nodes_entry = bsp_struct[_HEADER_CLIP_NODES_OFFSET], bsp_struct[_HEADER_CLIP_NODES_SIZE]
-        bsp.clip_nodes = cls.Bsp._read_chunk(file, clip_nodes_entry, bsp.ClipNode)
+        bsp.clip_nodes = Bsp._read_chunk(file, clip_nodes_entry, bsp.ClipNode)
 
         # Leafs
         leafs_entry = bsp_struct[_HEADER_LEAFS_OFFSET], bsp_struct[_HEADER_LEAFS_SIZE]
-        bsp.leafs = cls.Bsp._read_chunk(file, leafs_entry, bsp.Leaf)
+        bsp.leafs = Bsp._read_chunk(file, leafs_entry, bsp.Leaf)
 
         # Mark Surfaces
         mark_surfaces_offset = bsp_struct[_HEADER_MARK_SURFACES_OFFSET]
@@ -1164,7 +1168,7 @@ class Bsp(object):
 
         # Edges
         edges_entry = bsp_struct[_HEADER_EDGES_OFFSET], bsp_struct[_HEADER_EDGES_SIZE]
-        bsp.edges = cls.Bsp._read_chunk(file, edges_entry, bsp.Edge)
+        bsp.edges = Bsp._read_chunk(file, edges_entry, bsp.Edge)
 
         # Surf Edges
         surf_edges_offset = bsp_struct[_HEADER_SURF_EDGES_OFFSET]
@@ -1177,7 +1181,7 @@ class Bsp(object):
 
         # Models
         models_entry = bsp_struct[_HEADER_MODELS_OFFSET], bsp_struct[_HEADER_MODELS_SIZE]
-        bsp.models = cls.Bsp._read_chunk(file, models_entry, bsp.Model)
+        bsp.models = Bsp._read_chunk(file, models_entry, bsp.Model)
 
         return bsp
 
@@ -1190,6 +1194,8 @@ class Bsp(object):
 
     @classmethod
     def _write_file(cls, file, bsp):
+        Bsp = cls.Bsp
+
         # Stub out header info
         header_data = struct.pack(header_format,
                                   bsp.version,
@@ -1203,7 +1209,7 @@ class Bsp(object):
         entities_size = file.tell() - entities_offset
 
         # Planes
-        planes_entry = cls.Bsp._write_chunk(file, bsp.planes)
+        planes_entry = Bsp._write_chunk(file, bsp.planes)
 
         # Miptextures
         miptextures_offset = file.tell()
@@ -1234,7 +1240,7 @@ class Bsp(object):
         miptextures_size = file.tell() - miptextures_offset
 
         # Vertexes
-        vertexes_entry = cls.Bsp._write_chunk(file, bsp.vertexes)
+        vertexes_entry = Bsp._write_chunk(file, bsp.vertexes)
 
         # Visibilities
         visibilities_offset = file.tell()
@@ -1243,13 +1249,13 @@ class Bsp(object):
         visibilities_size = file.tell() - visibilities_offset
 
         # Nodes
-        nodes_entry = cls.Bsp._write_chunk(file, bsp.nodes)
+        nodes_entry = Bsp._write_chunk(file, bsp.nodes)
 
         # Texture Infos
-        texture_infos_entry = cls.Bsp._write_chunk(file, bsp.texture_infos)
+        texture_infos_entry = Bsp._write_chunk(file, bsp.texture_infos)
 
         # Faces
-        faces_entry = cls.Bsp._write_chunk(file, bsp.faces)
+        faces_entry = Bsp._write_chunk(file, bsp.faces)
 
         # Lighting
         lighting_offset = file.tell()
@@ -1258,10 +1264,10 @@ class Bsp(object):
         lighting_size = file.tell() - lighting_offset
 
         # Clip Nodes
-        clip_nodes_entry = cls.Bsp._write_chunk(file, bsp.clip_nodes)
+        clip_nodes_entry = Bsp._write_chunk(file, bsp.clip_nodes)
 
         # Leafs
-        leafs_entry = cls.Bsp._write_chunk(file, bsp.leafs)
+        leafs_entry = Bsp._write_chunk(file, bsp.leafs)
 
         # Mark Surfaces
         mark_surfaces_offset = file.tell()
@@ -1270,7 +1276,7 @@ class Bsp(object):
         mark_surfaces_size = file.tell() - mark_surfaces_offset
 
         # Edges
-        edges_entry = cls.Bsp._write_chunk(file, bsp.edges)
+        edges_entry = Bsp._write_chunk(file, bsp.edges)
 
         # Surf Edges
         surf_edges_offset = file.tell()
@@ -1281,7 +1287,7 @@ class Bsp(object):
         surf_edges_size = file.tell() - surf_edges_offset
 
         # Models
-        models_entry = cls.Bsp._write_chunk(file, bsp.models)
+        models_entry = Bsp._write_chunk(file, bsp.models)
 
         end_of_file = file.tell()
 
