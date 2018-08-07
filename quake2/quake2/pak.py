@@ -4,7 +4,7 @@ Example:
     pak_file = pak.Pak.open('pak0.pak')
 
 References:
-    Quake Source
+    Quake 2 Source
     - id Software
     - https://github.com/id-Software/Quake-2
 """
