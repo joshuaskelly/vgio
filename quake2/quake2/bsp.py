@@ -605,7 +605,7 @@ class Leafs(ClassSequence):
 class LeafFaces:
     @classmethod
     def write(cls, file, leaf_faces):
-        leaf_faces_format = '<{}H'.format(len(leaf_faces))
+        leaf_faces_format = f'<{len(leaf_faces)}H'
         leaf_faces_data = struct.pack(leaf_faces_format, *leaf_faces)
 
         file.write(leaf_faces_data)
@@ -618,10 +618,10 @@ class LeafFaces:
 class LeafBrushes:
     @classmethod
     def write(cls, file, leaf_brushes):
-        leaf_faces_format = '<{}H'.format(len(leaf_brushes))
-        leaf_faces_data = struct.pack(leaf_faces_format, *leaf_brushes)
+        leaf_brushes_format = f'<{len(leaf_brushes)}H'
+        leaf_brushes_data = struct.pack(leaf_brushes_format, *leaf_brushes)
 
-        file.write(leaf_faces_data)
+        file.write(leaf_brushes_data)
 
     @classmethod
     def read(cls, file):
@@ -674,7 +674,7 @@ class Edges(ClassSequence):
 class SurfEdges:
     @classmethod
     def write(cls, file, surf_edges):
-        surf_edges_format = '<{}H'.format(len(surf_edges))
+        surf_edges_format = f'<{len(surf_edges)}H'
         surf_edges_data = struct.pack(surf_edges_format, *surf_edges)
 
         file.write(surf_edges_data)
@@ -972,7 +972,7 @@ class Header:
         lumps: A sequence of nineteen Lumps
     """
 
-    format = '<4si{}'.format(Lump.format[1:] * 19)
+    format = f'<4si{Lump.format[1:] * 19}'
     size = struct.calcsize(format)
     order = [
         Entities,
