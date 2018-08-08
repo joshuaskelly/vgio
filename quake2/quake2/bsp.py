@@ -1126,6 +1126,7 @@ class Bsp:
     Planes = Planes
     Vertexes = Vertexes
     Visibilities = Visibilities
+    Visibilities = Visibilities
     Nodes = Nodes
     TextureInfos = TextureInfos
     Faces = Faces
