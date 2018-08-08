@@ -44,9 +44,9 @@ class TestMd2ReadWrite(TestCase):
 
     def test_triangle(self):
         vertexes = 0, 1, 2
-        st_coords = 0, 1, 2
+        st_vertexes = 0, 1, 2
         t0 = md2.Triangle(*vertexes,
-                          *st_coords)
+                          *st_vertexes)
 
         md2.Triangle.write(self.buff, t0)
         self.buff.seek(0)
@@ -54,7 +54,7 @@ class TestMd2ReadWrite(TestCase):
         t1 = md2.Triangle.read(self.buff)
 
         self.assertEqual(t0.vertexes, t1.vertexes, 'Vertexes should be equal')
-        self.assertEqual(t0.st_coords, t1.st_coords, 'St Coords should be equal')
+        self.assertEqual(t0.st_vertexes, t1.st_vertexes, 'St Coords should be equal')
 
     def test_frame(self):
         tv0 = md2.TriVertex(0, 16, 255, 0)
@@ -87,7 +87,7 @@ class TestMd2ReadWrite(TestCase):
         frame_size = 20
         number_of_skins = 2 << 1
         number_of_vertexes = 2 << 2
-        number_of_st_coords = 2 << 3
+        number_of_st_vertexes = 2 << 3
         number_of_triangles = 2 << 4
         number_of_gl_commands = 2 << 5
         number_of_frames = 2 << 6
@@ -105,7 +105,7 @@ class TestMd2ReadWrite(TestCase):
                         frame_size,
                         number_of_skins,
                         number_of_vertexes,
-                        number_of_st_coords,
+                        number_of_st_vertexes,
                         number_of_triangles,
                         number_of_gl_commands,
                         number_of_frames,
@@ -128,12 +128,12 @@ class TestMd2ReadWrite(TestCase):
         self.assertEqual(h0.frame_size, h1.frame_size, 'Frame Sizes should be equal')
         self.assertEqual(h0.number_of_skins, h1.number_of_skins, 'Number of skins should be equal')
         self.assertEqual(h0.number_of_vertexes, h1.number_of_vertexes, 'Number of vertexes should be equal')
-        self.assertEqual(h0.number_of_st_coords, h1.number_of_st_coords, 'Number of st_coords should be equal')
+        self.assertEqual(h0.number_of_st_vertexes, h1.number_of_st_vertexes, 'Number of st_vertexes should be equal')
         self.assertEqual(h0.number_of_triangles, h1.number_of_triangles, 'Number of triangles should be equal')
         self.assertEqual(h0.number_of_gl_commands, h1.number_of_gl_commands, 'Number of gl commands should be equal')
         self.assertEqual(h0.number_of_frames, h1.number_of_frames, 'Number of frames should be equal')
         self.assertEqual(h0.skin_offset, h1.skin_offset, 'Skin Offsets should be equal')
-        self.assertEqual(h0.st_coord_offset, h1.st_coord_offset, 'St Coord Offsets should be equal')
+        self.assertEqual(h0.st_vertex_offset, h1.st_vertex_offset, 'St Coord Offsets should be equal')
         self.assertEqual(h0.triangle_offset, h1.triangle_offset, 'Triangle Offsets should be equal')
         self.assertEqual(h0.frame_offset, h1.frame_offset, 'Frame Offsets should be equal')
         self.assertEqual(h0.gl_command_offset, h1.gl_command_offset, 'Gl Command Offsets should be equal')

@@ -650,10 +650,10 @@ class Md2:
         header = Header.read(file)
 
         if header.identity != b'IDP2':
-            raise BadMd2File(f'Bad identity: {header.identity}')
+            raise BadMd2File('Bad identity: {}'.format(header.identity))
 
         if header.version != 8:
-            raise BadMd2File(f'Bad version number: {header.version}')
+            raise BadMd2File('Bad version number: {}'.format(header.version))
 
         md2.header = header
         md2.skins = _read_chunk(Skins, header.skin_offset, header.number_of_skins)
@@ -664,7 +664,7 @@ class Md2:
         md2.frames = [Frame.read(file, header.number_of_vertexes) for _ in range(header.number_of_frames)]
 
         file.seek(header.gl_command_offset)
-        gl_command_data = file.read(struct.calcsize(f'<{header.number_of_gl_commands*4}B'))
+        gl_command_data = file.read(struct.calcsize('<{}B'.format(header.number_of_gl_commands*4)))
         md2.gl_commands = GlCommands.read(io.BytesIO(gl_command_data))
 
         return md2
@@ -675,10 +675,10 @@ class Md2:
 
     def validate(self):
         if self.identity != b'IDP2':
-            raise BadMd2File(f'Bad identity: {self.identity}')
+            raise BadMd2File('Bad identity: {self.identity}'.format(self.identity))
 
         if self.version != 8:
-            raise BadMd2File(f'Bad version number: {self.version}')
+            raise BadMd2File('Bad version number: {self.version}'.format(self.version))
 
     def save(self, file):
         """Writes Md2 data to file
