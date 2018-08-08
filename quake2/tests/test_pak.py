@@ -2,7 +2,7 @@ import io
 import unittest
 
 from tests.basecase import TestCase
-from quake import pak
+from quake2 import pak
 
 
 class TestPakReadWrite(TestCase):
