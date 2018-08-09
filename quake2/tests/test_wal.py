@@ -48,3 +48,6 @@ class TestWalReadWrite(TestCase):
         self.assertEqual(w0.contents, w1.contents, 'Contents should be equal')
         self.assertEqual(w0.value, w1.value, 'Value should be equal')
         self.assertEqual(w0.pixels, w1.pixels, 'Pixels should be equal')
+
+if __name__ == '__main__':
+    unittest.main()
