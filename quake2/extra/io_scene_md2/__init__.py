@@ -16,6 +16,7 @@ if 'bpy' in locals():
 
     if 'import_md2' in locals():
         importlib.reload(import_md2)
+        import_md2.reload()
 
     if 'export_md2' in locals():
         importlib.reload(export_md2)
