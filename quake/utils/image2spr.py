@@ -36,6 +36,11 @@ if __name__ == '__main__':
                         default=read_from_stdin(),
                         help='image source file')
 
+    parser.add_argument('-t',
+                        dest='type',
+                        default=0,
+                        help='sprite orientation type')
+
     parser.add_argument('-q',
                         dest='quiet',
                         action='store_true',
@@ -151,6 +156,7 @@ if __name__ == '__main__':
     with spr.Spr.open(args.dest_file, 'w') as spr_file:
         spr_file.width, spr_file.height = size
         spr_file.number_of_frames = len(images)
+        spr_file.type = int(args.type)
 
         origin = -size[0] // 2, size[1] // 2
 
