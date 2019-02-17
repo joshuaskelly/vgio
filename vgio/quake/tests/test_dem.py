@@ -1,8 +1,8 @@
 import io
 import unittest
 
-from tests.basecase import TestCase
-from quake import dem
+from vgio.quake.tests.basecase import TestCase
+from vgio.quake import dem
 
 
 class TestDemReadWrite(TestCase):

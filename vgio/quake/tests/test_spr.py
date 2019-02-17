@@ -1,7 +1,7 @@
 import unittest
 
-from tests.basecase import TestCase
-from quake import spr
+from vgio.quake.tests.basecase import TestCase
+from vgio.quake import spr
 
 
 class TestSprReadWrite(TestCase):

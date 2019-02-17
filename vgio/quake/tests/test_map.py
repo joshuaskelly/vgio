@@ -1,8 +1,8 @@
 import re
 import unittest
 
-from tests.basecase import TestCase
-from quake import map
+from vgio.quake.tests.basecase import TestCase
+from vgio.quake import map
 
 significant_digits = 5
 

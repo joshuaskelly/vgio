@@ -4,10 +4,10 @@ install:
 	pip install .
 
 uninstall:
-	pip uninstall duke3d-tools
+	pip uninstall vgio
 
 test:
-	python -m unittest discover -s tests
+	python -m unittest discover
 
 clean:
 	find . -name "*.pyc" -delete

@@ -1,7 +1,7 @@
 import unittest
 
-from tests.basecase import TestCase
-from quake import mdl
+from vgio.quake.tests.basecase import TestCase
+from vgio.quake import mdl
 
 significant_digits = 5
 

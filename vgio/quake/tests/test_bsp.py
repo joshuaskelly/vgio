@@ -1,8 +1,8 @@
 import unittest
 
-from tests.basecase import TestCase
-from quake.bsp import bsp29
-from quake.bsp import bsp29a
+from vgio.quake.tests.basecase import TestCase
+from vgio.quake.bsp import bsp29
+from vgio.quake.bsp import bsp29a
 
 significant_digits = 5
 

@@ -1,8 +1,8 @@
 import io
 import unittest
 
-from tests.basecase import TestCase
-from duke3d import grp
+from vgio.duke3d.tests.basecase import TestCase
+from vgio.duke3d import grp
 
 
 class TestGrpReadWrite(TestCase):

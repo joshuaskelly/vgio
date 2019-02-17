@@ -1,7 +1,7 @@
 import unittest
 
-from tests.basecase import TestCase
-from quake2 import wal
+from vgio.quake2.tests.basecase import TestCase
+from vgio.quake2 import wal
 
 significant_digits = 5
 

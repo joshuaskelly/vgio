@@ -1,7 +1,7 @@
 import unittest
 
-from tests.basecase import TestCase
-from duke3d import map
+from vgio.duke3d.tests.basecase import TestCase
+from vgio.duke3d import map
 
 
 class TestMapReadWrite(TestCase):

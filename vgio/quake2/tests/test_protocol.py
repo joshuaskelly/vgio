@@ -1,8 +1,8 @@
 import io
 import unittest
 
-from tests.basecase import TestCase
-from quake2 import protocol
+from vgio.quake2.tests.basecase import TestCase
+from vgio.quake2 import protocol
 
 significant_digits = 5
 angle_resolution = 360 / 256
