@@ -22,6 +22,9 @@ with Bsp.open('./maps/start.bsp') as bsp_file:
    """Do rad stuff with the BSP data structure!"""
 ```
 
+## Tests
+`$ python -m unittest discover`
+
 ## License
 MIT
 
