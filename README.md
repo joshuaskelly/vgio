@@ -11,7 +11,7 @@ vgio is a Python package for video game file I/O.
 - *Complete:* Support as many file types as possible.
 - *Robust:* The APIs and objects are thoroughly unit tested.
 
-## Supported Game
+## Supported Games
 
 - Duke Nukem 3D
 - Quake
