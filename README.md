@@ -2,7 +2,7 @@
 
 [![Python 3.6](https://img.shields.io/badge/python-3.6-blue.svg)]() [![Discord](https://img.shields.io/badge/discord-chat-7289DA.svg)](https://discord.gg/KvwmdXA)
 
-vgio is a Python package for video game io.
+vgio is a Python package for video game file I/O.
 
 ## Mission
 
