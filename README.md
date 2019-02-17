@@ -1,8 +1,8 @@
-# game-tools
+# vgio
 
 [![Python 3.6](https://img.shields.io/badge/python-3.6-blue.svg)]() [![Discord](https://img.shields.io/badge/discord-chat-7289DA.svg)](https://discord.gg/KvwmdXA)
 
-game-tools is a Python package for working with video game file formats.
+vgio is a Python package for working with video game file formats.
 
 ## Mission
 
