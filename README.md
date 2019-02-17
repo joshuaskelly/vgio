@@ -16,7 +16,9 @@ vgio is a Python package for video game io.
 
 ## Usage
 ```python
-with vgio.quake.bsp.Bsp.open('./maps/start.bsp') as bsp_file:
+from vgio.quake.bsp import Bsp
+
+with Bsp.open('./maps/start.bsp') as bsp_file:
    """Do rad stuff with the BSP data structure!"""
 ```
 
