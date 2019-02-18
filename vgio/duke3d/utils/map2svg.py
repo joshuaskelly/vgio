@@ -9,7 +9,7 @@ import os
 import sys
 
 import drawSvg
-from duke3d import map
+from vgio.duke3d import map
 
 
 class BoundingBox(object):

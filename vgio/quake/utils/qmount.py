@@ -28,7 +28,7 @@ import time
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler as Handler
 
-from quake import pak
+from vgio.quake import pak
 
 
 # Fix for frozen packages

@@ -13,7 +13,8 @@ from tabulate import tabulate
 
 from PIL import Image
 
-from duke3d import art
+from vgio import duke3d
+from vgio.duke3d import art
 
 
 class ResolvePathAction(argparse.Action):
@@ -78,7 +79,7 @@ if __name__ == '__main__':
 
         # Flatten out palette
         palette = []
-        for p in art.default_palette:
+        for p in duke3d.palette:
             palette += p
 
         for item in art_file.infolist():

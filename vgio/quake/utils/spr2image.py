@@ -13,8 +13,9 @@ import sys
 
 from PIL import Image
 
-from quake import spr
-from common import Parser, ResolvePathAction
+from vgio import quake
+from vgio.quake import spr
+from .common import Parser, ResolvePathAction
 
 if __name__ == '__main__':
     parser = Parser(prog='spr2image',
@@ -68,7 +69,7 @@ if __name__ == '__main__':
             print('Converting: {}'.format(os.path.basename(args.file)))
 
         # Flatten out palette
-        palette = [channel for rgb in spr.default_palette for channel in rgb]
+        palette = [channel for rgb in quake.palette for channel in rgb]
 
         # Default frame animation is 10 frames per second
         default_duration = 10 / 60 * 1000

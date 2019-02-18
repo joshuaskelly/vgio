@@ -11,8 +11,8 @@ import io
 import os
 import sys
 
-from quake import bsp, wad
-from common import Parser, ResolvePathAction, read_from_stdin
+from vgio.quake import bsp, wad
+from .common import Parser, ResolvePathAction, read_from_stdin
 
 if __name__ == '__main__':
     parser = Parser(prog='bsp2wad',

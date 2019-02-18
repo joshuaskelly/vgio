@@ -14,8 +14,9 @@ import sys
 
 from PIL import Image
 
-from quake import bsp, lmp, wad
-from common import Parser, ResolvePathAction, read_from_stdin
+from vgio import quake
+from vgio.quake import bsp, lmp, wad
+from .common import Parser, ResolvePathAction, read_from_stdin
 
 if __name__ == '__main__':
     parser = Parser(prog='wad',
@@ -69,7 +70,7 @@ if __name__ == '__main__':
 
         # Flatten out palette
         palette = []
-        for p in bsp.default_palette:
+        for p in quake.palette:
             palette += p
 
         # Create palette image for Image.quantize()

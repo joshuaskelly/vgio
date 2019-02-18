@@ -11,8 +11,8 @@ import os
 import sys
 from tabulate import tabulate
 
-from quake import pak
-from common import Parser, ResolvePathAction
+from vgio.quake import pak
+from .common import Parser, ResolvePathAction
 
 if __name__ == '__main__':
     parser = Parser(prog='unpak',

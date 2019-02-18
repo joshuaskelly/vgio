@@ -14,8 +14,8 @@ import sys
 
 from PIL import Image
 
-from quake import lmp
-from common import Parser, ResolvePathAction
+from vgio.quake import lmp
+from .common import Parser, ResolvePathAction
 
 if __name__ == '__main__':
     parser = Parser(prog='lumpr',

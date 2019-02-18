@@ -1,7 +1,7 @@
 from collections import namedtuple
 from functools import lru_cache
 
-from quake import bsp
+from vgio.quake import bsp
 
 try:
     from numpy import subtract, cross, dot

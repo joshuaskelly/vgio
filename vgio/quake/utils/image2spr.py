@@ -14,8 +14,8 @@ import sys
 
 from PIL import Image
 
-from quake import spr
-from common import Parser, ResolvePathAction, read_from_stdin
+from vgio.quake import spr
+from .common import Parser, ResolvePathAction, read_from_stdin
 
 if __name__ == '__main__':
     parser = Parser(prog='image2spr',

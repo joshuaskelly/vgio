@@ -9,7 +9,7 @@ import os
 import sys
 from tabulate import tabulate
 
-from duke3d import grp
+from vgio.duke3d import grp
 
 
 class ResolvePathAction(argparse.Action):

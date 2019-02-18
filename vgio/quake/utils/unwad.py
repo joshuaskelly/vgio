@@ -14,8 +14,9 @@ from tabulate import tabulate
 
 from PIL import Image
 
-from quake import lmp, wad
-from common import Parser, ResolvePathAction
+from vgio import quake
+from vgio.quake import lmp, wad
+from .common import Parser, ResolvePathAction
 
 if __name__ == '__main__':
     parser = Parser(prog='unwad',
@@ -107,7 +108,7 @@ if __name__ == '__main__':
 
         # Flatten out palette
         palette = []
-        for p in lmp.default_palette:
+        for p in quake.palette:
             palette += p
 
         for item in wad_file.infolist():

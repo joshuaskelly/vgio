@@ -10,8 +10,8 @@ import argparse
 import os
 import sys
 
-from quake import pak
-from common import Parser, ResolvePathAction, read_from_stdin
+from vgio.quake import pak
+from .common import Parser, ResolvePathAction, read_from_stdin
 
 if __name__ == '__main__':
     parser = Parser(prog='pak',

@@ -13,9 +13,9 @@ import sys
 import numpy as np
 import svgwrite
 
-from quake import bsp
-from bsphelper import Bsp
-from common import Parser, ResolvePathAction
+from vgio.quake import bsp
+from .bsphelper import Bsp
+from .common import Parser, ResolvePathAction
 
 if __name__ == '__main__':
     parser = Parser(prog='bsp2svg',

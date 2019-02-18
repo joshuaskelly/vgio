@@ -8,7 +8,7 @@ import argparse
 import os
 import sys
 
-from duke3d import grp
+from vgio.duke3d import grp
 
 
 class ResolvePathAction(argparse.Action):
