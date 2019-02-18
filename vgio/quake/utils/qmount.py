@@ -191,7 +191,7 @@ class PlatformHelper(object):
             subprocess.run('xdg-open %s' % path, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True)
 
         else:
-            raise
+            raise Exception('Unsupported platform: {}'.format(sys.platform))
 
 
 class ResolvePathAction(argparse.Action):
