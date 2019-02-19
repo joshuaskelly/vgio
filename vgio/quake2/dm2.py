@@ -25,9 +25,6 @@ class Dm2(object):
         d = Dm2.open(file)
 
     Attributes:
-        cd_track: The number of the cd track to play. The track will be '-1' if
-            no music.
-
         message_blocks: A sequence of Message objects
     """
 
@@ -36,7 +33,6 @@ class Dm2(object):
         self.mode = None
         self._did_modify = False
 
-        self.cd_track = '-1'
         self.message_blocks = []
 
     @staticmethod
