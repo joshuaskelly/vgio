@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 from vgio import __version__
 
 setup(name='vgio',
@@ -8,4 +8,5 @@ setup(name='vgio',
       author='Joshua Skelton',
       author_email='joshua.skelton@gmail.com',
       license='MIT',
-      packages=['vgio'])
+      packages=find_packages(exclude=('tests', '*.tests', '*.tests.*'))
+)
