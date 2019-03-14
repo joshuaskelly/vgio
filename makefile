@@ -6,8 +6,14 @@ install:
 uninstall:
 	pip uninstall vgio
 
-publish:
-	python setup.py sdist upload
+package:
+	python setup.py sdist
+
+publish: package
+	python -m twine upload dist/*
+
+publish-test: package
+	python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
 
 test:
 	python -m unittest discover
