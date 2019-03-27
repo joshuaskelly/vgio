@@ -1,7 +1,7 @@
-"""This module provides file I/O for Quake 2 BSP map files.
+"""This module provides file I/O for Quake 2 MD2 model files.
 
 Example:
-    bsp_file = bsp.Bsp.open('base1.bsp')
+    md2_file = md2.Md2.open('model.md2')
 
 References:
     Quake 2 Source
@@ -30,12 +30,10 @@ def _check_md2file(fp):
 
 
 def is_md2file(filename):
-    """Quickly see if a file is a bsp file by checking the magic number.
+    """Quickly see if a file is a md2 file by checking the magic number.
 
     The filename argument may be a file for file-like object.
     """
-    result = False
-
     try:
         if hasattr(filename, 'read'):
             return _check_md2file(fp=filename)
@@ -44,9 +42,7 @@ def is_md2file(filename):
                 return _check_md2file(fp)
 
     except:
-        pass
-
-    return result
+        return False
 
 
 class Header:
@@ -126,9 +122,17 @@ class Skin:
     format = '<64s'
     size = struct.calcsize(format)
 
+    __slots__ = (
+        'name'
+    )
+
+    def __init__(self,
+                 name):
+        self.name = name.split(b'\x00')[0].decode('ascii') if type(name) is bytes else name
+
     @classmethod
     def write(cls, file, skin):
-        skin_data = struct.pack(cls.format, skin.encode('ascii'))
+        skin_data = struct.pack(cls.format, skin.name.encode('ascii'))
 
         file.write(skin_data)
 
@@ -137,7 +141,7 @@ class Skin:
         skin_data = file.read(cls.size)
         skin_struct = struct.unpack(cls.format, skin_data)
 
-        return skin_struct[0].split(b'\00')[0].decode('ascii')
+        return Skin(*skin_struct)
 
 
 class Skins:
@@ -150,7 +154,7 @@ class Skins:
 
     @classmethod
     def read(cls, file):
-        return [c[0].split(b'\00')[0].decode('ascii') for c in struct.iter_unpack(cls.Class.format, file.read())]
+        return [Skin(s) for s in struct.iter_unpack(cls.Class.format, file.read())]
 
 
 class TriVertex:
@@ -202,14 +206,7 @@ class TriVertex:
         self.light_normal_index = light_normal_index
 
     def __getitem__(self, key):
-        if type(key) is int:
-            return [self.x, self.y, self.z][key]
-
-        elif type(key) is slice:
-            start = key.start or 0
-            stop = key.stop or 3
-
-            return [self.x, self.y, self.z][start:stop]
+        return (self.x, self.y, self.z)[key]
 
     def __setitem__(self, key, value):
         if type(key) is int:
@@ -280,14 +277,7 @@ class StVertex:
         self.t = t
 
     def __getitem__(self, key):
-        if type(key) is int:
-            return [self.s, self.t][key]
-
-        elif type(key) is slice:
-            start = key.start or 0
-            stop = key.stop or 2
-
-            return [self.s, self.t][start:stop]
+        return (self.s, self.t)[key]
 
     def __setitem__(self, key, value):
         if type(key) is int:
@@ -660,10 +650,12 @@ class Md2:
             return Class.read(io.BytesIO(file.read(length)))
 
         md2 = cls()
-        md2.mode = mode
         md2.fp = file
+        md2.mode = mode
 
-        header = cls.factory.Header.read(file)
+        factory = cls.factory
+
+        header = factory.Header.read(file)
 
         if header.identity != b'IDP2':
             raise BadMd2File('Bad identity: {}'.format(header.identity))
@@ -671,20 +663,20 @@ class Md2:
         if header.version != 8:
             raise BadMd2File('Bad version number: {}'.format(header.version))
 
+        md2.header = header
         md2.skin_width = header.skin_width
         md2.skin_height = header.skin_height
 
-        md2.header = header
-        md2.skins = _read_chunk(cls.factory.Skins, header.skin_offset, header.number_of_skins)
-        md2.st_vertexes = _read_chunk(cls.factory.StVertexes, header.st_vertex_offset, header.number_of_st_vertexes)
-        md2.triangles = _read_chunk(cls.factory.Triangles, header.triangle_offset, header.number_of_triangles)
+        md2.skins = _read_chunk(factory.Skins, header.skin_offset, header.number_of_skins)
+        md2.st_vertexes = _read_chunk(factory.StVertexes, header.st_vertex_offset, header.number_of_st_vertexes)
+        md2.triangles = _read_chunk(factory.Triangles, header.triangle_offset, header.number_of_triangles)
 
         file.seek(header.frame_offset)
-        md2.frames = [cls.factory.Frame.read(file, header.number_of_vertexes) for _ in range(header.number_of_frames)]
+        md2.frames = [factory.Frame.read(file, header.number_of_vertexes) for _ in range(header.number_of_frames)]
 
         file.seek(header.gl_command_offset)
         gl_command_data = file.read(struct.calcsize('<{}B'.format(header.number_of_gl_commands*4)))
-        md2.gl_commands = cls.factory.GlCommands.read(io.BytesIO(gl_command_data))
+        md2.gl_commands = factory.GlCommands.read(io.BytesIO(gl_command_data))
 
         return md2
 
@@ -699,13 +691,15 @@ class Md2:
 
         md2.validate()
 
+        factory = cls.factory
+
         # Stub out header info
-        header = cls.factory.Header(
+        header = factory.Header(
             md2.identity,
             md2.version,
             md2.skin_width,
             md2.skin_height,
-            cls.factory.Frame.size + (cls.factory.TriVertex.size * md2.header.number_of_vertexes),
+            factory.Frame.size + (factory.TriVertex.size * md2.header.number_of_vertexes),
             len(md2.skins),
             len(md2.frames[0].vertexes),
             len(md2.st_vertexes),
@@ -720,20 +714,20 @@ class Md2:
             0
         )
 
-        header.skin_offset, _ = _write_chunk(cls.factory.Skins, md2.skins)
-        header.st_vertex_offset, _ = _write_chunk(cls.factory.StVerexes, md2.st_vertexes)
-        header.triangle_offset, _ = _write_chunk(cls.factory.Triangles, md2.triangles)
+        header.skin_offset, _ = _write_chunk(factory.Skins, md2.skins)
+        header.st_vertex_offset, _ = _write_chunk(factory.StVerexes, md2.st_vertexes)
+        header.triangle_offset, _ = _write_chunk(factory.Triangles, md2.triangles)
 
         header.frame_offset = file.tell()
         for frame in md2.frames:
-            cls.factory.Frame.write(file, frame)
+            factory.Frame.write(file, frame)
 
-        header.gl_command_offset, header.number_of_gl_commands = _write_chunk(cls.factory.GlCommands, md2.gl_commands)
+        header.gl_command_offset, header.number_of_gl_commands = _write_chunk(factory.GlCommands, md2.gl_commands)
         header.end_offset = file.tell()
 
         # Finalize header
         file.seek(0)
-        cls.factory.Header.write(file, header)
+        factory.Header.write(file, header)
         file.seek(header.end_offset)
 
     def validate(self):
@@ -770,7 +764,7 @@ class Md2:
 
         elif not hasattr(file, 'write'):
             raise RuntimeError(
-                "Mdl.open() requires 'file' to be a path, a file-like object, "
+                "Md2.open() requires 'file' to be a path, a file-like object, "
                 "or bytes")
 
         Md2._write_file(file, self)

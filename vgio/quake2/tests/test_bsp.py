@@ -48,9 +48,7 @@ class TestBspReadWrite(TestCase):
         distance = 1.0
         type = 0
 
-        p0 = bsp.Plane(*normal,
-                         distance,
-                         type)
+        p0 = bsp.Plane(*normal, distance, type)
 
         bsp.Plane.write(self.buff, p0)
         self.buff.seek(0)
@@ -81,12 +79,14 @@ class TestBspReadWrite(TestCase):
         first_face = 0
         number_of_faces = 4
 
-        n0 = bsp.Node(plane_number,
-                      *children,
-                      *bounding_box_min,
-                      *bounding_box_max,
-                      first_face,
-                      number_of_faces)
+        n0 = bsp.Node(
+            plane_number,
+            *children,
+            *bounding_box_min,
+            *bounding_box_max,
+            first_face,
+            number_of_faces
+        )
 
         bsp.Node.write(self.buff, n0)
         self.buff.seek(0)
@@ -110,14 +110,16 @@ class TestBspReadWrite(TestCase):
         texture_name = 'e1u1/arrow0'
         next_texture_info = -1
 
-        t0 = bsp.TextureInfo(*s,
-                             s_offset,
-                             *t,
-                             t_offset,
-                             flags,
-                             value,
-                             texture_name,
-                             next_texture_info)
+        t0 = bsp.TextureInfo(
+            *s,
+            s_offset,
+            *t,
+            t_offset,
+            flags,
+            value,
+            texture_name,
+            next_texture_info
+        )
 
         bsp.TextureInfo.write(self.buff, t0)
         self.buff.seek(0)
@@ -142,13 +144,15 @@ class TestBspReadWrite(TestCase):
         styles = 0, 1, 2, 3
         light_offset = 0
 
-        f0 = bsp.Face(plane_number,
-                      side,
-                      first_edge,
-                      number_of_edges,
-                      texture_info,
-                      *styles,
-                      light_offset)
+        f0 = bsp.Face(
+            plane_number,
+            side,
+            first_edge,
+            number_of_edges,
+            texture_info,
+            *styles,
+            light_offset
+        )
 
         bsp.Face.write(self.buff, f0)
         self.buff.seek(0)
@@ -174,15 +178,17 @@ class TestBspReadWrite(TestCase):
         first_leaf_brush = 2 << 4
         number_of_leaf_brushes = 2 << 8
 
-        l0 = bsp.Leaf(contents,
-                      cluster,
-                      area,
-                      *bounding_box_min,
-                      *bounding_box_max,
-                      first_leaf_face,
-                      number_of_leaf_faces,
-                      first_leaf_brush,
-                      number_of_leaf_brushes)
+        l0 = bsp.Leaf(
+            contents,
+            cluster,
+            area,
+            *bounding_box_min,
+            *bounding_box_max,
+            first_leaf_face,
+            number_of_leaf_faces,
+            first_leaf_brush,
+            number_of_leaf_brushes
+        )
 
         bsp.Leaf.write(self.buff, l0)
         self.buff.seek(0)
@@ -217,12 +223,14 @@ class TestBspReadWrite(TestCase):
         first_face = 0
         number_of_faces = 8
 
-        m0 = bsp.Model(*bounding_box_min,
-                       *bounding_box_max,
-                       *origin,
-                       head_node,
-                       first_face,
-                       number_of_faces)
+        m0 = bsp.Model(
+            *bounding_box_min,
+            *bounding_box_max,
+            *origin,
+            head_node,
+            first_face,
+            number_of_faces
+        )
 
         bsp.Model.write(self.buff, m0)
         self.buff.seek(0)
@@ -241,9 +249,7 @@ class TestBspReadWrite(TestCase):
         number_of_sides = 2 << 8
         contents = 4
 
-        b0 = bsp.Brush(first_side,
-                       number_of_sides,
-                       contents)
+        b0 = bsp.Brush(first_side, number_of_sides, contents)
 
         bsp.Brush.write(self.buff, b0)
         self.buff.seek(0)
@@ -258,8 +264,7 @@ class TestBspReadWrite(TestCase):
         plane_number = 32767
         texture_info = 256
 
-        b0 = bsp.BrushSide(plane_number,
-                       texture_info)
+        b0 = bsp.BrushSide(plane_number, texture_info)
 
         bsp.BrushSide.write(self.buff, b0)
         self.buff.seek(0)
@@ -273,8 +278,7 @@ class TestBspReadWrite(TestCase):
         number_of_area_portals = 0
         first_area_portal = 0
 
-        a0 = bsp.Area(number_of_area_portals,
-                      first_area_portal)
+        a0 = bsp.Area(number_of_area_portals, first_area_portal)
 
         bsp.Area.write(self.buff, a0)
         self.buff.seek(0)
@@ -288,8 +292,7 @@ class TestBspReadWrite(TestCase):
         portal_number = 0
         other_area = 0
 
-        a0 = bsp.AreaPortal(portal_number,
-                            other_area)
+        a0 = bsp.AreaPortal(portal_number, other_area)
 
         bsp.AreaPortal.write(self.buff, a0)
         self.buff.seek(0)

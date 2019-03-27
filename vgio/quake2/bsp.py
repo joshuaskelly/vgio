@@ -16,6 +16,8 @@ References:
 import io
 import struct
 
+from types import SimpleNamespace
+
 __all__ = ['BadBspFile', 'is_bspfile', 'Bsp']
 
 
@@ -1092,6 +1094,29 @@ class Bsp:
 
         area_portals: A list of AreaPortal objects.
     """
+    factory = SimpleNamespace(
+        Lump=Lump,
+        Header=Header,
+        Entities=Entities,
+        Planes=Planes,
+        Vertexes=Vertexes,
+        Visibilities=Visibilities,
+        Nodes=Nodes,
+        TextureInfos=TextureInfos,
+        Faces=Faces,
+        Lighting=Lighting,
+        Leafs=Leafs,
+        LeafFaces=LeafFaces,
+        LeafBrushes=LeafBrushes,
+        Edges=Edges,
+        SurfEdges=SurfEdges,
+        Models=Models,
+        Brushes=Brushes,
+        BrushSides=BrushSides,
+        Pop=Pop,
+        Areas=Areas,
+        AreaPortals=AreaPortals
+    )
 
     def __init__(self):
         self.fp = None
@@ -1119,29 +1144,6 @@ class Bsp:
         self.pop = []
         self.areas = []
         self.area_portals = []
-
-    Lump = Lump
-    Header = Header
-    Entities = Entities
-    Planes = Planes
-    Vertexes = Vertexes
-    Visibilities = Visibilities
-    Visibilities = Visibilities
-    Nodes = Nodes
-    TextureInfos = TextureInfos
-    Faces = Faces
-    Lighting = Lighting
-    Leafs = Leafs
-    LeafFaces = LeafFaces
-    LeafBrushes = LeafBrushes
-    Edges = Edges
-    SurfEdges = SurfEdges
-    Models = Models
-    Brushes = Brushes
-    BrushSides = BrushSides
-    Pop = Pop
-    Areas = Areas
-    AreaPortals = AreaPortals
 
     @classmethod
     def open(cls, file, mode='r'):
@@ -1210,74 +1212,78 @@ class Bsp:
         bsp.mode = mode
         bsp.fp = file
 
+        factory = cls.factory
+
         # Header
-        header = cls.Header.read(file)
+        header = factory.Header.read(file)
         bsp.identity = header.identity
         bsp.version = header.version
 
-        bsp.entities = _read_lump(cls.Entities)
-        bsp.planes = _read_lump(cls.Planes)
-        bsp.vertexes = _read_lump(cls.Vertexes)
-        bsp.visibilities = _read_lump(cls.Visibilities)
-        bsp.nodes = _read_lump(cls.Nodes)
-        bsp.texture_infos = _read_lump(cls.TextureInfos)
-        bsp.faces = _read_lump(cls.Faces)
-        bsp.lighting = _read_lump(cls.Lighting)
-        bsp.leafs = _read_lump(cls.Leafs)
-        bsp.leaf_faces = _read_lump(cls.LeafFaces)
-        bsp.leaf_brushes = _read_lump(cls.LeafBrushes)
-        bsp.edges = _read_lump(cls.Edges)
-        bsp.surf_edges = _read_lump(cls.SurfEdges)
-        bsp.models = _read_lump(cls.Models)
-        bsp.brushes = _read_lump(cls.Brushes)
-        bsp.brush_sides = _read_lump(cls.BrushSides)
-        bsp.pop = _read_lump(cls.Pop)
-        bsp.areas = _read_lump(cls.Areas)
-        bsp.area_portals = _read_lump(cls.AreaPortals)
+        bsp.entities = _read_lump(factory.Entities)
+        bsp.planes = _read_lump(factory.Planes)
+        bsp.vertexes = _read_lump(factory.Vertexes)
+        bsp.visibilities = _read_lump(factory.Visibilities)
+        bsp.nodes = _read_lump(factory.Nodes)
+        bsp.texture_infos = _read_lump(factory.TextureInfos)
+        bsp.faces = _read_lump(factory.Faces)
+        bsp.lighting = _read_lump(factory.Lighting)
+        bsp.leafs = _read_lump(factory.Leafs)
+        bsp.leaf_faces = _read_lump(factory.LeafFaces)
+        bsp.leaf_brushes = _read_lump(factory.LeafBrushes)
+        bsp.edges = _read_lump(factory.Edges)
+        bsp.surf_edges = _read_lump(factory.SurfEdges)
+        bsp.models = _read_lump(factory.Models)
+        bsp.brushes = _read_lump(factory.Brushes)
+        bsp.brush_sides = _read_lump(factory.BrushSides)
+        bsp.pop = _read_lump(factory.Pop)
+        bsp.areas = _read_lump(factory.Areas)
+        bsp.area_portals = _read_lump(factory.AreaPortals)
 
         return bsp
 
     @classmethod
     def _write_file(cls, file, bsp):
+        factory = cls.factory
+
         def _write_lump(Class, data):
             offset = file.tell()
             Class.write(file, data)
             size = file.tell() - offset
 
-            return cls.Lump(offset, size)
+            return factory.Lump(offset, size)
 
-        lumps = [cls.Lump(0, 0) for _ in range(19)]
-        header = cls.Header(bsp.identity, bsp.version, lumps)
+        lumps = [factory.Lump(0, 0) for _ in range(19)]
+        header = factory.Header(bsp.identity, bsp.version, lumps)
         lump_index = header.order.index
 
         # Stub out header info
-        cls.Header.write(file, header)
+        factory.Header.write(file, header)
 
-        lumps[lump_index(cls.Entities)] = _write_lump(cls.Entities, bsp.entities)
-        lumps[lump_index(cls.Planes)] = _write_lump(cls.Planes, bsp.planes)
-        lumps[lump_index(cls.Vertexes)] = _write_lump(cls.Vertexes, bsp.vertexes)
-        lumps[lump_index(cls.Visibilities)] = _write_lump(cls.Visibilities, bsp.visibilities)
-        lumps[lump_index(cls.Nodes)] = _write_lump(cls.Nodes, bsp.nodes)
-        lumps[lump_index(cls.TextureInfos)] = _write_lump(cls.TextureInfos, bsp.texture_infos)
-        lumps[lump_index(cls.Faces)] = _write_lump(cls.Faces, bsp.faces)
-        lumps[lump_index(cls.Lighting)] = _write_lump(cls.Lighting, bsp.lighting)
-        lumps[lump_index(cls.Leafs)] = _write_lump(cls.Leafs, bsp.leafs)
-        lumps[lump_index(cls.LeafFaces)] = _write_lump(cls.LeafFaces, bsp.leaf_faces)
-        lumps[lump_index(cls.LeafBrushes)] = _write_lump(cls.LeafBrushes, bsp.leaf_brushes)
-        lumps[lump_index(cls.Edges)] = _write_lump(cls.Edges, bsp.edges)
-        lumps[lump_index(cls.SurfEdges)] = _write_lump(cls.SurfEdges, bsp.surf_edges)
-        lumps[lump_index(cls.Models)] = _write_lump(cls.Models, bsp.models)
-        lumps[lump_index(cls.Brushes)] = _write_lump(cls.Brushes, bsp.brushes)
-        lumps[lump_index(cls.BrushSides)] = _write_lump(cls.BrushSides, bsp.brush_sides)
-        lumps[lump_index(cls.Pop)] = _write_lump(cls.Pop, bsp.pop)
-        lumps[lump_index(cls.Areas)] = _write_lump(cls.Areas, bsp.areas)
-        lumps[lump_index(cls.AreaPortals)] = _write_lump(cls.AreaPortals, bsp.area_portals)
+        lumps[lump_index(factory.Entities)] = _write_lump(factory.Entities, bsp.entities)
+        lumps[lump_index(factory.Planes)] = _write_lump(factory.Planes, bsp.planes)
+        lumps[lump_index(factory.Vertexes)] = _write_lump(factory.Vertexes, bsp.vertexes)
+        lumps[lump_index(factory.Visibilities)] = _write_lump(factory.Visibilities, bsp.visibilities)
+        lumps[lump_index(factory.Nodes)] = _write_lump(factory.Nodes, bsp.nodes)
+        lumps[lump_index(factory.TextureInfos)] = _write_lump(factory.TextureInfos, bsp.texture_infos)
+        lumps[lump_index(factory.Faces)] = _write_lump(factory.Faces, bsp.faces)
+        lumps[lump_index(factory.Lighting)] = _write_lump(factory.Lighting, bsp.lighting)
+        lumps[lump_index(factory.Leafs)] = _write_lump(factory.Leafs, bsp.leafs)
+        lumps[lump_index(factory.LeafFaces)] = _write_lump(factory.LeafFaces, bsp.leaf_faces)
+        lumps[lump_index(factory.LeafBrushes)] = _write_lump(factory.LeafBrushes, bsp.leaf_brushes)
+        lumps[lump_index(factory.Edges)] = _write_lump(factory.Edges, bsp.edges)
+        lumps[lump_index(factory.SurfEdges)] = _write_lump(factory.SurfEdges, bsp.surf_edges)
+        lumps[lump_index(factory.Models)] = _write_lump(factory.Models, bsp.models)
+        lumps[lump_index(factory.Brushes)] = _write_lump(factory.Brushes, bsp.brushes)
+        lumps[lump_index(factory.BrushSides)] = _write_lump(factory.BrushSides, bsp.brush_sides)
+        lumps[lump_index(factory.Pop)] = _write_lump(factory.Pop, bsp.pop)
+        lumps[lump_index(factory.Areas)] = _write_lump(factory.Areas, bsp.areas)
+        lumps[lump_index(factory.AreaPortals)] = _write_lump(factory.AreaPortals, bsp.area_portals)
 
         end_of_file = file.tell()
 
         # Finalize header
         file.seek(0)
-        cls.Header.write(file, header)
+        factory.Header.write(file, header)
         file.seek(end_of_file)
 
     def save(self, file):

@@ -1,7 +1,7 @@
 # Bsp File Format
 The Bsp file contains level data for the video game Quake 2.
 
-## Standard Bsp File Layout
+## Bsp File Layout
 | Offset | Name                            |
 |--------|---------------------------------|
 | 0x00   | [Header](#header)               |
@@ -34,8 +34,8 @@ The Bsp file contains level data for the video game Quake 2.
 ## Header
 | Offset | Size | Type | Description       | Notes                                       |
 |--------|------|------|-------------------|---------------------------------------------|
-| 0x00   | 4    | int  | Identity          | Identity of the Bsp file. Should be b'IBSP' |
-| 0x04   | 4    | int  | Version Number    | Version of the Bsp file. Should be 29       |
+| 0x00   | 4    | int  | Identity          | Identity of the Bsp file. Should be 'IBSP'  |
+| 0x04   | 4    | int  | Version Number    | Version of the Bsp file. Should be 38       |
 | 0x10   | 8    | Lump | Entities Lump     |                                             |
 | 0x18   | 8    | Lump | Planes Lump       |                                             |
 | 0x20   | 8    | Lump | Vertexes Lump     |                                             |
