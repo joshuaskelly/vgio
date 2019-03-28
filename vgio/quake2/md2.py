@@ -12,7 +12,7 @@ References:
 import io
 import struct
 
-from types import SimpleNamespace
+from vgio._core import ReadWriteFile
 
 __all__ = ['BadMd2File', 'is_md2file', 'Md2']
 
@@ -89,24 +89,26 @@ class Header:
 
     @classmethod
     def write(cls, file, header):
-        header_data = struct.pack(cls.format,
-                                  header.identity,
-                                  header.version,
-                                  header.skin_width,
-                                  header.skin_height,
-                                  header.frame_size,
-                                  header.number_of_skins,
-                                  header.number_of_vertexes,
-                                  header.number_of_st_vertexes,
-                                  header.number_of_triangles,
-                                  header.number_of_gl_commands,
-                                  header.number_of_frames,
-                                  header.skin_offset,
-                                  header.st_vertex_offset,
-                                  header.triangle_offset,
-                                  header.frame_offset,
-                                  header.gl_command_offset,
-                                  header.end_offset)
+        header_data = struct.pack(
+            cls.format,
+            header.identity,
+            header.version,
+            header.skin_width,
+            header.skin_height,
+            header.frame_size,
+            header.number_of_skins,
+            header.number_of_vertexes,
+            header.number_of_st_vertexes,
+            header.number_of_triangles,
+            header.number_of_gl_commands,
+            header.number_of_frames,
+            header.skin_offset,
+            header.st_vertex_offset,
+            header.triangle_offset,
+            header.frame_offset,
+            header.gl_command_offset,
+            header.end_offset
+        )
 
         file.write(header_data)
 
@@ -228,11 +230,13 @@ class TriVertex:
 
     @classmethod
     def write(cls, file, tri_vertex):
-        tri_vertex_data = struct.pack(cls.format,
-                                      tri_vertex.x,
-                                      tri_vertex.y,
-                                      tri_vertex.z,
-                                      tri_vertex.light_normal_index)
+        tri_vertex_data = struct.pack(
+            cls.format,
+            tri_vertex.x,
+            tri_vertex.y,
+            tri_vertex.z,
+            tri_vertex.light_normal_index
+        )
 
         file.write(tri_vertex_data)
 
@@ -297,9 +301,11 @@ class StVertex:
 
     @classmethod
     def write(cls, file, st_vertex):
-        st_vertex_data = struct.pack(cls.format,
-                                     st_vertex.s,
-                                     st_vertex.t)
+        st_vertex_data = struct.pack(
+            cls.format,
+            st_vertex.s,
+            st_vertex.t
+        )
 
         file.write(st_vertex_data)
 
@@ -362,9 +368,11 @@ class Triangle:
 
     @classmethod
     def write(cls, file, triangle):
-        triangle_data = struct.pack(cls.format,
-                                    *triangle.vertexes,
-                                    *triangle.st_vertexes)
+        triangle_data = struct.pack(
+            cls.format,
+            *triangle.vertexes,
+            *triangle.st_vertexes
+        )
 
         file.write(triangle_data)
 
@@ -435,10 +443,12 @@ class Frame:
 
     @classmethod
     def write(cls, file, frame):
-        frame_data = struct.pack(cls.format,
-                                 *frame.scale,
-                                 *frame.translate,
-                                 frame.name.encode('ascii'))
+        frame_data = struct.pack(
+            cls.format,
+            *frame.scale,
+            *frame.translate,
+            frame.name.encode('ascii')
+        )
 
         file.write(frame_data)
 
@@ -477,10 +487,12 @@ class GlVertex:
 
     @classmethod
     def write(cls, file, gl_vertex):
-        gl_vertex_data = struct.pack(cls.format,
-                                     gl_vertex.s,
-                                     gl_vertex.t,
-                                     gl_vertex.vertex)
+        gl_vertex_data = struct.pack(
+            cls.format,
+            gl_vertex.s,
+            gl_vertex.t,
+            gl_vertex.vertex
+        )
 
         file.write(gl_vertex_data)
 
@@ -552,94 +564,51 @@ class GlCommands:
         return result
 
 
-class Md2:
-    factory = SimpleNamespace(
-        Header=Header,
-        Skin=Skin,
-        Skins=Skins,
-        TriVertex=TriVertex,
-        StVertex=StVertex,
-        StVertexes=StVertexes,
-        Triangle=Triangle,
-        Triangles=Triangles,
-        Frame=Frame,
-        GlVertex=GlVertex,
-        GlCommand=GlCommand,
-        GlCommands=GlCommands
-    )
+class Md2(ReadWriteFile):
+    """Class for working with Md2 files
+
+    Example:
+        m = Md2.open(file)
+
+    Attributes:
+        identity
+        version
+        skin_width
+        skin_height
+        header
+        frames
+        skins
+        st_vertexes
+        triangles
+        gl_commands
+    """
+    class factory:
+        Header = Header
+        Skin = Skin
+        Skins = Skins
+        TriVertex = TriVertex
+        StVertex = StVertex
+        StVertexes = StVertexes
+        Triangle = Triangle
+        Triangles = Triangles
+        Frame = Frame
+        GlVertex = GlVertex
+        GlCommand = GlCommand
+        GlCommands = GlCommands
 
     def __init__(self):
-        self.fp = None
-        self.mode = None
-        self._did_modify = False
+        super().__init__()
 
         self.identity = b'IDP2'
         self.version = 8
         self.skin_width = 0
         self.skin_height = 0
 
-        self.header = None
         self.frames = []
         self.skins = []
         self.st_vertexes = []
         self.triangles = []
         self.gl_commands = []
-
-    @classmethod
-    def open(cls, file, mode='r'):
-        """Returns an Md2 object
-
-        Args:
-            file: Either the path to the file, a file-like object, or bytes.
-
-            mode: An optional string that indicates which mode to open the file
-
-        Returns:
-            An Md2 object constructed from the information read from the
-            file-like object.
-
-        Raises:
-            ValueError: If an invalid file mode is given.
-
-            RuntimeError: If the file argument is not a file-like object.
-
-            BadMd2File: If the file opened is not recognized as an Md2 file.
-        """
-
-        if mode not in ('r', 'w', 'a'):
-            raise ValueError("invalid mode: '%s'" % mode)
-
-        filemode = {'r': 'rb', 'w': 'w+b', 'a': 'r+b'}[mode]
-
-        if isinstance(file, str):
-            file = io.open(file, filemode)
-
-        elif isinstance(file, bytes):
-            file = io.BytesIO(file)
-
-        elif not hasattr(file, 'read'):
-            raise RuntimeError(
-                "Md2.open() requires 'file' to be a path, a file-like object, or bytes")
-
-        # Read
-        if mode == 'r':
-            return Md2._read_file(file, mode)
-
-        # Write
-        elif mode == 'w':
-            md2 = Md2()
-            md2.fp = file
-            md2.mode = 'w'
-            md2._did_modify = True
-
-            return md2
-
-        # Append
-        else:
-            md2 = Md2._read_file(file, mode)
-            md2._did_modify = True
-
-            return md2
 
     @classmethod
     def _read_file(cls, file, mode):
@@ -663,7 +632,6 @@ class Md2:
         if header.version != 8:
             raise BadMd2File('Bad version number: {}'.format(header.version))
 
-        md2.header = header
         md2.skin_width = header.skin_width
         md2.skin_height = header.skin_height
 
@@ -682,9 +650,9 @@ class Md2:
 
     @classmethod
     def _write_file(cls, file, md2):
-        def _write_chunk(Class, data):
+        def _write_chunk(class_, data):
             offset = file.tell()
-            Class.write(file, data)
+            class_.write(file, data)
             size = file.tell() - offset
 
             return offset, size
@@ -693,15 +661,17 @@ class Md2:
 
         factory = cls.factory
 
+        vertex_count = len(md2.frames[0].vertexes)
+
         # Stub out header info
         header = factory.Header(
             md2.identity,
             md2.version,
             md2.skin_width,
             md2.skin_height,
-            factory.Frame.size + (factory.TriVertex.size * md2.header.number_of_vertexes),
+            factory.Frame.size + (factory.TriVertex.size * vertex_count),
             len(md2.skins),
-            len(md2.frames[0].vertexes),
+            vertex_count,
             len(md2.st_vertexes),
             len(md2.triangles),
             len(md2.gl_commands),
@@ -739,59 +709,3 @@ class Md2:
 
         if len(set([len(f.vertexes) for f in self.frames])) != 1:
             raise BadMd2File('Inconsistent frame vertex count')
-
-    def save(self, file):
-        """Writes Md2 data to file
-
-        Args:
-            file: Either the path to the file, or a file-like object, or bytes.
-
-        Raises:
-            RuntimeError: If file argument is not a file-like object.
-
-            BadMd2File: If the internal Md2 data is not invalid.
-        """
-
-        should_close = False
-
-        if isinstance(file, str):
-            file = io.open(file, 'r+b')
-            should_close = True
-
-        elif isinstance(file, bytes):
-            file = io.BytesIO(file)
-            should_close = True
-
-        elif not hasattr(file, 'write'):
-            raise RuntimeError(
-                "Md2.open() requires 'file' to be a path, a file-like object, "
-                "or bytes")
-
-        Md2._write_file(file, self)
-
-        if should_close:
-            file.close()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        self.close()
-
-    def close(self):
-        """Closes the file pointer if possible. If mode is 'w' or 'a', the file
-        will be written to.
-
-        Raises:
-            BadMd2File: If the internal Md2 data is not invalid.
-        """
-
-        if self.fp:
-            if self.mode in ('w', 'a') and self._did_modify:
-                self.fp.seek(0)
-                Md2._write_file(self.fp, self)
-                self.fp.truncate()
-
-            file_object = self.fp
-            self.fp = None
-            file_object.close()

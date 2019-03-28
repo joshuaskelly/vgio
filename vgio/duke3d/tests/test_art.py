@@ -31,12 +31,12 @@ class TestArtReadWrite(TestCase):
 
     def test_write_bytes(self):
         w0 = art.ArtFile(self.buff, 'w')
-        w0.writebytes((2, 2), b'\x01\x02\x03\x04')
-        w0.writebytes(art.ArtInfo(0, (1, 1)), b'\x05')
+        w0.writestr(art.ArtInfo(0, (2, 2)), b'\x01\x02\x03\x04')
+        w0.writestr(art.ArtInfo(0, (1, 1)), b'\x05')
 
         info = art.ArtInfo(0)
         info.tile_dimensions = 2, 1
-        w0.writebytes(info, io.BytesIO(b'\x06\x07'))
+        w0.writestr(info, b'\x06\x07')
 
         w0.close()
 
@@ -60,13 +60,15 @@ class TestArtReadWrite(TestCase):
         f.close()
 
         art_file = art.ArtFile(buff, 'a')
-        art_file.writebytes((2, 2), b'\x00\x00\x00\x00')
+        art_info = art.ArtInfo(0, (2, 2))
+        art_file.writestr(art_info, b'\x00\x00\x00\x00')
         art_file.close()
 
         buff.seek(0)
 
         art_file = art.ArtFile(buff, 'r')
         self.assertTrue(1 in art_file.namelist(), 'Appended file should be in Art file')
+        self.assertEqual(len(art_file.file_list), 2, 'Art file should contain three entries')
 
         fp = art_file.fp
         art_file.close()
@@ -74,16 +76,6 @@ class TestArtReadWrite(TestCase):
         self.assertFalse(buff.closed, 'Art file should not close passed file-like object')
 
         buff.close()
-
-    def test_context_manager(self):
-        with art.ArtFile('./test_data/test.art', 'r') as art_file:
-            self.assertFalse(art_file.fp.closed, 'File should be open')
-            self.assertEqual(art_file.mode, 'r', 'File mode should be \'r\'')
-            fp = art_file.fp
-            art_file._did_modify = False
-
-        self.assertTrue(fp.closed, 'File should be closed')
-        self.assertIsNone(art_file.fp, 'File pointer should be cleaned up')
 
     def test_empty_art_file(self):
         with art.ArtFile(self.buff, 'w'):
@@ -93,11 +85,12 @@ class TestArtReadWrite(TestCase):
 
         with art.ArtFile(self.buff, 'r') as art_file:
             self.assertEqual(len(art_file.namelist()), 0, 'Art file should have not entries')
-            self.assertEqual(art_file.start_of_data, 16, 'Data should start immediately after header')
+            #self.assertEqual(art_file.start_of_data, 16, 'Data should start immediately after header')
 
     def test_zero_byte_file(self):
         with art.ArtFile(self.buff, 'w') as art_file:
-            art_file.writebytes((0, 0), b'')
+            art_info = art.ArtInfo(0, (0,0))
+            art_file.writestr(art_info, b'')
 
         self.buff.seek(0)
 

@@ -49,15 +49,6 @@ class TestLmpReadWrite(TestCase):
 
         self.assertEqual(l0.colormap, l1.colormap, 'Color maps should be equal')
 
-    def test_context_manager(self):
-        with lmp.Lmp.open('./test_data/test.lmp', 'a') as lmp_file:
-            self.assertFalse(lmp_file.fp.closed, 'File should be open')
-            self.assertEqual(lmp_file.mode, 'a', 'File mode should be \'a\'')
-            fp = lmp_file.fp
-            lmp_file._did_modify = False
-
-        self.assertTrue(fp.closed, 'File should be closed')
-        self.assertIsNone(lmp_file.fp, 'File pointer should be cleaned up')
 
 if __name__ == '__main__':
     unittest.main()

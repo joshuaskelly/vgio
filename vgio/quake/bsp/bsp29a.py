@@ -31,10 +31,9 @@ def is_bspfile(filename):
         else:
             with open(filename, 'rb') as fp:
                 return _check_bspfile(fp)
-    except:
-        pass
 
-    return False
+    except Exception:
+        return False
 
 
 class Node(Bsp29.Node):
@@ -68,5 +67,6 @@ class Bsp(Bsp29):
     ClipNode = ClipNode
     Leaf = Leaf
     Edge = Edge
+
 
 Bsp.Bsp = Bsp

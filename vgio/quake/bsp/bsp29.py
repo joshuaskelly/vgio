@@ -13,8 +13,9 @@ References:
     - http://www.gamers.org/dEngine/quake/spec/quake-spec34/qkspec_4.htm
 """
 
-import io
 import struct
+
+from vgio._core import ReadWriteFile
 
 __all__ = ['BadBspFile', 'is_bspfile', 'Bsp']
 
@@ -107,8 +108,6 @@ def is_bspfile(filename):
 
     The filename argument may be a file for file-like object.
     """
-    result = False
-
     try:
         if hasattr(filename, 'read'):
             return _check_bspfile(fp=filename)
@@ -116,10 +115,8 @@ def is_bspfile(filename):
             with open(filename, 'rb') as fp:
                 return _check_bspfile(fp)
 
-    except:
-        pass
-
-    return result
+    except Exception:
+        return False
 
 
 default_palette = (
@@ -190,7 +187,7 @@ default_palette = (
 )
 
 
-class Plane(object):
+class Plane:
     """Class for representing a bsp plane
 
     Attributes:
@@ -244,7 +241,7 @@ class Plane(object):
         return Plane(*plane_struct)
 
 
-class Miptexture(object):
+class Miptexture:
     """Class for representing a miptexture
 
     A miptexture is an indexed image mip map embedded within the map. Maps
@@ -327,7 +324,7 @@ class Miptexture(object):
         return miptexture
 
 
-class Vertex(object):
+class Vertex:
     """Class for representing a vertex
 
     A Vertex is an XYZ triple.
@@ -381,7 +378,7 @@ class Vertex(object):
         return Vertex(*vertex_struct)
 
 
-class Node(object):
+class Node:
     """Class for representing a node
 
     A Node is a data structure used to compose a bsp tree data structure. A
@@ -462,7 +459,7 @@ class Node(object):
         return Node(*node_struct)
 
 
-class TextureInfo(object):
+class TextureInfo:
     """Class for representing a texture info
 
     Attributes:
@@ -529,7 +526,7 @@ class TextureInfo(object):
         return TextureInfo(*texture_info_struct)
 
 
-class Face(object):
+class Face:
     """Class for representing a face
 
     Attributes:
@@ -605,7 +602,7 @@ class Face(object):
         return Face(*face_struct)
 
 
-class ClipNode(object):
+class ClipNode:
     """Class for representing a clip node
 
     Attributes:
@@ -662,7 +659,7 @@ AMBIENT_SLIME = 2
 AMBIENT_LAVA = 3
 
 
-class Leaf(object):
+class Leaf:
     """Class for representing a leaf
 
     Attributes:
@@ -744,7 +741,7 @@ class Leaf(object):
         return Leaf(*leaf_struct)
 
 
-class Edge(object):
+class Edge:
     """Class for representing a edge
 
     Attributes:
@@ -783,7 +780,7 @@ class Edge(object):
         return Edge(*edge_struct)
 
 
-class Model(object):
+class Model:
     """Class for representing a model
 
     Attributes:
@@ -866,7 +863,7 @@ class Model(object):
         return Model(*model_struct)
 
 
-class Mesh(object):
+class Mesh:
     """Class for representing mesh data
 
     Attributes:
@@ -898,7 +895,7 @@ class Mesh(object):
         self.sub_meshes = []
 
 
-class Image(object):
+class Image:
     """Class for representing pixel data
 
     Attributes:
@@ -929,7 +926,7 @@ class Image(object):
         self.pixels = None
 
 
-class Bsp(object):
+class Bsp(ReadWriteFile):
     """Class for working with Bsp files
 
     Example:
@@ -978,9 +975,7 @@ class Bsp(object):
     """
 
     def __init__(self):
-        self.fp = None
-        self.mode = None
-        self._did_modify = False
+        super().__init__()
 
         self.version = header_version
         self.entities = ""
@@ -1009,63 +1004,6 @@ class Bsp(object):
     Leaf = Leaf
     Edge = Edge
     Model = Model
-
-    @classmethod
-    def open(cls, file, mode='r'):
-        """Returns a Bsp object
-
-        Args:
-            file: Either the path to the file, a file-like object, or bytes.
-
-            mode: An optional string that indicates which mode to open the file
-
-        Returns:
-            An Bsp object constructed from the information read from the
-            file-like object.
-
-        Raises:
-            ValueError: If an invalid file mode is given.
-
-            RuntimeError: If the file argument is not a file-like object.
-        """
-
-        Bsp = cls.Bsp
-
-        if mode not in ('r', 'w', 'a'):
-            raise ValueError("invalid mode: '%s'" % mode)
-
-        filemode = {'r': 'rb', 'w': 'w+b', 'a': 'r+b'}[mode]
-
-        if isinstance(file, str):
-            file = io.open(file, filemode)
-
-        elif isinstance(file, bytes):
-            file = io.BytesIO(file)
-
-        elif not hasattr(file, 'read'):
-            raise RuntimeError(
-                "Bsp.open() requires 'file' to be a path, a file-like object, "
-                "or bytes")
-
-        # Read
-        if mode == 'r':
-            return Bsp._read_file(file, mode)
-
-        # Write
-        elif mode == 'w':
-            bsp = Bsp()
-            bsp.fp = file
-            bsp.mode = 'w'
-            bsp._did_modify = True
-
-            return bsp
-
-        # Append
-        else:
-            bsp = Bsp._read_file(file, mode)
-            bsp._did_modify = True
-
-            return bsp
 
     @classmethod
     def _read_file(cls, file, mode):
@@ -1334,57 +1272,6 @@ class Bsp(object):
 
         return offset, size
 
-    def save(self, file):
-        """Writes Bsp data to file
-
-            Args:
-                file: Either the path to the file, or a file-like object, or bytes.
-
-            Raises:
-                RuntimeError: If the file argument is not a file-like object.
-        """
-
-        should_close = False
-
-        if isinstance(file, str):
-            file = io.open(file, 'r+b')
-            should_close = True
-
-        elif isinstance(file, bytes):
-            file = io.BytesIO(file)
-            should_close = True
-
-        elif not hasattr(file, 'write'):
-            raise RuntimeError(
-                "Bsp.open() requires 'file' to be a path, a file-like object, "
-                "or bytes")
-
-        self._write_file(file, self)
-
-        if should_close:
-            file.close()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        self.close()
-
-    def close(self):
-        """Closes the file pointer if possible. If mode is 'w' or 'a', the file
-        will be written to.
-        """
-
-        if self.fp:
-            if self.mode in ('w', 'a') and self._did_modify:
-                self.fp.seek(0)
-                self._write_file(self.fp, self)
-                self.fp.truncate()
-
-            file_object = self.fp
-            self.fp = None
-            file_object.close()
-
     def mesh(self, model=0):
         """Returns a Mesh object
 
@@ -1528,5 +1415,6 @@ class Bsp(object):
 
     def images(self):
         return [self.image(i) for i in range(len(self.miptextures))]
+
 
 Bsp.Bsp = Bsp

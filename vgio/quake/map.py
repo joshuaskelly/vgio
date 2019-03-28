@@ -25,7 +25,7 @@ class ParseError(Exception):
         self.location = location
 
 
-class Entity(object):
+class Entity:
     """Class for representing Map Entity data
 
     Note:
@@ -38,7 +38,7 @@ class Entity(object):
         self.brushes = []
 
 
-class Brush(object):
+class Brush:
     """Class for representing Brush data
 
     Attributes:
@@ -53,7 +53,7 @@ class Brush(object):
         self.planes = []
 
 
-class Plane(object):
+class Plane:
     """Class for representing planes(faces) of a Brush.
 
     Attributes:
@@ -98,19 +98,19 @@ def loads(s):
         ParseError: If fails to parse given document
     """
 
-    class StringLiteral(object):
+    class StringLiteral:
         def __init__(self, id):
             self.id = id
 
-    class NumericLiteral(object):
+    class NumericLiteral:
         def __init__(self, id):
             self.id = id
 
-    class Symbol(object):
+    class Symbol:
         def __init__(self, id):
             self.id = id
 
-    class EndToken(object):
+    class EndToken:
         pass
 
     separator_pattern = '\B([{}\(\)])\B'

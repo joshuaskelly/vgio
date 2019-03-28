@@ -13,9 +13,9 @@ References:
     - http://www.gamers.org/dEngine/quake/spec/quake-spec34/qkspec_5.htm
 """
 
-import io
 import struct
 
+from vgio._core import ReadWriteFile
 from vgio import quake
 
 __all__ = ['BadMdlFile', 'is_mdlfile', 'BadMdlFile', 'Skin', 'SkinGroup',
@@ -104,8 +104,6 @@ def is_mdlfile(filename):
 
     The filename argument may be a file for file-like object.
     """
-    result = False
-
     try:
         if hasattr(filename, 'read'):
             return _check_mdlfile(fp=filename)
@@ -113,17 +111,15 @@ def is_mdlfile(filename):
             with open(filename, 'rb') as fp:
                 return _check_mdlfile(fp)
 
-    except:
-        pass
-
-    return result
+    except Exception:
+        return False
 
 
 SINGLE = 0
 GROUP = 1
 
 
-class Skin(object):
+class Skin:
     """Class for representing a skin
 
     A skin is an indexed image embedded within the model. Models may contain
@@ -174,7 +170,7 @@ class Skin(object):
         return skin
 
 
-class SkinGroup(object):
+class SkinGroup:
     """Class for representing a skin group
 
     A skin group is a sequence of indexed images embedded within the model.
@@ -240,7 +236,7 @@ class SkinGroup(object):
         return skin_group
 
 
-class StVertex(object):
+class StVertex:
     """Class for representing an st vertex
 
     StVertices are similar to UV coordinates but are expressed in terms of
@@ -318,7 +314,7 @@ class StVertex(object):
         return st_vertex
 
 
-class Triangle(object):
+class Triangle:
     """Class for representing a triangle
 
     Note:
@@ -368,7 +364,7 @@ class Triangle(object):
         return triangle
 
 
-class TriVertex(object):
+class TriVertex:
     """Class for representing a trivertex
 
     A TriVertex is a set of XYZ coordinates and a light normal index.
@@ -460,7 +456,7 @@ class TriVertex(object):
         return tri_vertex
 
 
-class Frame(object):
+class Frame:
     """Class for representing a frame
 
     A Frame is a set of vertices that represent the state of the model at
@@ -519,7 +515,7 @@ class Frame(object):
         return frame
 
 
-class FrameGroup(object):
+class FrameGroup:
     """Class for representing a frame group
 
     Attributes:
@@ -592,7 +588,7 @@ TRACER2 = 64    # orange split trail + rotate
 TRACER3 = 128   # purple trail
 
 
-class Mesh(object):
+class Mesh:
     """Class for representing mesh data
 
     Attributes:
@@ -620,7 +616,7 @@ class Mesh(object):
         self.normals = []
 
 
-class Image(object):
+class Image:
     """Class for representing pixel data
 
     Attributes:
@@ -651,7 +647,7 @@ class Image(object):
         self.pixels = None
 
 
-class Mdl(object):
+class Mdl(ReadWriteFile):
     """Class for working with Mdl files
 
     Example:
@@ -714,9 +710,7 @@ class Mdl(object):
     """
 
     def __init__(self):
-        self.fp = None
-        self.mode = None
-        self._did_modify = False
+        super().__init__()
 
         self.identifier = header_magic_number
         self.version = header_version
@@ -738,62 +732,6 @@ class Mdl(object):
         self.st_vertices = []
         self.triangles = []
         self.frames = []
-
-    @staticmethod
-    def open(file, mode='r'):
-        """Returns an Mdl object
-
-        Args:
-            file: Either the path to the file, a file-like object, or bytes.
-
-            mode: An optional string that indicates which mode to open the file
-
-        Returns:
-            An Mdl object constructed from the information read from the
-            file-like object.
-
-        Raises:
-            ValueError: If an invalid file mode is given.
-
-            RuntimeError: If the file argument is not a file-like object.
-
-            BadMdlFile: If the file opened is not recognized as an Mdl file.
-        """
-
-        if mode not in ('r', 'w', 'a'):
-            raise ValueError("invalid mode: '%s'" % mode)
-
-        filemode = {'r': 'rb', 'w': 'w+b', 'a': 'r+b'}[mode]
-
-        if isinstance(file, str):
-            file = io.open(file, filemode)
-
-        elif isinstance(file, bytes):
-            file = io.BytesIO(file)
-
-        elif not hasattr(file, 'read'):
-            raise RuntimeError(
-                "Mdl.open() requires 'file' to be a path, a file-like object, or bytes")
-
-        # Read
-        if mode == 'r':
-            return Mdl._read_file(file, mode)
-
-        # Write
-        elif mode == 'w':
-            mdl = Mdl()
-            mdl.fp = file
-            mdl.mode = 'w'
-            mdl._did_modify = True
-
-            return mdl
-
-        # Append
-        else:
-            mdl = Mdl._read_file(file, mode)
-            mdl._did_modify = True
-
-            return mdl
 
     @staticmethod
     def _read_file(file, mode):
@@ -962,62 +900,6 @@ class Mdl(object):
                 for sub_frame in frame.frames:
                     if len(sub_frame.vertices) != self.number_of_vertices:
                         raise BadMdlFile('Incorrect number of vertices. Expected: %r Actual: %r' % (self.number_of_vertices, len(sub_frame.vertices)))
-
-    def save(self, file):
-        """Writes Mdl data to file
-
-        Args:
-            file: Either the path to the file, or a file-like object, or bytes.
-
-        Raises:
-            RuntimeError: If file argument is not a file-like object.
-
-            BadMdlFile: If the internal Mdl data is not invalid.
-        """
-
-        should_close = False
-
-        if isinstance(file, str):
-            file = io.open(file, 'r+b')
-            should_close = True
-
-        elif isinstance(file, bytes):
-            file = io.BytesIO(file)
-            should_close = True
-
-        elif not hasattr(file, 'write'):
-            raise RuntimeError(
-                "Mdl.open() requires 'file' to be a path, a file-like object, "
-                "or bytes")
-
-        Mdl._write_file(file, self)
-
-        if should_close:
-            file.close()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        self.close()
-
-    def close(self):
-        """Closes the file pointer if possible. If mode is 'w' or 'a', the file
-        will be written to.
-
-        Raises:
-            BadMdlFile: If the internal Mdl data is not invalid.
-        """
-
-        if self.fp:
-            if self.mode in ('w', 'a') and self._did_modify:
-                self.fp.seek(0)
-                Mdl._write_file(self.fp, self)
-                self.fp.truncate()
-
-            file_object = self.fp
-            self.fp = None
-            file_object.close()
 
     def mesh(self, frame=0, subframe=0):
         """Returns a Mesh object

@@ -10,10 +10,11 @@ References:
     - https://github.com/id-Software/Quake-2
 """
 
-import io
 import struct
 
-from types import SimpleNamespace
+from vgio._core import ReadWriteFile
+
+__all__ = ['BadSp2File', 'is_sp2file', 'Sp2']
 
 
 class BadSp2File(Exception):
@@ -142,7 +143,7 @@ class SpriteFrame:
         return SpriteFrame(*frame_struct)
 
 
-class Sp2:
+class Sp2(ReadWriteFile):
     """Class for working with Sp2 files
 
     Example:
@@ -158,11 +159,12 @@ class Sp2:
 
         frames: A list of SpriteFrame objects.
     """
+    class factory:
+        Header = Header
+        SpriteFrame = SpriteFrame
 
     def __init__(self):
-        self.fp = None
-        self.mode = None
-        self._did_modify = False
+        super().__init__()
 
         self.identity = b'IDS2'
         self.version = 2
@@ -170,66 +172,6 @@ class Sp2:
 
         self.header = None
         self.frames = []
-
-        self.factory = SimpleNamespace(
-            Header=Header,
-            SpriteFrame=SpriteFrame
-        )
-
-    @classmethod
-    def open(cls, file, mode='r'):
-        """Returns an Sp2 object
-
-        Args:
-            file: Either the path to the file, a file-like object, or bytes.
-
-            mode: An optional string that indicates which mode to open the file
-
-        Returns:
-            An Sp2 object constructed from the information read from the
-            file-like object.
-
-        Raises:
-            ValueError: If an invalid file mode is given.
-
-            RuntimeError: If the file argument is not a file-like object.
-
-            BadSp2File: If the file opened is not recognized as an Sp2 file.
-        """
-
-        if mode not in ('r', 'w', 'a'):
-            raise ValueError("invalid mode: '%s'" % mode)
-
-        filemode = {'r': 'rb', 'w': 'w+b', 'a': 'r+b'}[mode]
-
-        if isinstance(file, str):
-            file = io.open(file, filemode)
-
-        elif isinstance(file, bytes):
-            file = io.BytesIO(file)
-
-        elif not hasattr(file, 'read'):
-            raise RuntimeError("Sp2.open() requires 'file' to be a path, a file-like object, or bytes")
-
-        # Read
-        if mode == 'r':
-            return Sp2._read_file(file, mode)
-
-        # Write
-        elif mode == 'w':
-            sp2 = Sp2()
-            sp2.fp = file
-            sp2.mode = 'w'
-            sp2._did_modify = True
-
-            return sp2
-
-        # Append
-        else:
-            sp2 = Sp2._read_file(file, mode)
-            sp2._did_modify = True
-
-            return sp2
 
     @classmethod
     def _read_file(cls, file, mode):
@@ -263,54 +205,3 @@ class Sp2:
 
         for frame in sp2.frames:
             sp2.factory.SpriteFrame.write(file, frame)
-
-    def save(self, file):
-        """Writes Sp2 data to file
-
-        Args:
-            file: Either the path to the file, or a file-like object, or bytes.
-
-        Raises:
-            RuntimeError: If file argument is not a file-like object.
-        """
-
-        should_close = False
-
-        if isinstance(file, str):
-            file = io.open(file, 'r+b')
-            should_close = True
-
-        elif isinstance(file, bytes):
-            file = io.BytesIO(file)
-            should_close = True
-
-        elif not hasattr(file, 'write'):
-            raise RuntimeError(
-                "Sp2.open() requires 'file' to be a path, a file-like object, "
-                "or bytes")
-
-        Sp2._write_file(file, self)
-
-        if should_close:
-            file.close()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        self.close()
-
-    def close(self):
-        """Closes the file pointer if possible. If mode is 'w' or 'a', the file
-        will be written to.
-        """
-
-        if self.fp:
-            if self.mode in ('w', 'a') and self._did_modify:
-                self.fp.seek(0)
-                Sp2._write_file(self.fp, self)
-                self.fp.truncate()
-
-            file_object = self.fp
-            self.fp = None
-            file_object.close()

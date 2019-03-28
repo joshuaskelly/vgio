@@ -182,16 +182,6 @@ class TestBspReadWrite(TestCase):
         self.assertTrue(fp.closed, 'File should be closed')
         self.assertIsNone(m1.fp, 'File pointer should be cleaned up')
 
-    def test_context_manager(self):
-        with mdl.Mdl.open('./test_data/test.mdl', 'a') as mdl_file:
-            self.assertFalse(mdl_file.fp.closed, 'File should be open')
-            self.assertEqual(mdl_file.mode, 'a', 'File mode should be \'a\'')
-            fp = mdl_file.fp
-            mdl_file._did_modify = False
-
-        self.assertTrue(fp.closed, 'File should be closed')
-        self.assertIsNone(mdl_file.fp, 'File pointer should be cleaned up')
-
     def test_to_mesh(self):
         m0 = mdl.Mdl.open('./test_data/test.mdl')
         m0.close()

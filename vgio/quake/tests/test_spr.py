@@ -89,15 +89,6 @@ class TestSprReadWrite(TestCase):
         self.assertTrue(fp.closed, 'File should be closed')
         self.assertIsNone(s1.fp, 'File pointer should be cleaned up')
 
-    def test_context_manager(self):
-        with spr.Spr.open('./test_data/test.spr', 'a') as spr_file:
-            self.assertFalse(spr_file.fp.closed, 'File should be open')
-            self.assertEqual(spr_file.mode, 'a', 'File mode should be \'a\'')
-            fp = spr_file.fp
-            spr_file._did_modify = False
-
-        self.assertTrue(fp.closed, 'File should be closed')
-        self.assertIsNone(spr_file.fp, 'File pointer should be cleaned up')
 
 if __name__ == '__main__':
     unittest.main()

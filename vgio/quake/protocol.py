@@ -176,7 +176,7 @@ SVC_SELLSCREEN = 33
 SVC_CUTSCENE = 34
 
 
-class Bad(object):
+class Bad:
     """Class for representing a Bad message
 
     This is an error message and should not appear.
@@ -194,7 +194,7 @@ class Bad(object):
         return Bad()
 
 
-class Nop(object):
+class Nop:
     """Class for representing a Nop message"""
 
     __slots__ = ()
@@ -209,7 +209,7 @@ class Nop(object):
         return Nop()
 
 
-class Disconnect(object):
+class Disconnect:
     """Class for representing a Disconnect message
 
     Disconnect from the server and end the game. Typically this the last
@@ -228,7 +228,7 @@ class Disconnect(object):
         return Disconnect()
 
 
-class UpdateStat(object):
+class UpdateStat:
     """Class for representing UpdateStat messages
 
     Updates a player state value.
@@ -264,7 +264,7 @@ class UpdateStat(object):
         return update_stat
 
 
-class Version(object):
+class Version:
     """Class for representing Version messages
 
     Attributes:
@@ -292,7 +292,7 @@ class Version(object):
         return version
 
 
-class SetView(object):
+class SetView:
     """Class for representing SetView messages
 
     Sets the camera position to the given entity.
@@ -327,7 +327,7 @@ SND_ATTENUATION = 0b0010
 SND_LOOPING = 0b0100
 
 
-class Sound(object):
+class Sound:
     """Class for representing Sound messages
 
     Plays a sound on a channel at a position.
@@ -406,7 +406,7 @@ class Sound(object):
         return sound
 
 
-class Time(object):
+class Time:
     """Class for representing Time messages
 
     A time stamp that should appear in each block of messages.
@@ -437,7 +437,7 @@ class Time(object):
         return time
 
 
-class Print(object):
+class Print:
     """Class for representing Print messages
 
     Prints text in the top left corner of the screen and console.
@@ -467,7 +467,7 @@ class Print(object):
         return _print
 
 
-class StuffText(object):
+class StuffText:
     """Class for representing StuffText messages
 
     Text sent to the client console and ran.
@@ -499,7 +499,7 @@ class StuffText(object):
         return stuff_text
 
 
-class SetAngle(object):
+class SetAngle:
     """Class for representing SetAngle messages
 
     Sets the camera's orientation.
@@ -530,7 +530,7 @@ class SetAngle(object):
         return set_angle
 
 
-class ServerInfo(object):
+class ServerInfo:
     """Class for representing ServerInfo messages
 
     Handles the loading of assets. Usually first message sent after a level
@@ -611,7 +611,7 @@ class ServerInfo(object):
         return server_data
 
 
-class LightStyle(object):
+class LightStyle:
     """Class for representing a LightStyle message
 
     Defines the style of a light. Usually happens shortly after level change.
@@ -655,7 +655,7 @@ class LightStyle(object):
         return light_style
 
 
-class UpdateName(object):
+class UpdateName:
     """Class for representing UpdateName messages
 
     Sets the player's name.
@@ -691,7 +691,7 @@ class UpdateName(object):
         return update_name
 
 
-class UpdateFrags(object):
+class UpdateFrags:
     """Class for representing UpdateFrags messages
 
     Sets the player's frag count.
@@ -743,7 +743,7 @@ SU_ARMOR = 0b0010000000000000
 SU_WEAPON = 0b0100000000000000
 
 
-class ClientData(object):
+class ClientData:
     """Class for representing ClientData messages
 
     Server information about this client.
@@ -935,7 +935,7 @@ class ClientData(object):
         return client_data
 
 
-class StopSound(object):
+class StopSound:
     """Class for representing StopSound messages
 
     Stops a playing sound.
@@ -972,7 +972,7 @@ class StopSound(object):
         return stop_sound
 
 
-class UpdateColors(object):
+class UpdateColors:
     """Class for representing UpdateColors messages
 
     Sets the player's colors.
@@ -1007,7 +1007,7 @@ class UpdateColors(object):
         return update_colors
 
 
-class Particle(object):
+class Particle:
     """Class for representing Particle messages
 
     Creates particle effects
@@ -1057,7 +1057,7 @@ class Particle(object):
         return particle
 
 
-class Damage(object):
+class Damage:
     """Class for representing Damage messages
 
     Damage information
@@ -1099,7 +1099,7 @@ class Damage(object):
         return damage
 
 
-class SpawnStatic(object):
+class SpawnStatic:
     """Class for representing SpawnStatic messages
 
     Creates a static entity
@@ -1159,7 +1159,7 @@ class SpawnStatic(object):
         return spawn_static
 
 
-class SpawnBinary(object):
+class SpawnBinary:
     """Class for representing SpawnBinary messages
 
     This is a deprecated message.
@@ -1176,7 +1176,7 @@ class SpawnBinary(object):
         raise BadMessage('SpawnBinary message obsolete')
 
 
-class SpawnBaseline(object):
+class SpawnBaseline:
     """Class for representing SpawnBaseline messages
 
     Creates a dynamic entity
@@ -1258,7 +1258,7 @@ TE_EXPLOSION2 = 12
 TE_BEAM = 13
 
 
-class TempEntity(object):
+class TempEntity:
     """Class for representing TempEntity messages
 
     Creates a temporary entity. The attributes of the message depend on the
@@ -1343,7 +1343,7 @@ class TempEntity(object):
         return temp_entity
 
 
-class SetPause(object):
+class SetPause:
     """Class for representing SetPause messages
 
     Sets the pause state
@@ -1373,7 +1373,7 @@ class SetPause(object):
         return set_pause
 
 
-class SignOnNum(object):
+class SignOnNum:
     """Class for representing SignOnNum messages
 
     This message represents the client state.
@@ -1403,7 +1403,7 @@ class SignOnNum(object):
         return sign_on_num
 
 
-class CenterPrint(object):
+class CenterPrint:
     """Class for representing CenterPrint messages
 
     Prints text in the center of the screen.
@@ -1433,7 +1433,7 @@ class CenterPrint(object):
         return center_print
 
 
-class KilledMonster(object):
+class KilledMonster:
     """Class for representing KilledMonster messages
 
     Indicates the death of a monster.
@@ -1451,7 +1451,7 @@ class KilledMonster(object):
         return KilledMonster()
 
 
-class FoundSecret(object):
+class FoundSecret:
     """Class for representing FoundSecret messages
 
     Indicates a secret has been found.
@@ -1469,7 +1469,7 @@ class FoundSecret(object):
         return FoundSecret()
 
 
-class SpawnStaticSound(object):
+class SpawnStaticSound:
     """Class for representing SpawnStaticSound messages
 
     Creates a static sound
@@ -1517,7 +1517,7 @@ class SpawnStaticSound(object):
         return spawn_static_sound
 
 
-class Intermission(object):
+class Intermission:
     """Class for representing Intermission messages
 
     Displays the level end screen.
@@ -1535,7 +1535,7 @@ class Intermission(object):
         return Intermission()
 
 
-class Finale(object):
+class Finale:
     """Class for representing Finale messages
 
     Displays the episode end screen.
@@ -1565,7 +1565,7 @@ class Finale(object):
         return finale
 
 
-class CdTrack(object):
+class CdTrack:
     """Class for representing CdTrack messages
 
     Selects the cd track
@@ -1601,7 +1601,7 @@ class CdTrack(object):
         return cd_track
 
 
-class SellScreen(object):
+class SellScreen:
     """Class for representing SellScreen messages
 
     Displays the help and sell screen.
@@ -1619,7 +1619,7 @@ class SellScreen(object):
         return SellScreen()
 
 
-class CutScene(object):
+class CutScene:
     """Class for representing CutScene messages
 
     Displays end screen and text.
@@ -1675,7 +1675,7 @@ U_EFFECTS = 0b0010000000000000
 U_LONGENTITY = 0b0100000000000000
 
 
-class UpdateEntity(object):
+class UpdateEntity:
     """Class for representing UpdateEntity messages
 
     Updates an entity.
@@ -1820,7 +1820,7 @@ class UpdateEntity(object):
         return update_entity
 
 
-class MessageBlock(object):
+class MessageBlock:
     """Class for representing a message block
 
     Attributes:

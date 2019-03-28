@@ -91,16 +91,6 @@ class TestGrpReadWrite(TestCase):
 
         self.buff.close()
 
-    def test_context_manager(self):
-        with grp.GrpFile('./test_data/test.grp', 'r') as grp_file:
-            self.assertFalse(grp_file.fp.closed, 'File should be open')
-            self.assertEqual(grp_file.mode, 'r', 'File mode should be \'r\'')
-            fp = grp_file.fp
-            grp_file._did_modify = False
-
-        self.assertTrue(fp.closed, 'File should be closed')
-        self.assertIsNone(grp_file.fp, 'File pointer should be cleaned up')
-        
     def test_empty_grp_file(self):
         with grp.GrpFile(self.buff, 'w'):
             pass
@@ -109,8 +99,7 @@ class TestGrpReadWrite(TestCase):
 
         with grp.GrpFile(self.buff, 'r') as grp_file:
             self.assertEqual(len(grp_file.namelist()), 0, 'Grp file should have not entries')
-            self.assertEqual(grp_file.start_of_directory, 16, 'Directory should start immediately after header')
-            
+
     def test_zero_byte_file(self):
         with grp.GrpFile(self.buff, 'w') as grp_file:
             grp_file.writestr('zero.txt', b'')

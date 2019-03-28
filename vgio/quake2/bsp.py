@@ -16,7 +16,7 @@ References:
 import io
 import struct
 
-from types import SimpleNamespace
+from vgio._core import ReadWriteFile
 
 __all__ = ['BadBspFile', 'is_bspfile', 'Bsp']
 
@@ -38,8 +38,6 @@ def is_bspfile(filename):
 
     The filename argument may be a file for file-like object.
     """
-    result = False
-
     try:
         if hasattr(filename, 'read'):
             return _check_bspfile(fp=filename)
@@ -47,10 +45,8 @@ def is_bspfile(filename):
             with open(filename, 'rb') as fp:
                 return _check_bspfile(fp)
 
-    except:
-        pass
-
-    return result
+    except Exception:
+        return False
 
 
 class ClassSequence:
@@ -1042,7 +1038,7 @@ class Header:
         return Header(ident, version, lumps)
 
 
-class Bsp:
+class Bsp(ReadWriteFile):
     """Class for working with Bsp files
 
     Example:
@@ -1094,34 +1090,31 @@ class Bsp:
 
         area_portals: A list of AreaPortal objects.
     """
-    factory = SimpleNamespace(
-        Lump=Lump,
-        Header=Header,
-        Entities=Entities,
-        Planes=Planes,
-        Vertexes=Vertexes,
-        Visibilities=Visibilities,
-        Nodes=Nodes,
-        TextureInfos=TextureInfos,
-        Faces=Faces,
-        Lighting=Lighting,
-        Leafs=Leafs,
-        LeafFaces=LeafFaces,
-        LeafBrushes=LeafBrushes,
-        Edges=Edges,
-        SurfEdges=SurfEdges,
-        Models=Models,
-        Brushes=Brushes,
-        BrushSides=BrushSides,
-        Pop=Pop,
-        Areas=Areas,
-        AreaPortals=AreaPortals
-    )
+    class factory:
+        Lump = Lump
+        Header = Header
+        Entities = Entities
+        Planes = Planes
+        Vertexes = Vertexes
+        Visibilities = Visibilities
+        Nodes = Nodes
+        TextureInfos = TextureInfos
+        Faces = Faces
+        Lighting = Lighting
+        Leafs = Leafs
+        LeafFaces = LeafFaces
+        LeafBrushes = LeafBrushes
+        Edges = Edges
+        SurfEdges = SurfEdges
+        Models = Models
+        Brushes = Brushes
+        BrushSides = BrushSides
+        Pop = Pop
+        Areas = Areas
+        AreaPortals = AreaPortals
 
     def __init__(self):
-        self.fp = None
-        self.mode = None
-        self._did_modify = False
+        super().__init__()
 
         self.identity = b'IBSP'
         self.version = 38
@@ -1146,67 +1139,12 @@ class Bsp:
         self.area_portals = []
 
     @classmethod
-    def open(cls, file, mode='r'):
-        """Returns a Bsp object
-
-        Args:
-            file: Either the path to the file, a file-like object, or bytes.
-
-            mode: An optional string that indicates which mode to open the file
-
-        Returns:
-            An Bsp object constructed from the information read from the
-            file-like object.
-
-        Raises:
-            ValueError: If an invalid file mode is given.
-
-            RuntimeError: If the file argument is not a file-like object.
-        """
-
-        if mode not in ('r', 'w', 'a'):
-            raise ValueError("invalid mode: '%s'" % mode)
-
-        filemode = {'r': 'rb', 'w': 'w+b', 'a': 'r+b'}[mode]
-
-        if isinstance(file, str):
-            file = io.open(file, filemode)
-
-        elif isinstance(file, bytes):
-            file = io.BytesIO(file)
-
-        elif not hasattr(file, 'read'):
-            raise RuntimeError(
-                "Bsp.open() requires 'file' to be a path, a file-like object, "
-                "or bytes")
-
-        # Read
-        if mode == 'r':
-            return cls._read_file(file, mode)
-
-        # Write
-        elif mode == 'w':
-            bsp = cls()
-            bsp.fp = file
-            bsp.mode = 'w'
-            bsp._did_modify = True
-
-            return bsp
-
-        # Append
-        else:
-            bsp = cls._read_file(file, mode)
-            bsp._did_modify = True
-
-            return bsp
-
-    @classmethod
     def _read_file(cls, file, mode):
-        def _read_lump(Class):
-            lump = header.lumps[header.order.index(Class)]
+        def _read_lump(class_):
+            lump = header.lumps[header.order.index(class_)]
             file.seek(lump.offset)
 
-            return Class.read(io.BytesIO(file.read(lump.length)))
+            return class_.read(io.BytesIO(file.read(lump.length)))
 
         bsp = cls()
         bsp.mode = mode
@@ -1245,9 +1183,9 @@ class Bsp:
     def _write_file(cls, file, bsp):
         factory = cls.factory
 
-        def _write_lump(Class, data):
+        def _write_lump(class_, data):
             offset = file.tell()
-            Class.write(file, data)
+            class_.write(file, data)
             size = file.tell() - offset
 
             return factory.Lump(offset, size)
@@ -1285,54 +1223,3 @@ class Bsp:
         file.seek(0)
         factory.Header.write(file, header)
         file.seek(end_of_file)
-
-    def save(self, file):
-        """Writes Bsp data to file
-
-        Args:
-            file: Either the path to the file, or a file-like object, or bytes.
-
-        Raises:
-            RuntimeError: If the file argument is not a file-like object.
-        """
-
-        should_close = False
-
-        if isinstance(file, str):
-            file = io.open(file, 'r+b')
-            should_close = True
-
-        elif isinstance(file, bytes):
-            file = io.BytesIO(file)
-            should_close = True
-
-        elif not hasattr(file, 'write'):
-            raise RuntimeError(
-                "Bsp.open() requires 'file' to be a path, a file-like object, "
-                "or bytes")
-
-        self._write_file(file, self)
-
-        if should_close:
-            file.close()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        self.close()
-
-    def close(self):
-        """Closes the file pointer if possible. If mode is 'w' or 'a', the file
-        will be written to.
-        """
-
-        if self.fp:
-            if self.mode in ('w', 'a') and self._did_modify:
-                self.fp.seek(0)
-                self._write_file(self.fp, self)
-                self.fp.truncate()
-
-            file_object = self.fp
-            self.fp = None
-            file_object.close()

@@ -24,7 +24,7 @@ class TestWadReadWrite(TestCase):
         self.assertEqual(info.filename, 'test')
         self.assertEqual(info.file_size, 5480, 'FileInfo size of test file should be 5480')
         self.assertEqual(info.file_offset, 12, 'FileInfo offset of test file should be 12')
-        self.assertEqual(info.type, wad.TYPE_MIPTEX, 'FileInfo type of test file should be MIPTEX')
+        self.assertEqual(info.type, wad.LumpType.MIPTEX, 'FileInfo type of test file should be MIPTEX')
 
         file = wad_file.open('test')
         self.assertIsNotNone(file, 'File should not be None')
@@ -59,7 +59,7 @@ class TestWadReadWrite(TestCase):
 
         info = wad.WadInfo('bytes')
         info.file_size = len(b'bytes')
-        info.type = wad.TYPE_LUMP
+        info.type = wad.LumpType.LUMP
         w0.writestr(info, io.BytesIO(b'bytes'))
 
         w0.close()
@@ -117,7 +117,7 @@ class TestWadReadWrite(TestCase):
 
         with wad.WadFile(self.buff, 'r') as wad_file:
             self.assertEqual(len(wad_file.namelist()), 0, 'Wad file should have not entries')
-            self.assertEqual(wad_file.start_of_directory, 12, 'Directory should start immediately after header')
+            self.assertEqual(wad_file.end_of_data, 12, 'Directory should start immediately after header')
             
     def test_zero_byte_file(self):
         with wad.WadFile(self.buff, 'w') as wad_file:

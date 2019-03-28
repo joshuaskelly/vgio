@@ -29,8 +29,7 @@ class TestMd2ReadWrite(TestCase):
         y = 16
         z = 255
         light_normal_index = 0
-        t0 = md2.TriVertex(x, y, z,
-                           light_normal_index)
+        t0 = md2.TriVertex(x, y, z, light_normal_index)
 
         md2.TriVertex.write(self.buff, t0)
         self.buff.seek(0)
@@ -45,8 +44,7 @@ class TestMd2ReadWrite(TestCase):
     def test_triangle(self):
         vertexes = 0, 1, 2
         st_vertexes = 0, 1, 2
-        t0 = md2.Triangle(*vertexes,
-                          *st_vertexes)
+        t0 = md2.Triangle(*vertexes, *st_vertexes)
 
         md2.Triangle.write(self.buff, t0)
         self.buff.seek(0)
@@ -64,9 +62,7 @@ class TestMd2ReadWrite(TestCase):
         offset = 0.0, 128.0, -64.0
         name = 'frame0'
 
-        f0 = md2.Frame(*scale,
-                       *offset,
-                       name)
+        f0 = md2.Frame(*scale, *offset, name)
 
         f0.vertexes = tv0, tv1
 
@@ -98,23 +94,25 @@ class TestMd2ReadWrite(TestCase):
         gl_command_offset = 2 << 11
         end_offset = 2 << 12
 
-        h0 = md2.Header(identity,
-                        version,
-                        skin_width,
-                        skin_height,
-                        frame_size,
-                        number_of_skins,
-                        number_of_vertexes,
-                        number_of_st_vertexes,
-                        number_of_triangles,
-                        number_of_gl_commands,
-                        number_of_frames,
-                        skin_offset,
-                        st_coord_offset,
-                        triangle_offset,
-                        frame_offset,
-                        gl_command_offset,
-                        end_offset)
+        h0 = md2.Header(
+            identity,
+            version,
+            skin_width,
+            skin_height,
+            frame_size,
+            number_of_skins,
+            number_of_vertexes,
+            number_of_st_vertexes,
+            number_of_triangles,
+            number_of_gl_commands,
+            number_of_frames,
+            skin_offset,
+            st_coord_offset,
+            triangle_offset,
+            frame_offset,
+            gl_command_offset,
+            end_offset
+        )
 
         md2.Header.write(self.buff, h0)
         self.buff.seek(0)

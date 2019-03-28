@@ -13,9 +13,9 @@ References:
     - http://www.gamers.org/dEngine/quake/spec/quake-spec34/qkspec_6.htm
 """
 
-import io
 import struct
 
+from vgio._core import ReadWriteFile
 from vgio import quake
 
 __all__ = ['BadSprFile', 'Spr', 'is_sprfile']
@@ -65,8 +65,6 @@ def is_sprfile(filename):
 
     The filename argument may be a file for file-like object.
     """
-    result = False
-
     try:
         if hasattr(filename, 'read'):
             return _check_sprfile(fp=filename)
@@ -74,17 +72,15 @@ def is_sprfile(filename):
             with open(filename, 'rb') as fp:
                 return _check_sprfile(fp)
 
-    except:
-        pass
-
-    return result
+    except Exception:
+        return False
 
 
 SINGLE = 0
 GROUP = 1
 
 
-class SpriteFrame(object):
+class SpriteFrame:
     """Class for representing a single sprite frame
 
     Attributes:
@@ -151,7 +147,7 @@ class SpriteFrame(object):
         return sprite_frame
 
 
-class SpriteGroup(object):
+class SpriteGroup:
     """Class for representing a sprite group
 
     Attributes:
@@ -207,7 +203,7 @@ class SpriteGroup(object):
         return sprite_group
 
 
-class Image(object):
+class Image:
     """Class for representing pixel data
 
     Attributes:
@@ -248,7 +244,7 @@ SYNC = 0
 RAND = 1
 
 
-class Spr(object):
+class Spr(ReadWriteFile):
     """Class for working with Spr files
 
     Example:
@@ -281,9 +277,7 @@ class Spr(object):
     """
 
     def __init__(self):
-        self.fp = None
-        self.mode = None
-        self._did_modify = False
+        super().__init__()
 
         self.identifier = header_magic_number
         self.version = header_version
@@ -296,55 +290,6 @@ class Spr(object):
         self.sync_type = SYNC
 
         self.frames = []
-
-    @staticmethod
-    def open(file, mode='r'):
-        """Returns an Spr object
-
-        Args:
-            file: Either the path to the file, a file-like object, or bytes.
-
-            mode: An optional string that indicates which mode to open the file
-
-        Returns:
-            An Spr object constructed from the information read from the
-            file-like object.
-        """
-
-        if mode not in ('r', 'w', 'a'):
-            raise ValueError("invalid mode: '%s'" % mode)
-
-        filemode = {'r': 'rb', 'w': 'w+b', 'a': 'r+b'}[mode]
-
-        if isinstance(file, str):
-            file = io.open(file, filemode)
-
-        elif isinstance(file, bytes):
-            file = io.BytesIO(file)
-
-        elif not hasattr(file, 'read'):
-            raise RuntimeError(
-                "Spr.open() requires 'file' to be a path, a file-like object, or bytes")
-
-        # Read
-        if mode == 'r':
-            return Spr._read_file(file, mode)
-
-        # Write
-        elif mode == 'w':
-            spr = Spr()
-            spr.fp = file
-            spr.mode = 'w'
-            spr._did_modify = True
-
-            return spr
-
-        # Append
-        else:
-            spr = Spr._read_file(file, mode)
-            spr._did_modify = True
-
-            return spr
 
     @staticmethod
     def _read_file(file, mode):
@@ -453,62 +398,6 @@ class Spr(object):
 
             else:
                 raise BadSprFile('Bad frame type: %r' % (frame.type))
-
-
-    @staticmethod
-    def write(file, lmp):
-        Spr._write_file(file, lmp)
-
-    def save(self, file):
-        """Writes Spr data to file
-
-        Args:
-            file: Either the path to the file, or a file-like object, or bytes.
-
-        Raises:
-            RuntimeError: If file argument is not a file-like object.
-        """
-
-        should_close = False
-
-        if isinstance(file, str):
-            file = io.open(file, 'r+b')
-            should_close = True
-
-        elif isinstance(file, bytes):
-            file = io.BytesIO(file)
-            should_close = True
-
-        elif not hasattr(file, 'write'):
-            raise RuntimeError(
-                "Spr.open() requires 'file' to be a path, a file-like object, "
-                "or bytes")
-
-        Spr._write_file(file, self)
-
-        if should_close:
-            file.close()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        self.close()
-
-    def close(self):
-        """Closes the file pointer if possible. If mode is 'w' or 'a', the file
-        will be written to.
-        """
-
-        if self.fp:
-            if self.mode in ('w', 'a') and self._did_modify:
-                self.fp.seek(0)
-                Spr._write_file(self.fp, self)
-                self.fp.truncate()
-
-        file_object = self.fp
-        self.fp = None
-        file_object.close()
 
     def image(self, index=0, subindex=0, palette=quake.palette):
         """Returns an Image object.

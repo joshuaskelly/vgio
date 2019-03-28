@@ -9,8 +9,9 @@ References:
     - http://fabiensanglard.net/duke3d/BUILDINF.TXT
 """
 
-import io
 import struct
+
+from vgio._core import ReadWriteFile
 
 __all__ = ['BadMapFile', 'is_mapfile', 'Sector', 'Wall', 'Sprite', 'Map']
 
@@ -125,8 +126,6 @@ def is_mapfile(filename):
 
     The filename argument may be a file for file-like object.
     """
-    result = False
-
     try:
         if hasattr(filename, 'read'):
             return _check_mapfile(fp=filename)
@@ -134,13 +133,11 @@ def is_mapfile(filename):
             with open(filename, 'rb') as fp:
                 return _check_mapfile(fp)
 
-    except:
-        pass
-
-    return result
+    except Exception:
+        return False
 
 
-class Sector(object):
+class Sector:
     """Class for representing a sector
 
     Attributes:
@@ -298,7 +295,7 @@ class Sector(object):
         return sector
 
 
-class Wall(object):
+class Wall:
     """Class for representing a wall
 
     Attributes:
@@ -427,7 +424,7 @@ class Wall(object):
         return wall
 
 
-class Sprite(object):
+class Sprite:
     """Class for representing a sprite
 
     Attributes:
@@ -584,7 +581,7 @@ class Sprite(object):
         return sprite
 
 
-class Map(object):
+class Map(ReadWriteFile):
     """Class for working with map files
 
     Example:
@@ -611,9 +608,7 @@ class Map(object):
     """
 
     def __init__(self):
-        self.fp = None
-        self.mode = None
-        self._did_modify = False
+        super().__init__()
 
         self.version = header_version
         self.position_x = 0
@@ -624,61 +619,6 @@ class Map(object):
         self.sectors = []
         self.walls = []
         self.sprites = []
-
-    @staticmethod
-    def open(file, mode='r'):
-        """Returns a Map object
-
-        Args:
-            file: Either the path to the file, a file-like object, or bytes.
-
-            mode: An optional string that indicates which mode to open the file
-
-        Returns:
-            An Map object constructed from the information read from the
-            file-like object.
-
-        Raises:
-            ValueError: If an invalid file mode is given.
-
-            RuntimeError: If the file argument is not a file-like object.
-        """
-        
-        if mode not in ('r', 'w', 'a'):
-            raise ValueError("invalid mode: '%s'" % mode)
-
-        filemode = {'r': 'rb', 'w': 'w+b', 'a': 'r+b'}[mode]
-
-        if isinstance(file, str):
-            file = io.open(file, filemode)
-
-        elif isinstance(file, bytes):
-            file = io.BytesIO(file)
-
-        elif not hasattr(file, 'read'):
-            raise RuntimeError(
-                "Map.open() requires 'file' to be a path, a file-like object, "
-                "or bytes")
-
-        # Read
-        if mode == 'r':
-            return Map._read_file(file, mode)
-
-        # Write
-        elif mode == 'w':
-            map = Map()
-            map.fp = file
-            map.mode = 'w'
-            map._did_modify = True
-
-            return map
-
-        # Append
-        else:
-            map = Map._read_file(file, mode)
-            map._did_modify = True
-
-            return map
 
     @staticmethod
     def _read_file(file, mode):
@@ -749,54 +689,3 @@ class Map(object):
 
         for sprite in map.sprites:
             Sprite.write(file, sprite)
-
-    def save(self, file):
-        """Writes Map data to file
-
-        Args:
-            file: Either the path to the file, or a file-like object, or bytes.
-
-        Raises:
-            RuntimeError: If the file argument is not a file-like object.
-        """
-
-        should_close = False
-
-        if isinstance(file, str):
-            file = io.open(file, 'r+b')
-            should_close = True
-
-        elif isinstance(file, bytes):
-            file = io.BytesIO(file)
-            should_close = True
-
-        elif not hasattr(file, 'write'):
-            raise RuntimeError(
-                "Map.save() requires 'file' to be a path, a file-like object, "
-                "or bytes")
-
-        Map._write_file(file, self)
-
-        if should_close:
-            file.close()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        self.close()
-
-    def close(self):
-        """Closes the file pointer if possible. If mode is 'w' or 'a', the file
-        will be written to.
-        """
-
-        if self.fp:
-            if self.mode in ('w', 'a') and self._did_modify:
-                self.fp.seek(0)
-                Map._write_file(self.fp, self)
-                self.fp.truncate()
-
-            file_object = self.fp
-            self.fp = None
-            file_object.close()

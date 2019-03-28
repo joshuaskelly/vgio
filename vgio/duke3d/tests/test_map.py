@@ -155,16 +155,6 @@ class TestMapReadWrite(TestCase):
         self.assertEqual(s0.hitag, s1.hitag, 'Hitag values should be equal')
         self.assertEqual(s0.extra, s1.extra, 'Extra values should be equal')
 
-    def test_context_manager(self):
-        with map.Map.open('./test_data/test.map', 'a') as map_file:
-            self.assertFalse(map_file.fp.closed, 'File should be open')
-            self.assertEqual(map_file.mode, 'a', 'File mode should be \'a\'')
-            fp = map_file.fp
-            map_file._did_modify = False
-
-        self.assertTrue(fp.closed, 'File should be closed')
-        self.assertIsNone(map_file.fp, 'File pointer should be cleaned up')
-
 
 if __name__ == '__main__':
     unittest.main()

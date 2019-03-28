@@ -12,8 +12,92 @@ References:
 
 import struct
 
+from vgio._core import ReadWriteFile
 
-class Wal:
+__all__ = ['Wal']
+
+
+class Header:
+    """Class for representing a Wal file header
+
+    Attributes:
+        name:  Name of the wal texture.
+
+        width:  Width of the wal texture at mip level 0.
+
+        height:  Height of the wal texture at mip level 0.
+
+        offsets:  The offsets for each of the mipmaps.
+
+        animation_name:  The name of the next wal texture in the animation
+
+        flags:  A bitfield of surface behaviors.
+
+        contents:
+
+        value:
+    """
+
+    format = '<32s6I32s3i'
+    size = struct.calcsize(format)
+
+    __slots__ = (
+        'name',
+        'width',
+        'height',
+        'offsets',
+        'animation_name',
+        'flags',
+        'contents',
+        'value'
+    )
+
+    def __init__(self,
+                 name,
+                 width,
+                 height,
+                 offsets_0,
+                 offsets_1,
+                 offsets_2,
+                 offsets_3,
+                 animation_name,
+                 flags,
+                 contents,
+                 value):
+        self.name = name.split(b'\x00')[0].decode('ascii') if type(name) is bytes else name
+        self.width = width
+        self.height = height
+        self.offsets = offsets_0, offsets_1, offsets_2, offsets_3
+        self.animation_name = animation_name.split(b'\x00')[0].decode('ascii') if type(animation_name) is bytes else animation_name
+        self.flags = flags
+        self.contents = contents
+        self.value = value
+
+    @classmethod
+    def write(cls, file, header):
+        header_data = struct.pack(
+            cls.format,
+            header.name.encode('ascii'),
+            header.width,
+            header.height,
+            *header.offsets,
+            header.animation_name.encode('ascii'),
+            header.flags,
+            header.contents,
+            header.value
+        )
+
+        file.write(header_data)
+
+    @classmethod
+    def read(cls, file):
+        header_data = file.read(cls.size)
+        header_struct = struct.unpack(cls.format, header_data)
+
+        return Header(*header_struct)
+
+
+class Wal(ReadWriteFile):
     """Class for working with Wal files
 
     Example:
@@ -53,72 +137,56 @@ class Wal:
             wal.width * wal.height * 85 / 64
     """
 
-    format = '<32s6I32s3i'
-    size = struct.calcsize(format)
+    class factory:
+        Header = Header
 
-    __slots__ = (
-        'name',
-        'width',
-        'height',
-        'offsets',
-        'animation_name',
-        'flags',
-        'contents',
-        'value',
-        'pixels'
-    )
+    def __init__(self):
+        super().__init__()
 
-    def __init__(self,
-                 name,
-                 width,
-                 height,
-                 offset_0,
-                 offset_1,
-                 offset_2,
-                 offset_3,
-                 animation_name,
-                 flags,
-                 contents,
-                 value,
-                 pixels):
-
-        self.name = name
-        self.width = width
-        self.height = height
-        self.offsets = offset_0, offset_1, offset_2, offset_3
-        self.animation_name = animation_name
-        self.flags = flags
-        self.contents = contents
-        self.value = value
-        self.pixels = pixels
-
-        if type(name) == bytes:
-            self.name = name.split(b'\00')[0].decode('ascii')
-
-        if type(animation_name) == bytes:
-            self.animation_name = animation_name.split(b'\00')[0].decode('ascii')
+        self.name = ''
+        self.width = 0
+        self.height = 0
+        self.offsets = 0, 0, 0, 0
+        self.animation_name = ''
+        self.flags = 0
+        self.contents = 0
+        self.value = 0
+        self.pixels = None
 
     @classmethod
-    def write(cls, file, wal):
-        wal_data = struct.pack(cls.format,
-                               wal.name.encode('ascii'),
-                               wal.width,
-                               wal.height,
-                               *wal.offsets,
-                               wal.animation_name.encode('ascii'),
-                               wal.flags,
-                               wal.contents,
-                               wal.value)
+    def _read_file(cls, file, mode):
+        wal = Wal()
+        wal.fp = file
+        wal.mode = mode
 
-        file.write(wal_data)
+        header = Header.read(file)
+
+        wal.name = header.name
+        wal.width = header.width
+        wal.height = header.height
+        wal.offsets = header.offsets
+        wal.animation_name = header.animation_name
+        wal.flags = header.flags
+        wal.contents = header.contents
+        wal.value = header.value
+
+        pixels_size = wal.width * wal.height * 85 // 64
+        wal.pixels = file.read(pixels_size)
+
+        return wal
+
+    @classmethod
+    def _write_file(cls, file, wal):
+        header = wal.factory.Header(
+            wal.name,
+            wal.width,
+            wal.height,
+            *wal.offsets,
+            wal.animation_name,
+            wal.flags,
+            wal.contents,
+            wal.value
+        )
+
+        wal.factory.Header.write(file, header)
         file.write(wal.pixels)
-
-    @classmethod
-    def read(cls, file):
-        wal_data = file.read(cls.size)
-        wal_struct = struct.unpack(cls.format, wal_data)
-
-        pixels_size = wal_struct[1] * wal_struct[2] * 85 // 64
-        pixels = file.read(pixels_size)
-
-        return cls(*wal_struct, pixels)

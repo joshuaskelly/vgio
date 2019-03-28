@@ -481,6 +481,7 @@ class TestBsp29aReadWrite(TestCase):
         self.buff.seek(0)
 
         b1 = bsp29a.Bsp.open(self.buff)
+        b1.close()
 
         self.assertEqual(b0.version, b1.version, 'Versions should be equal')
         self.assertEqual(b0.entities, b1.entities, 'Entities should be equal')
@@ -569,22 +570,6 @@ class TestBsp29aReadWrite(TestCase):
             self.assertEqual(m0.visleafs, m1.visleafs, 'Visleafs should be equal')
             self.assertEqual(m0.first_face, m1.first_face, 'First faces should be equal')
             self.assertEqual(m0.number_of_faces, m1.number_of_faces, 'Number of faces should be equal')
-
-        self.assertFalse(b1.fp.closed, 'File should be open')
-        fp = b1.fp
-        b1.close()
-        self.assertTrue(fp.closed, 'File should be closed')
-        self.assertIsNone(b1.fp, 'File pointer should be cleaned up')
-
-    def test_context_manager(self):
-        with bsp29a.Bsp.open('./test_data/test.bsp2', 'a') as bsp_file:
-            self.assertFalse(bsp_file.fp.closed, 'File should be open')
-            self.assertEqual(bsp_file.mode, 'a', 'File mode should be \'a\'')
-            fp = bsp_file.fp
-            bsp_file._did_modify = False
-
-        self.assertTrue(fp.closed, 'File should be closed')
-        self.assertIsNone(bsp_file.fp, 'File pointer should be cleaned up')
 
 
 if __name__ == '__main__':

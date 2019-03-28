@@ -13,7 +13,7 @@ def is_bspfile(filename):
     return bsp29.is_bspfile(filename) or bsp29a.is_bspfile(filename)
 
 
-class Bsp(object):
+class Bsp:
     @staticmethod
     def open(file, mode='r'):
         # Open for read or append

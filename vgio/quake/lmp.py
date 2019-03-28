@@ -13,9 +13,9 @@ References:
     - http://www.gamers.org/dEngine/quake/spec/quake-spec34/qkspec_7.htm#CWADS
 """
 
-import io
 import struct
 
+from vgio._core import ReadWriteFile
 from vgio import quake
 
 __all__ = ['BadLmpFile', 'Lmp']
@@ -41,7 +41,7 @@ colormap_size = struct.calcsize(colormap_format)
 quake_colormap_size = struct.calcsize('<16385B')
 
 
-class Image(object):
+class Image:
     """Class for representing pixel data
 
     Attributes:
@@ -72,7 +72,7 @@ class Image(object):
         self.pixels = None
 
 
-class Lmp(object):
+class Lmp(ReadWriteFile):
     """Class for working with Lmp files
 
     There are three different types of lump files:
@@ -103,62 +103,7 @@ class Lmp(object):
     """
 
     def __init__(self):
-        self.fp = None
-        self.mode = None
-        self._did_modify = False
-
-    @staticmethod
-    def open(file, mode='r'):
-        """Returns an Lmp object
-        
-        Args:
-            file: Either the path to the file, a file-like object, or bytes.
-
-            mode: An optional string that indicates which mode to open the file
-
-        Returns:
-            An Lmp object constructed from the information read from the
-            file-like object.
-
-        Raises:
-            ValueError: If an invalid file mode is given.
-
-            RuntimeError: If the file argument is not a file-like object.
-        """
-
-        if mode not in ('r', 'w', 'a'):
-            raise ValueError("invalid mode: '%s'" % mode)
-
-        filemode = {'r': 'rb', 'w': 'w+b', 'a': 'r+b'}[mode]
-
-        if isinstance(file, str):
-            file = io.open(file, filemode)
-
-        elif isinstance(file, bytes):
-            file = io.BytesIO(file)
-
-        elif not hasattr(file, 'read'):
-            raise RuntimeError("Lmp.open() requires 'file' to be a path, a file-like object, or bytes")
-
-        # Read
-        if mode == 'r':
-            return Lmp._read_file(file, mode)
-
-        # Write
-        elif mode == 'w':
-            lmp = Lmp()
-            lmp.fp = file
-            lmp.mode = 'w'
-            lmp._did_modify = True
-
-            return lmp
-
-        # Append
-        else:
-            lmp = Lmp._read_file(file, mode)
-            lmp._did_modify = True
-
-            return lmp
+        super().__init__()
 
     @staticmethod
     def _read_file(file, mode):
@@ -303,59 +248,6 @@ class Lmp(object):
     @staticmethod
     def write(file, lmp):
         Lmp._write_file(file, lmp)
-
-    def save(self, file):
-        """Writes Lmp data to file
-
-        Args:
-            file: Either the path to the file, or a file-like object, or bytes.
-
-        Raises:
-            RuntimeError: If file argument is not a file-like object.
-
-            BadLmpFile: If unable to determine type of Lmp to write.
-        """
-
-        should_close = False
-
-        if isinstance(file, str):
-            file = io.open(file, 'r+b')
-            should_close = True
-
-        elif isinstance(file, bytes):
-            file = io.BytesIO(file)
-            should_close = True
-
-        elif not hasattr(file, 'write'):
-            raise RuntimeError(
-                "Lmp.open() requires 'file' to be a path, a file-like object, "
-                "or bytes")
-
-        Lmp._write_file(file, self)
-
-        if should_close:
-            file.close()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        self.close()
-
-    def close(self):
-        """Closes the file pointer if possible. If mode is 'w' or 'a', the file
-        will be written to.
-        """
-
-        if self.fp:
-            if self.mode in ('w', 'a') and self._did_modify:
-                self.fp.seek(0)
-                Lmp._write_file(self.fp, self)
-                self.fp.truncate()
-
-        file_object = self.fp
-        self.fp = None
-        file_object.close()
 
     def image(self, palette=quake.palette):
         """Returns an Image object.
