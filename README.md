@@ -13,9 +13,10 @@ vgio is a Python package for video game file I/O.
 
 ## Supported Games
 
-- Duke Nukem 3D
-- Quake
-- Quake II
+- [Devil Daggers](./vgio/devildaggers)
+- [Duke Nukem 3D](./vgio/duke3d)
+- [Quake](./vgio/quake)
+- [Quake II](./vgio/quake2)
 
 ## Installation
 `$ pip install vgio`

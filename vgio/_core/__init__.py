@@ -9,8 +9,6 @@ try:
 except ImportError:
     import dummy_threading as threading
 
-from types import SimpleNamespace
-
 
 __all__ = ['ReadWriteFile', 'ArchiveInfo', 'ArchiveFile']
 
@@ -513,7 +511,7 @@ class ArchiveFile:
         """
 
         if members is None:
-            members = self.namelist()
+            members = [info for info in self.file_list]
 
         for archiveinfo in members:
             self.extract(archiveinfo, path)
