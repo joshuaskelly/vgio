@@ -15,6 +15,8 @@ References:
 
 import struct
 
+from types import SimpleNamespace
+
 from vgio._core import ReadWriteFile
 from vgio import quake
 
@@ -27,28 +29,9 @@ class BadMdlFile(Exception):
     pass
 
 
-# The mdl header structure
-header_format = '<4si10f8if'
-header_magic_number = b'IDPO'
-header_version = 6
-header_size = struct.calcsize(header_format)
+IDENTITY = b'IDPO'
+VERSION = 6
 
-# Indexes of the header structure
-_HEADER_SIGNATURE = 0
-_HEADER_VERSION = 1
-_HEADER_SCALE = 2
-_HEADER_ORIGIN = 5
-_HEADER_RADIUS = 8
-_HEADER_OFFSETS = 9
-_HEADER_NUMSKINS = 12
-_HEADER_SKINWIDTH = 13
-_HEADER_SKINHEIGHT = 14
-_HEADER_NUMVERTS = 15
-_HEADER_NUMTRIS = 16
-_HEADER_NUMFRAMES = 17
-_HEADER_SYNCTYPE = 18
-_HEADER_FLAGS = 19
-_HEADER_SIZE = 20
 
 # Skin structure
 def _calculate_skin_format(size):
@@ -96,7 +79,7 @@ def _check_mdlfile(fp):
     fp.seek(0)
     data = fp.read(struct.calcsize('<4s'))
 
-    return data == header_magic_number
+    return data == IDENTITY
 
 
 def is_mdlfile(filename):
@@ -113,6 +96,82 @@ def is_mdlfile(filename):
 
     except Exception:
         return False
+
+
+class Header:
+    """Class representing a MDL file header"""
+    format = '<4si10f8if'
+    size = struct.calcsize(format)
+
+    def __init__(self,
+                 identity,
+                 version,
+                 scale_x,
+                 scale_y,
+                 scale_z,
+                 origin_x,
+                 origin_y,
+                 origin_z,
+                 radius,
+                 eye_position_x,
+                 eye_position_y,
+                 eye_position_z,
+                 number_of_skins,
+                 skin_width,
+                 skin_height,
+                 number_of_vertexes,
+                 number_of_triangles,
+                 number_of_frames,
+                 sync_type,
+                 flags,
+                 size
+                 ):
+
+        self.identity = identity
+        self.version = version
+        self.scale = scale_x, scale_y, scale_z
+        self.origin = origin_x, origin_y, origin_z
+        self.radius = radius
+        self.eye_position = eye_position_x, eye_position_y, eye_position_z
+        self.number_of_skins = number_of_skins
+        self.skin_width = skin_width
+        self.skin_height = skin_height
+        self.number_of_vertexes = number_of_vertexes
+        self.number_of_triangles = number_of_triangles
+        self.number_of_frames = number_of_frames
+        self.sync_type = sync_type
+        self.flags = flags
+        self.size = size
+
+    @classmethod
+    def write(cls, file, header):
+        header_data = struct.pack(
+            cls.format,
+            header.identity,
+            header.version,
+            *header.scale,
+            *header.origin,
+            header.radius,
+            *header.eye_position,
+            header.number_of_skins,
+            header.skin_width,
+            header.skin_height,
+            header.number_of_vertexes,
+            header.number_of_triangles,
+            header.number_of_frames,
+            header.sync_type,
+            header.flags,
+            header.size,
+        )
+
+        file.write(header_data)
+
+    @classmethod
+    def read(cls, file):
+        header_data = file.read(cls.size)
+        header_struct = struct.unpack(cls.format, header_data)
+
+        return Header(*header_struct)
 
 
 SINGLE = 0
@@ -136,38 +195,48 @@ class Skin:
 
             mdl.skin_width * mdl.skin_height.
     """
+    format = ''
+    size = 0
 
     __slots__ = (
         'type',
         'pixels'
     )
 
-    def __init__(self):
-        self.type = SINGLE
-        self.pixels = None
+    def __init__(self, type, *pixels):
+        self.type = type
+        self.pixels = pixels
 
     @staticmethod
     def write(file, skin, size):
-        width, height = size
-        skin_format = _calculate_skin_format(size)
-        skin_data = struct.pack(skin_format,
-                                skin.type,
-                                *skin.pixels)
+        #width, height = size
+        #skin_format = _calculate_skin_format(size)
+        #skin_data = struct.pack(skin_format,
+        #                        skin.type,
+        #                        *skin.pixels)
+
+        skin_data = struct.pack(
+            skin.format,
+            skin.type,
+            *skin.pixels
+        )
 
         file.write(skin_data)
 
-    @staticmethod
-    def read(file, size):
-        skin = Skin()
-        skin_format = _calculate_skin_format(size)
-        skin_size = struct.calcsize(skin_format)
-        skin_data = file.read(skin_size)
-        skin_struct = struct.unpack(skin_format, skin_data)
+    @classmethod
+    def read(cls, file, size):
+        skin_data = file.read(cls.size)
+        skin_struct = struct.unpack(cls.format, skin_data)
 
-        skin.type = skin_struct[_SKIN_TYPE]
-        skin.pixels = skin_struct[_SKIN_PIXELS:]
+        return cls(*skin_struct)
 
-        return skin
+    @classmethod
+    def create_class(cls, width, height):
+        class _Skin(cls):
+            format = f'<i{width * height}B'
+            size = struct.calcsize(format)
+
+        return _Skin
 
 
 class SkinGroup:
@@ -497,7 +566,7 @@ class Frame:
         self.vertices = []
 
     @staticmethod
-    def write(file, frame, number_of_vertices):
+    def write(file, frame, number_of_vertexes):
         TriVertex.write(file, frame.bounding_box_min)
         TriVertex.write(file, frame.bounding_box_max)
         file.write(struct.pack('<16s', frame.name.encode('ascii')))
@@ -505,12 +574,12 @@ class Frame:
             TriVertex.write(file, vertex)
 
     @staticmethod
-    def read(file, number_of_vertices):
+    def read(file, number_of_vertexes):
         frame = Frame()
         frame.bounding_box_min = TriVertex.read(file)
         frame.bounding_box_max = TriVertex.read(file)
         frame.name = struct.unpack('<16s', file.read(struct.calcsize('<16s')))[0].split(b'\00')[0].decode('ascii')
-        frame.vertices = [TriVertex.read(file) for _ in range(number_of_vertices)]
+        frame.vertices = [TriVertex.read(file) for _ in range(number_of_vertexes)]
 
         return frame
 
@@ -553,24 +622,24 @@ class FrameGroup:
         self.frames = None
 
     @staticmethod
-    def write(file, frame_group, number_of_vertices):
+    def write(file, frame_group, number_of_vertexes):
         file.write(struct.pack('<l', frame_group.number_of_frames))
         TriVertex.write(file, frame_group.bounding_box_min)
         TriVertex.write(file, frame_group.bounding_box_max)
         intervals_data = struct.pack('<%if' % frame_group.number_of_frames, *frame_group.intervals)
         file.write(intervals_data)
         for frame in frame_group.frames:
-            Frame.write(file, frame, number_of_vertices)
+            Frame.write(file, frame, number_of_vertexes)
 
     @staticmethod
-    def read(file, number_of_vertices):
+    def read(file, number_of_vertexes):
         frame_group = FrameGroup()
         frame_group.number_of_frames = struct.unpack('<l', file.read(4))[0]
         frame_group.bounding_box_min = TriVertex.read(file)
         frame_group.bounding_box_max = TriVertex.read(file)
         intervals_data = file.read(4 * frame_group.number_of_frames)
         frame_group.intervals = struct.unpack('<%if' % frame_group.number_of_frames, intervals_data)
-        frame_group.frames = [Frame.read(file, number_of_vertices) for _ in range(frame_group.number_of_frames)]
+        frame_group.frames = [Frame.read(file, number_of_vertexes) for _ in range(frame_group.number_of_frames)]
 
         return frame_group
 
@@ -654,7 +723,7 @@ class Mdl(ReadWriteFile):
         m = Mdl.open(file)
 
     Attributes:
-        identifier: The magic number of the model, must be b'IDPO'
+        identity: The magic number of the model, must be IDENTITY
 
         version: The version of the model, should be 6.
 
@@ -677,13 +746,13 @@ class Mdl(ReadWriteFile):
 
         skin_height: The pixel height of the skin texture.
 
-        number_of_vertices: The number of vertices for the model.
+        number_of_vertexes: The number of vertices for the model.
 
         number_of_triangles: The number of triangles for the model.
 
         number_of_frames: The number of frames for the model.
 
-        synctype: The synchronization type for the model. It is either
+        sync_type: The synchronization type for the model. It is either
             SYNC or RAND.
 
         flags: A bit field of entity effects.
@@ -712,8 +781,8 @@ class Mdl(ReadWriteFile):
     def __init__(self):
         super().__init__()
 
-        self.identifier = header_magic_number
-        self.version = header_version
+        self.identity = IDENTITY
+        self.version = VERSION
         self.scale = 1, 1, 1
         self.origin = 0, 0, 0
         self.bounding_radius = 0
@@ -721,10 +790,10 @@ class Mdl(ReadWriteFile):
         self.number_of_skins = 0
         self.skin_width = 0
         self.skin_height = 0
-        self.number_of_vertices = 0
+        self.number_of_vertexes = 0
         self.number_of_triangles = 0
         self.number_of_frames = 0
-        self.synctype = SYNC
+        self.sync_type = SYNC
         self.flags = 0
         self.size = 0
 
@@ -733,37 +802,50 @@ class Mdl(ReadWriteFile):
         self.triangles = []
         self.frames = []
 
+        self.factory = SimpleNamespace(
+            Header=Header,
+            Skin=Skin,
+            SkinGroup=SkinGroup,
+            StVertex=StVertex,
+            Triangle=Triangle,
+            TriVertex=TriVertex,
+            Frame=Frame,
+            FrameGroup=FrameGroup
+        )
+
     @staticmethod
     def _read_file(file, mode):
         mdl = Mdl()
-        mdl.mode = mode
         mdl.fp = file
+        mdl.mode = mode
 
-        # Header
-        data = file.read(header_size)
-        data = struct.unpack(header_format, data)
+        factory = mdl.factory
 
-        if data[_HEADER_SIGNATURE] != header_magic_number:
-            raise BadMdlFile('Bad magic number: %r' % data[_HEADER_SIGNATURE])
+        header = factory.Header.read(file)
 
-        if data[_HEADER_VERSION] != header_version:
-            raise BadMdlFile('Bad version number: %r' % data[_HEADER_VERSION])
+        if header.identity != IDENTITY:
+            raise BadMdlFile(f'Bad magic number: {header.identity}')
 
-        mdl.identifier = data[_HEADER_SIGNATURE]
-        mdl.version = data[_HEADER_VERSION]
-        mdl.scale = data[_HEADER_SCALE:_HEADER_ORIGIN]
-        mdl.origin = data[_HEADER_ORIGIN:_HEADER_RADIUS]
-        mdl.bounding_radius = data[_HEADER_RADIUS]
-        mdl.eye_position = data[_HEADER_OFFSETS:_HEADER_NUMSKINS]
-        mdl.number_of_skins = data[_HEADER_NUMSKINS]
-        mdl.skin_width = data[_HEADER_SKINWIDTH]
-        mdl.skin_height = data[_HEADER_SKINHEIGHT]
-        mdl.number_of_vertices = data[_HEADER_NUMVERTS]
-        mdl.number_of_triangles = data[_HEADER_NUMTRIS]
-        mdl.number_of_frames = data[_HEADER_NUMFRAMES]
-        mdl.synctype = data[_HEADER_SYNCTYPE]
-        mdl.flags = data[_HEADER_FLAGS]
-        mdl.size = data[_HEADER_SIZE]
+        if header.version != VERSION:
+            raise BadMdlFile(f'Bad version number: {header.version}')
+
+        factory.Skin = Skin.create_class(header.skin_width, header.skin_height)
+
+        mdl.identity = header.identity
+        mdl.version = header.version
+        mdl.scale = header.scale
+        mdl.origin = header.origin
+        mdl.bounding_radius = header.radius
+        mdl.eye_position = header.eye_position
+        mdl.number_of_skins = header.number_of_skins
+        mdl.skin_width = header.skin_width
+        mdl.skin_height = header.skin_height
+        mdl.number_of_vertexes = header.number_of_vertexes
+        mdl.number_of_triangles = header.number_of_triangles
+        mdl.number_of_frames = header.number_of_frames
+        mdl.sync_type = header.sync_type
+        mdl.flags = header.flags
+        mdl.size = header.size
 
         mdl.skins = []
         mdl.st_vertices = []
@@ -777,30 +859,30 @@ class Mdl(ReadWriteFile):
             file.seek(pos)
 
             if group == 0:
-                skin = Skin.read(file, (mdl.skin_width, mdl.skin_height))
+                skin = factory.Skin.read(file, (mdl.skin_width, mdl.skin_height))
                 mdl.skins.append(skin)
 
             else:
-                skin_group = SkinGroup.read(file, (mdl.skin_width, mdl.skin_height))
+                skin_group = factory.SkinGroup.read(file, (mdl.skin_width, mdl.skin_height))
                 mdl.skins.append(skin_group)
 
         # St Vertexes
-        for _ in range(mdl.number_of_vertices):
-            mdl.st_vertices.append(StVertex.read(file))
+        for _ in range(mdl.number_of_vertexes):
+            mdl.st_vertices.append(mdl.factory.StVertex.read(file))
 
         # Triangles
         for _ in range(mdl.number_of_triangles):
-            mdl.triangles.append(Triangle.read(file))
+            mdl.triangles.append(mdl.factory.Triangle.read(file))
 
         # Frames
         for _ in range(mdl.number_of_frames):
             frame_type = struct.unpack('<i', file.read(4))[0]
 
             if frame_type == SINGLE:
-                mdl.frames.append(Frame.read(file, mdl.number_of_vertices))
+                mdl.frames.append(factory.Frame.read(file, mdl.number_of_vertexes))
 
             else:
-                mdl.frames.append(FrameGroup.read(file, mdl.number_of_vertices))
+                mdl.frames.append(factory.FrameGroup.read(file, mdl.number_of_vertexes))
 
         return mdl
 
@@ -810,50 +892,63 @@ class Mdl(ReadWriteFile):
         mdl.validate()
 
         # Header
-        header_data = struct.pack(header_format,
-                                  mdl.identifier,
-                                  mdl.version,
-                                  *mdl.scale,
-                                  *mdl.origin,
-                                  mdl.bounding_radius,
-                                  *mdl.eye_position,
-                                  mdl.number_of_skins,
-                                  mdl.skin_width,
-                                  mdl.skin_height,
-                                  mdl.number_of_vertices,
-                                  mdl.number_of_triangles,
-                                  mdl.number_of_frames,
-                                  mdl.synctype,
-                                  mdl.flags,
-                                  mdl.size)
+        header = Header(
+            mdl.identity,
+            mdl.version,
+            *mdl.scale,
+            *mdl.origin,
+            mdl.bounding_radius,
+            *mdl.eye_position,
+            mdl.number_of_skins,
+            mdl.skin_width,
+            mdl.skin_height,
+            mdl.number_of_vertexes,
+            mdl.number_of_triangles,
+            mdl.number_of_frames,
+            mdl.synctype,
+            mdl.flags,
+            mdl.size
+        )
 
-        file.write(header_data)
+        Header.write(file, header)
 
         # Skins
         for skin in mdl.skins:
             if skin.type == SINGLE:
-                Skin.write(file, skin, (mdl.skin_width, mdl.skin_height))
+                mdl.factory.Skin.write(file, skin, (mdl.skin_width, mdl.skin_height))
 
             else:
-                SkinGroup.write(file, skin, (mdl.skin_width, mdl.skin_height))
+                mdl.factory.SkinGroup.write(file, skin, (mdl.skin_width, mdl.skin_height))
 
         # St Vertexes
         for st_vertex in mdl.st_vertices:
-            StVertex.write(file, st_vertex)
+            mdl.factory.StVertex.write(file, st_vertex)
 
         # Triangles
         for triangle in mdl.triangles:
-            Triangle.write(file, triangle)
+            mdl.factory.Triangle.write(file, triangle)
 
         # Frames
         for frame in mdl.frames:
             if frame.type == SINGLE:
                 file.write(struct.pack('<l', SINGLE))
-                Frame.write(file, frame, mdl.number_of_vertices)
+                mdl.factory.Frame.write(file, frame, mdl.number_of_vertexes)
 
             else:
                 file.write(struct.pack('<l', GROUP))
-                FrameGroup.write(file, frame, mdl.number_of_vertices)
+                mdl.factory.FrameGroup.write(file, frame, mdl.number_of_vertexes)
+
+    @property
+    def identifier(self):
+        return self.identity
+
+    @property
+    def number_of_vertices(self):
+        return self.number_of_vertexes
+
+    @property
+    def synctype(self):
+        return self.sync_type
 
     def validate(self):
         """Verifies correctness of Mdl data.
@@ -862,10 +957,10 @@ class Mdl(ReadWriteFile):
             BadMdlFile: If a discrepancy is found.
         """
 
-        if self.identifier != header_magic_number:
-            raise BadMdlFile('Bad magic number: %r' % self.identifier)
+        if self.identity != IDENTITY:
+            raise BadMdlFile('Bad magic number: %r' % self.identity)
 
-        if self.version != header_version:
+        if self.version != VERSION:
             raise BadMdlFile('Bad version number: %r' % self.version)
 
         if self.number_of_triangles != len(self.triangles):
@@ -873,7 +968,7 @@ class Mdl(ReadWriteFile):
 
         for triangle in self.triangles:
             for vertex in triangle.vertices:
-                if vertex < 0 or vertex > self.number_of_vertices:
+                if vertex < 0 or vertex > self.number_of_vertexes:
                     raise BadMdlFile('Bad vertex index: %r' % vertex)
 
         if self.number_of_skins != len(self.skins):
@@ -886,20 +981,20 @@ class Mdl(ReadWriteFile):
             elif skin.type == GROUP and len(skin.pixels) != self.skin_width * self.skin_height * skin.number_of_skins:
                 raise BadMdlFile('Incorrect number of pixels. Expected: %r Actual: %r' % (self.skin_width * self.skin_height * skin.number_of_skins, len(skin.pixels)))
 
-        if self.number_of_vertices != len(self.st_vertices):
-            raise BadMdlFile('Incorrect number of st vertices. Expected: %r Actual: %r' % (self.number_of_vertices, len(self.st_vertices)))
+        if self.number_of_vertexes != len(self.st_vertices):
+            raise BadMdlFile('Incorrect number of st vertices. Expected: %r Actual: %r' % (self.number_of_vertexes, len(self.st_vertices)))
 
         if self.number_of_frames != len(self.frames):
             raise BadMdlFile('Incorrect number of frames. Expected: %r Actual: %r' % (self.number_of_frames, len(self.frames)))
 
         for frame in self.frames:
-            if frame.type == SINGLE and len(frame.vertices) != self.number_of_vertices:
-                raise BadMdlFile('Incorrect number of vertices. Expected: %r Actual: %r' % (self.number_of_vertices, len(frame.vertices)))
+            if frame.type == SINGLE and len(frame.vertices) != self.number_of_vertexes:
+                raise BadMdlFile('Incorrect number of vertices. Expected: %r Actual: %r' % (self.number_of_vertexes, len(frame.vertices)))
 
             elif frame.type == GROUP:
                 for sub_frame in frame.frames:
-                    if len(sub_frame.vertices) != self.number_of_vertices:
-                        raise BadMdlFile('Incorrect number of vertices. Expected: %r Actual: %r' % (self.number_of_vertices, len(sub_frame.vertices)))
+                    if len(sub_frame.vertices) != self.number_of_vertexes:
+                        raise BadMdlFile('Incorrect number of vertices. Expected: %r Actual: %r' % (self.number_of_vertexes, len(sub_frame.vertices)))
 
     def mesh(self, frame=0, subframe=0):
         """Returns a Mesh object
