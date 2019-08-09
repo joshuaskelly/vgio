@@ -17,18 +17,16 @@ class TestBspReadWrite(TestCase):
         self.assertFalse(mdl.is_mdlfile('./test_data/test.wad'))
 
     def test_skin(self):
+        s0 = mdl.Skin()
+        s0.type = mdl.SINGLE
+        s0.pixels = tuple(range(256))
+
         size = 16, 16
 
-        _Skin = mdl.Skin.create_class(*size)
-        s0 = _Skin(
-            mdl.SINGLE,
-            *tuple(range(256)),
-        )
-
-        _Skin.write(self.buff, s0, size)
+        mdl.Skin.write(self.buff, s0, size)
         self.buff.seek(0)
 
-        s1 = _Skin.read(self.buff, size)
+        s1 = mdl.Skin.read(self.buff, size)
 
         self.assertEqual(s0.type, s1.type, 'Type should be equal')
         self.assertEqual(s0.pixels, s1.pixels, 'Type should be equal')
