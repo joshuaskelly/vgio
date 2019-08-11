@@ -21,26 +21,13 @@ from vgio import quake
 __all__ = ['BadSprFile', 'Spr', 'is_sprfile']
 
 
+VERSION = 1
+IDENTITY = b'IDSP'
+
+
 class BadSprFile(Exception):
     pass
 
-
-# The spr header structure
-header_format = '<4s2if3ifi'
-header_magic_number = b'IDSP'
-header_version = 1
-header_size = struct.calcsize(header_format)
-
-# Indexes of the header structure
-_HEADER_IDENTIFIER = 0
-_HEADER_VERSION = 1
-_HEADER_TYPE = 2
-_HEADER_BOUNDING_RADIUS = 3
-_HEADER_WIDTH = 4
-_HEADER_HEIGHT = 5
-_HEADER_NUMBER_OF_FRAMES = 6
-_HEADER_BEAM_LENGTH = 7
-_HEADER_SYNC_TYPE = 8
 
 # Sprite Frame structure
 sprite_frame_format = '<5i'
@@ -57,7 +44,7 @@ def _check_sprfile(fp):
     fp.seek(0)
     data = fp.read(struct.calcsize('<4s'))
 
-    return data == header_magic_number
+    return data == IDENTITY
 
 
 def is_sprfile(filename):
@@ -74,6 +61,67 @@ def is_sprfile(filename):
 
     except Exception:
         return False
+
+
+class Header:
+    format = '<4s2if3ifi'
+    size = struct.calcsize(format)
+
+    __slots__ = (
+        'identity',
+        'version',
+        'type',
+        'bounding_radius',
+        'width',
+        'height',
+        'number_of_frames',
+        'beam_length',
+        'sync_type'
+    )
+
+    def __init__(self,
+                 identity,
+                 version,
+                 type,
+                 bounding_radius,
+                 width,
+                 height,
+                 number_of_frames,
+                 beam_length,
+                 sync_type):
+        self.identity = identity
+        self.version = version
+        self.type = type
+        self.bounding_radius = bounding_radius
+        self.width = width
+        self.height = height
+        self.number_of_frames = number_of_frames
+        self.beam_length = beam_length
+        self.sync_type = sync_type
+
+    @classmethod
+    def write(cls, file, header):
+        header_data = struct.pack(
+            cls.format,
+            header.identity,
+            header.version,
+            header.type,
+            header.bounding_radius,
+            header.width,
+            header.height,
+            header.number_of_frames,
+            header.beam_length,
+            header.sync_type
+        )
+
+        file.write(header_data)
+
+    @classmethod
+    def read(cls, file):
+        header_data = file.read(cls.size)
+        header_struct = struct.unpack(cls.format, header_data)
+
+        return Header(*header_struct)
 
 
 SINGLE = 0
@@ -114,11 +162,13 @@ class SpriteFrame:
 
     @staticmethod
     def write(file, sprite_frame):
-        sprite_frame_data = struct.pack(sprite_frame_format,
-                                        sprite_frame.type,
-                                        *sprite_frame.origin,
-                                        sprite_frame.width,
-                                        sprite_frame.height)
+        sprite_frame_data = struct.pack(
+            sprite_frame_format,
+            sprite_frame.type,
+            *sprite_frame.origin,
+            sprite_frame.width,
+            sprite_frame.height
+        )
 
         file.write(sprite_frame_data)
 
@@ -251,7 +301,7 @@ class Spr(ReadWriteFile):
         s = Spr.open(file)
 
     Attributes:
-        identifier: The magic number of the model, must be b'IDSP'
+        identity: The magic number of the model, must be b'IDSP'
 
         version: The version of the model, should be 1
 
@@ -275,12 +325,16 @@ class Spr(ReadWriteFile):
 
         mode: The file mode for the file-like object.
     """
+    class factory:
+        Header = Header
+        SpriteFrame = SpriteFrame
+        SpriteGroup = SpriteGroup
 
     def __init__(self):
         super().__init__()
 
-        self.identifier = header_magic_number
-        self.version = header_version
+        self.identity = IDENTITY
+        self.version = VERSION
         self.type = VP_PARALLEL_UPRIGHT
         self.bounding_radius = 0
         self.width = 0
@@ -291,75 +345,65 @@ class Spr(ReadWriteFile):
 
         self.frames = []
 
-    @staticmethod
-    def _read_file(file, mode):
-        spr = Spr()
+    @classmethod
+    def _read_file(cls, file, mode):
+        spr = cls()
         spr.fp = file
         spr.mode = mode
 
-        data = file.read(header_size)
-        data = struct.unpack(header_format, data)
+        header = cls.factory.Header.read(file)
 
-        if data[_HEADER_IDENTIFIER] != header_magic_number:
-            raise BadSprFile('Bad magic number: %r' % data[_HEADER_IDENTIFIER])
+        if header.identity != IDENTITY:
+            raise BadSprFile(f'Bad magic number: {header.identity}')
 
-        if data[_HEADER_VERSION] != header_version:
-            raise BadSprFile('Bad version number: %r' % data[_HEADER_VERSION])
+        if header.version != VERSION:
+            raise BadSprFile(f'Bad version number: {header.version}')
 
-        spr.identifier = data[_HEADER_IDENTIFIER]
-        spr.version = data[_HEADER_VERSION]
-        spr.type = data[_HEADER_TYPE]
-        spr.bounding_radius = data[_HEADER_BOUNDING_RADIUS]
-        spr.width = data[_HEADER_WIDTH]
-        spr.height = data[_HEADER_HEIGHT]
-        spr.number_of_frames = data[_HEADER_NUMBER_OF_FRAMES]
-        spr.beam_length = data[_HEADER_BEAM_LENGTH]
-        spr.sync_type = data[_HEADER_SYNC_TYPE]
+        spr.identity = header.identity
+        spr.version = header.version
+        spr.type = header.type
+        spr.bounding_radius = header.bounding_radius
+        spr.width = header.width
+        spr.height = header.height
+        spr.number_of_frames = header.number_of_frames
+        spr.beam_length = header.beam_length
+        spr.sync_type = header.sync_type
 
         for sprite_id in range(spr.number_of_frames):
             pos = file.tell()
             frame_type = struct.unpack('<i', file.read(4))[0]
             file.seek(pos)
 
-            if frame_type == SINGLE:
-                sprite_frame = SpriteFrame.read(file)
-                spr.frames.append(sprite_frame)
-
-            else:
-                sprite_group = SpriteGroup.read(file)
-                spr.frames.append(sprite_group)
+            class_ = (cls.factory.SpriteFrame, cls.factory.SpriteGroup)[frame_type]
+            frame = class_.read(file)
+            spr.frames.append(frame)
 
         return spr
 
-    @staticmethod
-    def _write_file(file, spr):
+    @classmethod
+    def _write_file(cls, file, spr):
         # Validate Spr Data
         spr.validate()
 
         # Header
-        header_data = struct.pack(header_format,
-                                  spr.identifier,
-                                  spr.version,
-                                  spr.type,
-                                  spr.bounding_radius,
-                                  spr.width,
-                                  spr.height,
-                                  spr.number_of_frames,
-                                  spr.beam_length,
-                                  spr.sync_type)
+        header = cls.factory.Header(
+            spr.identity,
+            spr.version,
+            spr.type,
+            spr.bounding_radius,
+            spr.width,
+            spr.height,
+            spr.number_of_frames,
+            spr.beam_length,
+            spr.sync_type
+        )
 
-        file.write(header_data)
+        cls.factory.Header.write(file, header)
 
         # Frames
         for frame in spr.frames:
-            if frame.type == SINGLE:
-                SpriteFrame.write(file, frame)
-
-            elif frame.type == GROUP:
-                SpriteGroup.write(file, frame)
-
-            else:
-                raise BadSprFile('Unknown frame type: %s' % frame.type)
+            class_ = (cls.factory.SpriteFrame, cls.factory.SpriteGroup)[frame.type]
+            class_.write(file, frame)
 
     def validate(self):
         """Verifies the correctness of Spr data.
@@ -368,10 +412,10 @@ class Spr(ReadWriteFile):
             BadSprFile: If a discrepancy is found.
         """
 
-        if self.identifier != header_magic_number:
-            raise BadSprFile('Bad magic number: %r' % self.identifier)
+        if self.identity != IDENTITY:
+            raise BadSprFile('Bad magic number: %r' % self.identity)
 
-        if self.version != header_version:
+        if self.version != VERSION:
             raise BadSprFile('Bad version number: %r' % self.version)
 
         if self.number_of_frames != len(self.frames):

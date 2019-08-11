@@ -24,7 +24,7 @@ __all__ = ['Bad', 'Nop', 'Disconnect', 'UpdateStat', 'Version', 'SetView',
            'SellScreen', 'CutScene', 'UpdateEntity', 'MessageBlock']
 
 
-class IO:
+class _IO:
     """Simple namespace for protocol IO"""
 
     @staticmethod
@@ -36,48 +36,48 @@ class IO:
 
         @staticmethod
         def char(file):
-            return int(IO._read('<b', file))
+            return int(_IO._read('<b', file))
 
         @staticmethod
         def byte(file):
-            return int(IO._read('<B', file))
+            return int(_IO._read('<B', file))
 
         @staticmethod
         def short(file):
-            return int(IO._read('<h', file))
+            return int(_IO._read('<h', file))
 
         @staticmethod
         def long(file):
-            return int(IO._read('<l', file))
+            return int(_IO._read('<l', file))
 
         @staticmethod
         def float(file):
-            return float(IO._read('<f', file))
+            return float(_IO._read('<f', file))
 
         @staticmethod
         def coord(file):
-            return IO.read.short(file) * 0.125
+            return _IO.read.short(file) * 0.125
 
         @staticmethod
         def position(file):
-            return IO.read.coord(file), IO.read.coord(file), IO.read.coord(file)
+            return _IO.read.coord(file), _IO.read.coord(file), _IO.read.coord(file)
 
         @staticmethod
         def angle(file):
-            return IO.read.char(file) * 360 / 256
+            return _IO.read.char(file) * 360 / 256
 
         @staticmethod
         def angles(file):
-            return IO.read.angle(file), IO.read.angle(file), IO.read.angle(file)
+            return _IO.read.angle(file), _IO.read.angle(file), _IO.read.angle(file)
 
         @staticmethod
         def string(file, terminal_byte=b'\x00'):
             string = b''
-            char = IO._read('<s', file)
+            char = _IO._read('<s', file)
 
             while char != terminal_byte:
                 string += char
-                char = IO._read('<s', file)
+                char = _IO._read('<s', file)
 
             return string.decode('ascii')
 
@@ -91,39 +91,39 @@ class IO:
 
         @staticmethod
         def char(file, value):
-            IO._write('<b', file, int(value))
+            _IO._write('<b', file, int(value))
 
         @staticmethod
         def byte(file, value):
-            IO._write('<B', file, int(value))
+            _IO._write('<B', file, int(value))
 
         @staticmethod
         def short(file, value):
-            IO._write('<h', file, int(value))
+            _IO._write('<h', file, int(value))
 
         @staticmethod
         def long(file, value):
-            IO._write('<l', file, int(value))
+            _IO._write('<l', file, int(value))
 
         @staticmethod
         def float(file, value):
-            IO._write('<f', file, float(value))
+            _IO._write('<f', file, float(value))
 
         @staticmethod
         def coord(file, value):
-            IO.write.short(file, value / 0.125)
+            _IO.write.short(file, value / 0.125)
 
         @staticmethod
         def position(file, values):
-            IO.write.coord(file, values[0]), IO.write.coord(file, values[1]), IO.write.coord(file, values[2])
+            _IO.write.coord(file, values[0]), _IO.write.coord(file, values[1]), _IO.write.coord(file, values[2])
 
         @staticmethod
         def angle(file, value):
-           IO.write.char(file, int(value * 256 / 360))
+           _IO.write.char(file, int(value * 256 / 360))
 
         @staticmethod
         def angles(file, values):
-            IO.write.angle(file, values[0]), IO.write.angle(file, values[1]), IO.write.angle(file, values[2])
+            _IO.write.angle(file, values[0]), _IO.write.angle(file, values[1]), _IO.write.angle(file, values[2])
 
         @staticmethod
         def string(file, value, terminal_byte=b'\x00'):
@@ -186,11 +186,11 @@ class Bad:
 
     @staticmethod
     def write(file, bad=None):
-        IO.write.byte(file, SVC_BAD)
+        _IO.write.byte(file, SVC_BAD)
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_BAD
+        assert _IO.read.byte(file) == SVC_BAD
         return Bad()
 
 
@@ -201,11 +201,11 @@ class Nop:
 
     @staticmethod
     def write(file, nop=None):
-        IO.write.byte(file, SVC_NOP)
+        _IO.write.byte(file, SVC_NOP)
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_NOP
+        assert _IO.read.byte(file) == SVC_NOP
         return Nop()
 
 
@@ -220,11 +220,11 @@ class Disconnect:
 
     @staticmethod
     def write(file, disconnect=None):
-        IO.write.byte(file, SVC_DISCONNECT)
+        _IO.write.byte(file, SVC_DISCONNECT)
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_DISCONNECT
+        assert _IO.read.byte(file) == SVC_DISCONNECT
         return Disconnect()
 
 
@@ -250,16 +250,16 @@ class UpdateStat:
 
     @staticmethod
     def write(file, update_stat):
-        IO.write.byte(file, SVC_UPDATESTAT)
-        IO.write.byte(file, update_stat.index)
-        IO.write.long(file, update_stat.value)
+        _IO.write.byte(file, SVC_UPDATESTAT)
+        _IO.write.byte(file, update_stat.index)
+        _IO.write.long(file, update_stat.value)
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_UPDATESTAT
+        assert _IO.read.byte(file) == SVC_UPDATESTAT
         update_stat = UpdateStat()
-        update_stat.index = IO.read.byte(file)
-        update_stat.value = IO.read.long(file)
+        update_stat.index = _IO.read.byte(file)
+        update_stat.value = _IO.read.long(file)
 
         return update_stat
 
@@ -280,14 +280,14 @@ class Version:
 
     @staticmethod
     def write(file, version):
-        IO.write.byte(file, SVC_VERSION)
-        IO.write.long(file, version.protocol_version)
+        _IO.write.byte(file, SVC_VERSION)
+        _IO.write.long(file, version.protocol_version)
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_VERSION
+        assert _IO.read.byte(file) == SVC_VERSION
         version = Version()
-        version.protocol_version = IO.read.long(file)
+        version.protocol_version = _IO.read.long(file)
 
         return version
 
@@ -310,14 +310,14 @@ class SetView:
 
     @staticmethod
     def write(file, set_view):
-        IO.write.byte(file, SVC_SETVIEW)
-        IO.write.short(file, set_view.entity)
+        _IO.write.byte(file, SVC_SETVIEW)
+        _IO.write.short(file, set_view.entity)
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_SETVIEW
+        assert _IO.read.byte(file) == SVC_SETVIEW
         set_view = SetView()
-        set_view.entity = IO.read.short(file)
+        set_view.entity = _IO.read.short(file)
 
         return set_view
 
@@ -369,39 +369,39 @@ class Sound:
 
     @staticmethod
     def write(file, sound):
-        IO.write.byte(file, SVC_SOUND)
-        IO.write.byte(file, sound.bit_mask)
+        _IO.write.byte(file, SVC_SOUND)
+        _IO.write.byte(file, sound.bit_mask)
 
         if sound.bit_mask & SND_VOLUME:
-            IO.write.byte(file, sound.volume)
+            _IO.write.byte(file, sound.volume)
 
         if sound.bit_mask & SND_ATTENUATION:
-            IO.write.byte(file, sound.attenuation * 64)
+            _IO.write.byte(file, sound.attenuation * 64)
 
         channel = sound.entity << 3
         channel |= sound.channel
 
-        IO.write.short(file, channel)
-        IO.write.byte(file, sound.sound_number)
-        IO.write.position(file, sound.origin)
+        _IO.write.short(file, channel)
+        _IO.write.byte(file, sound.sound_number)
+        _IO.write.position(file, sound.origin)
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_SOUND
+        assert _IO.read.byte(file) == SVC_SOUND
         sound = Sound()
-        sound.bit_mask = IO.read.byte(file)
+        sound.bit_mask = _IO.read.byte(file)
 
         if sound.bit_mask & SND_VOLUME:
-            sound.volume = IO.read.byte(file)
+            sound.volume = _IO.read.byte(file)
 
         if sound.bit_mask & SND_ATTENUATION:
-            sound.attenuation = IO.read.byte(file) / 64
+            sound.attenuation = _IO.read.byte(file) / 64
 
-        sound.channel = IO.read.short(file)
+        sound.channel = _IO.read.short(file)
         sound.entity = sound.channel >> 3
         sound.channel &= 7
-        sound.sound_number = IO.read.byte(file)
-        sound.origin = IO.read.position(file)
+        sound.sound_number = _IO.read.byte(file)
+        sound.origin = _IO.read.position(file)
 
         return sound
 
@@ -425,14 +425,14 @@ class Time:
 
     @staticmethod
     def write(file, time):
-        IO.write.byte(file, SVC_TIME)
-        IO.write.float(file, time.time)
+        _IO.write.byte(file, SVC_TIME)
+        _IO.write.float(file, time.time)
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_TIME
+        assert _IO.read.byte(file) == SVC_TIME
         time = Time()
-        time.time = IO.read.float(file)
+        time.time = _IO.read.float(file)
 
         return time
 
@@ -455,14 +455,14 @@ class Print:
 
     @staticmethod
     def write(file, _print):
-        IO.write.byte(file, SVC_PRINT)
-        IO.write.string(file, _print.text)
+        _IO.write.byte(file, SVC_PRINT)
+        _IO.write.string(file, _print.text)
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_PRINT
+        assert _IO.read.byte(file) == SVC_PRINT
         _print = Print()
-        _print.text = IO.read.string(file)
+        _print.text = _IO.read.string(file)
 
         return _print
 
@@ -487,14 +487,14 @@ class StuffText:
 
     @staticmethod
     def write(file, stuff_text):
-        IO.write.byte(file, SVC_STUFFTEXT)
-        IO.write.string(file, stuff_text.text, b'\n')
+        _IO.write.byte(file, SVC_STUFFTEXT)
+        _IO.write.string(file, stuff_text.text, b'\n')
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_STUFFTEXT
+        assert _IO.read.byte(file) == SVC_STUFFTEXT
         stuff_text = StuffText()
-        stuff_text.text = IO.read.string(file, b'\n')
+        stuff_text.text = _IO.read.string(file, b'\n')
 
         return stuff_text
 
@@ -517,15 +517,15 @@ class SetAngle:
 
     @staticmethod
     def write(file, set_angle):
-        IO.write.byte(file, SVC_SETANGLE)
-        IO.write.angles(file, set_angle.angles)
+        _IO.write.byte(file, SVC_SETANGLE)
+        _IO.write.angles(file, set_angle.angles)
 
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_SETANGLE
+        assert _IO.read.byte(file) == SVC_SETANGLE
         set_angle = SetAngle()
-        set_angle.angles = IO.read.angles(file)
+        set_angle.angles = _IO.read.angles(file)
 
         return set_angle
 
@@ -569,42 +569,42 @@ class ServerInfo:
 
     @staticmethod
     def write(file, server_data):
-        IO.write.byte(file, SVC_SERVERINFO)
-        IO.write.long(file, server_data.protocol_version)
-        IO.write.byte(file, server_data.max_clients)
-        IO.write.byte(file, server_data.multi)
-        IO.write.string(file, server_data.map_name)
+        _IO.write.byte(file, SVC_SERVERINFO)
+        _IO.write.long(file, server_data.protocol_version)
+        _IO.write.byte(file, server_data.max_clients)
+        _IO.write.byte(file, server_data.multi)
+        _IO.write.string(file, server_data.map_name)
 
         for model in server_data.models:
-            IO.write.string(file, model)
+            _IO.write.string(file, model)
 
-        IO.write.byte(file, 0)
+        _IO.write.byte(file, 0)
 
         for sound in server_data.sounds:
-            IO.write.string(file, sound)
+            _IO.write.string(file, sound)
 
-        IO.write.byte(file, 0)
+        _IO.write.byte(file, 0)
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_SERVERINFO
+        assert _IO.read.byte(file) == SVC_SERVERINFO
         server_data = ServerInfo()
-        server_data.protocol_version = IO.read.long(file)
-        server_data.max_clients = IO.read.byte(file)
-        server_data.multi = IO.read.byte(file)
-        server_data.map_name = IO.read.string(file)
+        server_data.protocol_version = _IO.read.long(file)
+        server_data.max_clients = _IO.read.byte(file)
+        server_data.multi = _IO.read.byte(file)
+        server_data.map_name = _IO.read.string(file)
 
-        model = IO.read.string(file)
+        model = _IO.read.string(file)
         while model:
             server_data.models.append(model)
-            model = IO.read.string(file)
+            model = _IO.read.string(file)
 
         server_data.models = tuple(server_data.models)
 
-        sound = IO.read.string(file)
+        sound = _IO.read.string(file)
         while sound:
             server_data.sounds.append(sound)
-            sound = IO.read.string(file)
+            sound = _IO.read.string(file)
 
         server_data.sounds = tuple(server_data.sounds)
 
@@ -641,16 +641,16 @@ class LightStyle:
 
     @staticmethod
     def write(file, light_style):
-        IO.write.byte(file, SVC_LIGHTSTYLE)
-        IO.write.byte(file, light_style.style)
-        IO.write.string(file, light_style.string)
+        _IO.write.byte(file, SVC_LIGHTSTYLE)
+        _IO.write.byte(file, light_style.style)
+        _IO.write.string(file, light_style.string)
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_LIGHTSTYLE
+        assert _IO.read.byte(file) == SVC_LIGHTSTYLE
         light_style = LightStyle()
-        light_style.style = IO.read.byte(file)
-        light_style.string = IO.read.string(file)
+        light_style.style = _IO.read.byte(file)
+        light_style.string = _IO.read.string(file)
 
         return light_style
 
@@ -677,16 +677,16 @@ class UpdateName:
 
     @staticmethod
     def write(file, update_name):
-        IO.write.byte(file, SVC_UPDATENAME)
-        IO.write.byte(file, update_name.player)
-        IO.write.string(file, update_name.name)
+        _IO.write.byte(file, SVC_UPDATENAME)
+        _IO.write.byte(file, update_name.player)
+        _IO.write.string(file, update_name.name)
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_UPDATENAME
+        assert _IO.read.byte(file) == SVC_UPDATENAME
         update_name = UpdateName()
-        update_name.player = IO.read.byte(file)
-        update_name.name = IO.read.string(file)
+        update_name.player = _IO.read.byte(file)
+        update_name.name = _IO.read.string(file)
 
         return update_name
 
@@ -712,16 +712,16 @@ class UpdateFrags:
 
     @staticmethod
     def write(file, update_frags):
-        IO.write.byte(file, SVC_UPDATEFRAGS)
-        IO.write.byte(file, update_frags.player)
-        IO.write.short(file, update_frags.frags)
+        _IO.write.byte(file, SVC_UPDATEFRAGS)
+        _IO.write.byte(file, update_frags.player)
+        _IO.write.short(file, update_frags.frags)
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_UPDATEFRAGS
+        assert _IO.read.byte(file) == SVC_UPDATEFRAGS
         update_frags = UpdateFrags()
-        update_frags.player = IO.read.byte(file)
-        update_frags.frags = IO.read.short(file)
+        update_frags.player = _IO.read.byte(file)
+        update_frags.frags = _IO.read.short(file)
 
         return update_frags
 
@@ -818,7 +818,7 @@ class ClientData:
 
     @staticmethod
     def write(file, client_data):
-        IO.write.byte(file, SVC_CLIENTDATA)
+        _IO.write.byte(file, SVC_CLIENTDATA)
 
         if client_data.on_ground:
             client_data.bit_mask |= SU_ONGROUND
@@ -826,111 +826,111 @@ class ClientData:
         if client_data.in_water:
             client_data.bit_mask |= SU_INWATER
 
-        IO.write.short(file, client_data.bit_mask)
+        _IO.write.short(file, client_data.bit_mask)
 
         if client_data.bit_mask & SU_VIEWHEIGHT:
-            IO.write.char(file, client_data.view_height)
+            _IO.write.char(file, client_data.view_height)
 
         if client_data.bit_mask & SU_IDEALPITCH:
-            IO.write.char(file, client_data.ideal_pitch)
+            _IO.write.char(file, client_data.ideal_pitch)
 
         if client_data.bit_mask & SU_PUNCH1:
             pa = client_data.punch_angle
-            IO.write.angle(file, pa[0])
+            _IO.write.angle(file, pa[0])
 
         if client_data.bit_mask & SU_VELOCITY1:
             ve = client_data.velocity
-            IO.write.char(file, ve[0] // 16)
+            _IO.write.char(file, ve[0] // 16)
 
         if client_data.bit_mask & SU_PUNCH2:
             pa = client_data.punch_angle
-            IO.write.angle(file, pa[1])
+            _IO.write.angle(file, pa[1])
 
         if client_data.bit_mask & SU_VELOCITY2:
             ve = client_data.velocity
-            IO.write.char(file, ve[1] // 16)
+            _IO.write.char(file, ve[1] // 16)
 
         if client_data.bit_mask & SU_PUNCH3:
             pa = client_data.punch_angle
-            IO.write.angle(file, pa[2])
+            _IO.write.angle(file, pa[2])
 
         if client_data.bit_mask & SU_VELOCITY3:
             ve = client_data.velocity
-            IO.write.char(file, ve[2] // 16)
+            _IO.write.char(file, ve[2] // 16)
 
-        IO.write.long(file, client_data.item_bit_mask)
+        _IO.write.long(file, client_data.item_bit_mask)
 
         if client_data.bit_mask & SU_WEAPONFRAME:
-            IO.write.byte(file, client_data.weapon_frame)
+            _IO.write.byte(file, client_data.weapon_frame)
 
         if client_data.bit_mask & SU_ARMOR:
-            IO.write.byte(file, client_data.armor)
+            _IO.write.byte(file, client_data.armor)
 
         if client_data.bit_mask & SU_WEAPON:
-            IO.write.byte(file, client_data.weapon)
+            _IO.write.byte(file, client_data.weapon)
 
-        IO.write.short(file, client_data.health)
-        IO.write.byte(file, client_data.active_ammo)
-        IO.write.byte(file, client_data.ammo[0])
-        IO.write.byte(file, client_data.ammo[1])
-        IO.write.byte(file, client_data.ammo[2])
-        IO.write.byte(file, client_data.ammo[3])
-        IO.write.byte(file, client_data.active_weapon)
+        _IO.write.short(file, client_data.health)
+        _IO.write.byte(file, client_data.active_ammo)
+        _IO.write.byte(file, client_data.ammo[0])
+        _IO.write.byte(file, client_data.ammo[1])
+        _IO.write.byte(file, client_data.ammo[2])
+        _IO.write.byte(file, client_data.ammo[3])
+        _IO.write.byte(file, client_data.active_weapon)
 
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_CLIENTDATA
+        assert _IO.read.byte(file) == SVC_CLIENTDATA
         client_data = ClientData()
-        client_data.bit_mask = IO.read.short(file)
+        client_data.bit_mask = _IO.read.short(file)
         client_data.on_ground = client_data.bit_mask & SU_ONGROUND != 0
         client_data.in_water = client_data.bit_mask & SU_INWATER != 0
 
         if client_data.bit_mask & SU_VIEWHEIGHT:
-            client_data.view_height = IO.read.char(file)
+            client_data.view_height = _IO.read.char(file)
 
         if client_data.bit_mask & SU_IDEALPITCH:
-            client_data.ideal_pitch = IO.read.char(file)
+            client_data.ideal_pitch = _IO.read.char(file)
 
         if client_data.bit_mask & SU_PUNCH1:
             pa = client_data.punch_angle
-            client_data.punch_angle = IO.read.angle(file), pa[1], pa[2]
+            client_data.punch_angle = _IO.read.angle(file), pa[1], pa[2]
 
         if client_data.bit_mask & SU_VELOCITY1:
             ve = client_data.velocity
-            client_data.velocity = IO.read.char(file) * 16, ve[1], ve[2]
+            client_data.velocity = _IO.read.char(file) * 16, ve[1], ve[2]
 
         if client_data.bit_mask & SU_PUNCH2:
             pa = client_data.punch_angle
-            client_data.punch_angle = pa[0], IO.read.angle(file), pa[2]
+            client_data.punch_angle = pa[0], _IO.read.angle(file), pa[2]
 
         if client_data.bit_mask & SU_VELOCITY2:
             ve = client_data.velocity
-            client_data.velocity = ve[0], IO.read.char(file) * 16, ve[2]
+            client_data.velocity = ve[0], _IO.read.char(file) * 16, ve[2]
 
         if client_data.bit_mask & SU_PUNCH3:
             pa = client_data.punch_angle
-            client_data.punch_angle = pa[0], pa[1], IO.read.angle(file)
+            client_data.punch_angle = pa[0], pa[1], _IO.read.angle(file)
 
         if client_data.bit_mask & SU_VELOCITY3:
             ve = client_data.velocity
-            client_data.velocity = ve[0], ve[1], IO.read.char(file) * 16
+            client_data.velocity = ve[0], ve[1], _IO.read.char(file) * 16
 
-        client_data.item_bit_mask = IO.read.long(file)
+        client_data.item_bit_mask = _IO.read.long(file)
 
         if client_data.bit_mask & SU_WEAPONFRAME:
-            client_data.weapon_frame = IO.read.byte(file)
+            client_data.weapon_frame = _IO.read.byte(file)
 
         if client_data.bit_mask & SU_ARMOR:
-            client_data.armor = IO.read.byte(file)
+            client_data.armor = _IO.read.byte(file)
 
         if client_data.bit_mask & SU_WEAPON:
-            client_data.weapon = IO.read.byte(file)
+            client_data.weapon = _IO.read.byte(file)
 
-        client_data.health = IO.read.short(file)
-        client_data.active_ammo = IO.read.byte(file)
-        client_data.ammo = IO.read.byte(file), IO.read.byte(file), IO.read.byte(file), IO.read.byte(file)
-        client_data.active_weapon = IO.read.byte(file)
+        client_data.health = _IO.read.short(file)
+        client_data.active_ammo = _IO.read.byte(file)
+        client_data.ammo = _IO.read.byte(file), _IO.read.byte(file), _IO.read.byte(file), _IO.read.byte(file)
+        client_data.active_weapon = _IO.read.byte(file)
 
         return client_data
 
@@ -956,15 +956,15 @@ class StopSound:
 
     @staticmethod
     def write(file, stop_sound):
-        IO.write.byte(file, SVC_STOPSOUND)
+        _IO.write.byte(file, SVC_STOPSOUND)
         data = stop_sound.entity << 3 | (stop_sound.channel & 0x07)
-        IO.write.short(file, data)
+        _IO.write.short(file, data)
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_STOPSOUND
+        assert _IO.read.byte(file) == SVC_STOPSOUND
         stop_sound = StopSound()
-        data = IO.read.short(file)
+        data = _IO.read.short(file)
 
         stop_sound.channel = data & 0x07
         stop_sound.entity = data >> 3
@@ -993,16 +993,16 @@ class UpdateColors:
 
     @staticmethod
     def write(file, update_colors):
-        IO.write.byte(file, SVC_UPDATECOLORS)
-        IO.write.byte(file, update_colors.player)
-        IO.write.byte(file, update_colors.colors)
+        _IO.write.byte(file, SVC_UPDATECOLORS)
+        _IO.write.byte(file, update_colors.player)
+        _IO.write.byte(file, update_colors.colors)
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_UPDATECOLORS
+        assert _IO.read.byte(file) == SVC_UPDATECOLORS
         update_colors = UpdateColors()
-        update_colors.player = IO.read.byte(file)
-        update_colors.colors = IO.read.byte(file)
+        update_colors.player = _IO.read.byte(file)
+        update_colors.colors = _IO.read.byte(file)
 
         return update_colors
 
@@ -1037,22 +1037,22 @@ class Particle:
 
     @staticmethod
     def write(file, particle):
-        IO.write.byte(file, SVC_PARTICLE)
-        IO.write.position(file, particle.origin)
-        IO.write.char(file, particle.direction[0] * 16)
-        IO.write.char(file, particle.direction[1] * 16)
-        IO.write.char(file, particle.direction[2] * 16)
-        IO.write.byte(file, particle.count)
-        IO.write.byte(file, particle.color)
+        _IO.write.byte(file, SVC_PARTICLE)
+        _IO.write.position(file, particle.origin)
+        _IO.write.char(file, particle.direction[0] * 16)
+        _IO.write.char(file, particle.direction[1] * 16)
+        _IO.write.char(file, particle.direction[2] * 16)
+        _IO.write.byte(file, particle.count)
+        _IO.write.byte(file, particle.color)
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_PARTICLE
+        assert _IO.read.byte(file) == SVC_PARTICLE
         particle = Particle()
-        particle.origin = IO.read.position(file)
-        particle.direction = IO.read.char(file) / 16, IO.read.char(file) / 16, IO.read.char(file) / 16,
-        particle.count = IO.read.byte(file)
-        particle.color = IO.read.byte(file)
+        particle.origin = _IO.read.position(file)
+        particle.direction = _IO.read.char(file) / 16, _IO.read.char(file) / 16, _IO.read.char(file) / 16,
+        particle.count = _IO.read.byte(file)
+        particle.color = _IO.read.byte(file)
 
         return particle
 
@@ -1083,18 +1083,18 @@ class Damage:
 
     @staticmethod
     def write(file, damage):
-        IO.write.byte(file, SVC_DAMAGE)
-        IO.write.byte(file, damage.armor)
-        IO.write.byte(file, damage.blood)
-        IO.write.position(file, damage.origin)
+        _IO.write.byte(file, SVC_DAMAGE)
+        _IO.write.byte(file, damage.armor)
+        _IO.write.byte(file, damage.blood)
+        _IO.write.position(file, damage.origin)
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_DAMAGE
+        assert _IO.read.byte(file) == SVC_DAMAGE
         damage = Damage()
-        damage.armor = IO.read.byte(file)
-        damage.blood = IO.read.byte(file)
-        damage.origin = IO.read.position(file)
+        damage.armor = _IO.read.byte(file)
+        damage.blood = _IO.read.byte(file)
+        damage.origin = _IO.read.position(file)
 
         return damage
 
@@ -1137,24 +1137,24 @@ class SpawnStatic:
 
     @staticmethod
     def write(file, spawn_static):
-        IO.write.byte(file, SVC_SPAWNSTATIC)
-        IO.write.byte(file, spawn_static.model_index)
-        IO.write.byte(file, spawn_static.frame)
-        IO.write.byte(file, spawn_static.color_map)
-        IO.write.byte(file, spawn_static.skin)
-        IO.write.position(file, spawn_static.origin)
-        IO.write.angles(file, spawn_static.angles)
+        _IO.write.byte(file, SVC_SPAWNSTATIC)
+        _IO.write.byte(file, spawn_static.model_index)
+        _IO.write.byte(file, spawn_static.frame)
+        _IO.write.byte(file, spawn_static.color_map)
+        _IO.write.byte(file, spawn_static.skin)
+        _IO.write.position(file, spawn_static.origin)
+        _IO.write.angles(file, spawn_static.angles)
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_SPAWNSTATIC
+        assert _IO.read.byte(file) == SVC_SPAWNSTATIC
         spawn_static = SpawnStatic()
-        spawn_static.model_index = IO.read.byte(file)
-        spawn_static.frame = IO.read.byte(file)
-        spawn_static.color_map = IO.read.byte(file)
-        spawn_static.skin = IO.read.byte(file)
-        spawn_static.origin = IO.read.position(file)
-        spawn_static.angles = IO.read.angles(file)
+        spawn_static.model_index = _IO.read.byte(file)
+        spawn_static.frame = _IO.read.byte(file)
+        spawn_static.color_map = _IO.read.byte(file)
+        spawn_static.skin = _IO.read.byte(file)
+        spawn_static.origin = _IO.read.position(file)
+        spawn_static.angles = _IO.read.angles(file)
 
         return spawn_static
 
@@ -1218,26 +1218,26 @@ class SpawnBaseline:
 
     @staticmethod
     def write(file, spawn_baseline):
-        IO.write.byte(file, SVC_SPAWNBASELINE)
-        IO.write.short(file, spawn_baseline.entity)
-        IO.write.byte(file, spawn_baseline.model_index)
-        IO.write.byte(file, spawn_baseline.frame)
-        IO.write.byte(file, spawn_baseline.color_map)
-        IO.write.byte(file, spawn_baseline.skin)
-        IO.write.position(file, spawn_baseline.origin)
-        IO.write.angles(file, spawn_baseline.angles)
+        _IO.write.byte(file, SVC_SPAWNBASELINE)
+        _IO.write.short(file, spawn_baseline.entity)
+        _IO.write.byte(file, spawn_baseline.model_index)
+        _IO.write.byte(file, spawn_baseline.frame)
+        _IO.write.byte(file, spawn_baseline.color_map)
+        _IO.write.byte(file, spawn_baseline.skin)
+        _IO.write.position(file, spawn_baseline.origin)
+        _IO.write.angles(file, spawn_baseline.angles)
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_SPAWNBASELINE
+        assert _IO.read.byte(file) == SVC_SPAWNBASELINE
         spawn_baseline = SpawnBaseline()
-        spawn_baseline.entity = IO.read.short(file)
-        spawn_baseline.model_index = IO.read.byte(file)
-        spawn_baseline.frame = IO.read.byte(file)
-        spawn_baseline.color_map = IO.read.byte(file)
-        spawn_baseline.skin = IO.read.byte(file)
-        spawn_baseline.origin = IO.read.position(file)
-        spawn_baseline.angles = IO.read.angles(file)
+        spawn_baseline.entity = _IO.read.short(file)
+        spawn_baseline.model_index = _IO.read.byte(file)
+        spawn_baseline.frame = _IO.read.byte(file)
+        spawn_baseline.color_map = _IO.read.byte(file)
+        spawn_baseline.skin = _IO.read.byte(file)
+        spawn_baseline.origin = _IO.read.position(file)
+        spawn_baseline.angles = _IO.read.angles(file)
 
         return spawn_baseline
 
@@ -1273,8 +1273,8 @@ class TempEntity:
 
     @staticmethod
     def write(file, temp_entity):
-        IO.write.byte(file, SVC_TEMP_ENTITY)
-        IO.write.byte(file, temp_entity.type)
+        _IO.write.byte(file, SVC_TEMP_ENTITY)
+        _IO.write.byte(file, temp_entity.type)
 
         if temp_entity.type == TE_WIZSPIKE or \
                         temp_entity.type == TE_KNIGHTSPIKE or \
@@ -1286,59 +1286,59 @@ class TempEntity:
                         temp_entity.type == TE_LAVASPLASH or \
                         temp_entity.type == TE_TELEPORT:
 
-            IO.write.position(file, temp_entity.origin)
+            _IO.write.position(file, temp_entity.origin)
 
         elif temp_entity.type == TE_LIGHTNING1 or \
                         temp_entity.type == TE_LIGHTNING2 or \
                         temp_entity.type == TE_LIGHTNING3 or \
                         temp_entity.type == TE_BEAM:
 
-            IO.write.short(file, temp_entity.entity)
-            IO.write.position(file, temp_entity.start)
-            IO.write.position(file, temp_entity.end)
+            _IO.write.short(file, temp_entity.entity)
+            _IO.write.position(file, temp_entity.start)
+            _IO.write.position(file, temp_entity.end)
 
         elif temp_entity.type == TE_EXPLOSION2:
-            IO.write.position(file, temp_entity.origin)
-            IO.write.byte(file, temp_entity.color_start)
-            IO.write.byte(file, temp_entity.color_length)
+            _IO.write.position(file, temp_entity.origin)
+            _IO.write.byte(file, temp_entity.color_start)
+            _IO.write.byte(file, temp_entity.color_length)
 
         else:
             raise BadMessage('Invalid Temporary Entity type: %r' % temp_entity.type)
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_TEMP_ENTITY
+        assert _IO.read.byte(file) == SVC_TEMP_ENTITY
         temp_entity = TempEntity()
-        temp_entity.type = IO.read.byte(file)
+        temp_entity.type = _IO.read.byte(file)
 
         if temp_entity.type == TE_WIZSPIKE or \
-                        temp_entity.type == TE_KNIGHTSPIKE or \
-                        temp_entity.type == TE_SPIKE or \
-                        temp_entity.type == TE_SUPERSPIKE or \
-                        temp_entity.type == TE_GUNSHOT or \
-                        temp_entity.type == TE_EXPLOSION or \
-                        temp_entity.type == TE_TAREXPLOSION or \
-                        temp_entity.type == TE_LAVASPLASH or \
-                        temp_entity.type == TE_TELEPORT:
+                temp_entity.type == TE_KNIGHTSPIKE or \
+                temp_entity.type == TE_SPIKE or \
+                temp_entity.type == TE_SUPERSPIKE or \
+                temp_entity.type == TE_GUNSHOT or \
+                temp_entity.type == TE_EXPLOSION or \
+                temp_entity.type == TE_TAREXPLOSION or \
+                temp_entity.type == TE_LAVASPLASH or \
+                temp_entity.type == TE_TELEPORT:
 
-            temp_entity.origin = IO.read.position(file)
+            temp_entity.origin = _IO.read.position(file)
 
         elif temp_entity.type == TE_LIGHTNING1 or \
-                        temp_entity.type == TE_LIGHTNING2 or \
-                        temp_entity.type == TE_LIGHTNING3 or \
-                        temp_entity.type == TE_BEAM:
+                temp_entity.type == TE_LIGHTNING2 or \
+                temp_entity.type == TE_LIGHTNING3 or \
+                temp_entity.type == TE_BEAM:
 
-            temp_entity.entity = IO.read.short(file)
-            temp_entity.start = IO.read.position(file)
-            temp_entity.end = IO.read.position(file)
+            temp_entity.entity = _IO.read.short(file)
+            temp_entity.start = _IO.read.position(file)
+            temp_entity.end = _IO.read.position(file)
 
         elif temp_entity.type == TE_EXPLOSION2:
-            temp_entity.origin = IO.read.position(file)
-            temp_entity.color_start = IO.read.byte(file)
-            temp_entity.color_length = IO.read.byte(file)
+            temp_entity.origin = _IO.read.position(file)
+            temp_entity.color_start = _IO.read.byte(file)
+            temp_entity.color_length = _IO.read.byte(file)
 
         else:
-            raise BadMessage('Invalid Temporary Entity type: %r' % temp_entity.type)
+            raise BadMessage(f'Invalid Temporary Entity type: {temp_entity.type}')
 
         return temp_entity
 
@@ -1361,14 +1361,14 @@ class SetPause:
 
     @staticmethod
     def write(file, set_pause):
-        IO.write.byte(file, SVC_SETPAUSE)
-        IO.write.byte(file, set_pause.paused)
+        _IO.write.byte(file, SVC_SETPAUSE)
+        _IO.write.byte(file, set_pause.paused)
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_SETPAUSE
+        assert _IO.read.byte(file) == SVC_SETPAUSE
         set_pause = SetPause()
-        set_pause.paused = IO.read.byte(file)
+        set_pause.paused = _IO.read.byte(file)
 
         return set_pause
 
@@ -1391,14 +1391,14 @@ class SignOnNum:
 
     @staticmethod
     def write(file, sign_on_num):
-        IO.write.byte(file, SVC_SIGNONNUM)
-        IO.write.byte(file, sign_on_num.sign_on)
+        _IO.write.byte(file, SVC_SIGNONNUM)
+        _IO.write.byte(file, sign_on_num.sign_on)
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_SIGNONNUM
+        assert _IO.read.byte(file) == SVC_SIGNONNUM
         sign_on_num = SignOnNum()
-        sign_on_num.sign_on = IO.read.byte(file)
+        sign_on_num.sign_on = _IO.read.byte(file)
 
         return sign_on_num
 
@@ -1421,14 +1421,14 @@ class CenterPrint:
 
     @staticmethod
     def write(file, center_print):
-        IO.write.byte(file, SVC_CENTERPRINT)
-        IO.write.string(file, center_print.text)
+        _IO.write.byte(file, SVC_CENTERPRINT)
+        _IO.write.string(file, center_print.text)
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_CENTERPRINT
+        assert _IO.read.byte(file) == SVC_CENTERPRINT
         center_print = CenterPrint()
-        center_print.text = IO.read.string(file)
+        center_print.text = _IO.read.string(file)
 
         return center_print
 
@@ -1443,11 +1443,11 @@ class KilledMonster:
 
     @staticmethod
     def write(file, killed_monster=None):
-        IO.write.byte(file, SVC_KILLEDMONSTER)
+        _IO.write.byte(file, SVC_KILLEDMONSTER)
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_KILLEDMONSTER
+        assert _IO.read.byte(file) == SVC_KILLEDMONSTER
         return KilledMonster()
 
 
@@ -1461,11 +1461,11 @@ class FoundSecret:
 
     @staticmethod
     def write(file, found_secret=None):
-        IO.write.byte(file, SVC_FOUNDSECRET)
+        _IO.write.byte(file, SVC_FOUNDSECRET)
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_FOUNDSECRET
+        assert _IO.read.byte(file) == SVC_FOUNDSECRET
         return FoundSecret()
 
 
@@ -1499,20 +1499,20 @@ class SpawnStaticSound:
 
     @staticmethod
     def write(file, spawn_static_sound):
-        IO.write.byte(file, SVC_SPAWNSTATICSOUND)
-        IO.write.position(file, spawn_static_sound.origin)
-        IO.write.byte(file, spawn_static_sound.sound_number)
-        IO.write.byte(file, spawn_static_sound.volume * 256)
-        IO.write.byte(file, spawn_static_sound.attenuation * 64)
+        _IO.write.byte(file, SVC_SPAWNSTATICSOUND)
+        _IO.write.position(file, spawn_static_sound.origin)
+        _IO.write.byte(file, spawn_static_sound.sound_number)
+        _IO.write.byte(file, spawn_static_sound.volume * 256)
+        _IO.write.byte(file, spawn_static_sound.attenuation * 64)
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_SPAWNSTATICSOUND
+        assert _IO.read.byte(file) == SVC_SPAWNSTATICSOUND
         spawn_static_sound = SpawnStaticSound()
-        spawn_static_sound.origin = IO.read.position(file)
-        spawn_static_sound.sound_number = IO.read.byte(file)
-        spawn_static_sound.volume = IO.read.byte(file) / 256
-        spawn_static_sound.attenuation = IO.read.byte(file) / 64
+        spawn_static_sound.origin = _IO.read.position(file)
+        spawn_static_sound.sound_number = _IO.read.byte(file)
+        spawn_static_sound.volume = _IO.read.byte(file) / 256
+        spawn_static_sound.attenuation = _IO.read.byte(file) / 64
 
         return spawn_static_sound
 
@@ -1527,11 +1527,11 @@ class Intermission:
 
     @staticmethod
     def write(file, intermission=None):
-        IO.write.byte(file, SVC_INTERMISSION)
+        _IO.write.byte(file, SVC_INTERMISSION)
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_INTERMISSION
+        assert _IO.read.byte(file) == SVC_INTERMISSION
         return Intermission()
 
 
@@ -1553,14 +1553,14 @@ class Finale:
 
     @staticmethod
     def write(file, finale):
-        IO.write.byte(file, SVC_FINALE)
-        IO.write.string(file, finale.text)
+        _IO.write.byte(file, SVC_FINALE)
+        _IO.write.string(file, finale.text)
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_FINALE
+        assert _IO.read.byte(file) == SVC_FINALE
         finale = Finale()
-        finale.text = IO.read.string(file)
+        finale.text = _IO.read.string(file)
 
         return finale
 
@@ -1587,16 +1587,16 @@ class CdTrack:
 
     @staticmethod
     def write(file, cd_track):
-        IO.write.byte(file, SVC_CDTRACK)
-        IO.write.byte(file, cd_track.from_track)
-        IO.write.byte(file, cd_track.to_track)
+        _IO.write.byte(file, SVC_CDTRACK)
+        _IO.write.byte(file, cd_track.from_track)
+        _IO.write.byte(file, cd_track.to_track)
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_CDTRACK
+        assert _IO.read.byte(file) == SVC_CDTRACK
         cd_track = CdTrack()
-        cd_track.from_track = IO.read.byte(file)
-        cd_track.to_track = IO.read.byte(file)
+        cd_track.from_track = _IO.read.byte(file)
+        cd_track.to_track = _IO.read.byte(file)
 
         return cd_track
 
@@ -1611,11 +1611,11 @@ class SellScreen:
 
     @staticmethod
     def write(file, sell_screen=None):
-        IO.write.byte(file, SVC_SELLSCREEN)
+        _IO.write.byte(file, SVC_SELLSCREEN)
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_SELLSCREEN
+        assert _IO.read.byte(file) == SVC_SELLSCREEN
         return SellScreen()
 
 
@@ -1637,14 +1637,14 @@ class CutScene:
 
     @staticmethod
     def write(file, cut_scene):
-        IO.write.byte(file, SVC_CUTSCENE)
-        IO.write.string(file, cut_scene.text)
+        _IO.write.byte(file, SVC_CUTSCENE)
+        _IO.write.string(file, cut_scene.text)
 
     @staticmethod
     def read(file):
-        assert IO.read.byte(file) == SVC_CUTSCENE
+        assert _IO.read.byte(file) == SVC_CUTSCENE
         cut_scene = CutScene()
-        cut_scene.text = IO.read.string(file)
+        cut_scene.text = _IO.read.string(file)
 
         return cut_scene
 
@@ -1725,97 +1725,97 @@ class UpdateEntity:
 
     @staticmethod
     def write(file, update_entity):
-        IO.write.byte(file, update_entity.bit_mask & 0xFF | 0x80)
+        _IO.write.byte(file, update_entity.bit_mask & 0xFF | 0x80)
 
         if update_entity.bit_mask & U_MOREBITS:
-            IO.write.byte(file, update_entity.bit_mask >> 8 & 0xFF)
+            _IO.write.byte(file, update_entity.bit_mask >> 8 & 0xFF)
 
         if update_entity.bit_mask & U_LONGENTITY:
-            IO.write.short(file, update_entity.entity)
+            _IO.write.short(file, update_entity.entity)
 
         else:
-            IO.write.byte(file, update_entity.entity)
+            _IO.write.byte(file, update_entity.entity)
 
         if update_entity.bit_mask & U_MODEL:
-            IO.write.byte(file, update_entity.model_index)
+            _IO.write.byte(file, update_entity.model_index)
 
         if update_entity.bit_mask & U_FRAME:
-            IO.write.byte(file, update_entity.frame)
+            _IO.write.byte(file, update_entity.frame)
 
         if update_entity.bit_mask & U_COLORMAP:
-            IO.write.byte(file, update_entity.colormap)
+            _IO.write.byte(file, update_entity.colormap)
 
         if update_entity.bit_mask & U_SKIN:
-            IO.write.byte(file, update_entity.skin)
+            _IO.write.byte(file, update_entity.skin)
 
         if update_entity.bit_mask & U_EFFECTS:
-            IO.write.byte(file, update_entity.effects)
+            _IO.write.byte(file, update_entity.effects)
 
         if update_entity.bit_mask & U_ORIGIN1:
-            IO.write.coord(file, update_entity.origin[0])
+            _IO.write.coord(file, update_entity.origin[0])
 
         if update_entity.bit_mask & U_ANGLE1:
-            IO.write.angle(file, update_entity.angles[0])
+            _IO.write.angle(file, update_entity.angles[0])
 
         if update_entity.bit_mask & U_ORIGIN2:
-            IO.write.coord(file, update_entity.origin[1])
+            _IO.write.coord(file, update_entity.origin[1])
 
         if update_entity.bit_mask & U_ANGLE2:
-            IO.write.angle(file, update_entity.angles[1])
+            _IO.write.angle(file, update_entity.angles[1])
 
         if update_entity.bit_mask & U_ORIGIN3:
-            IO.write.coord(file, update_entity.origin[2])
+            _IO.write.coord(file, update_entity.origin[2])
 
         if update_entity.bit_mask & U_ANGLE3:
-            IO.write.angle(file, update_entity.angles[2])
+            _IO.write.angle(file, update_entity.angles[2])
 
     @staticmethod
     def read(file):
         update_entity = UpdateEntity()
-        b = IO.read.byte(file)
+        b = _IO.read.byte(file)
         update_entity.bit_mask = b & 0x7F
 
         if update_entity.bit_mask & U_MOREBITS:
-            update_entity.bit_mask |= IO.read.byte(file) << 8
+            update_entity.bit_mask |= _IO.read.byte(file) << 8
 
         if update_entity.bit_mask & U_LONGENTITY:
-            update_entity.entity = IO.read.short(file)
+            update_entity.entity = _IO.read.short(file)
 
         else:
-            update_entity.entity = IO.read.byte(file)
+            update_entity.entity = _IO.read.byte(file)
 
         if update_entity.bit_mask & U_MODEL:
-            update_entity.model_index = IO.read.byte(file)
+            update_entity.model_index = _IO.read.byte(file)
 
         if update_entity.bit_mask & U_FRAME:
-            update_entity.frame = IO.read.byte(file)
+            update_entity.frame = _IO.read.byte(file)
 
         if update_entity.bit_mask & U_COLORMAP:
-            update_entity.colormap = IO.read.byte(file)
+            update_entity.colormap = _IO.read.byte(file)
 
         if update_entity.bit_mask & U_SKIN:
-            update_entity.skin = IO.read.byte(file)
+            update_entity.skin = _IO.read.byte(file)
 
         if update_entity.bit_mask & U_EFFECTS:
-            update_entity.effects = IO.read.byte(file)
+            update_entity.effects = _IO.read.byte(file)
 
         if update_entity.bit_mask & U_ORIGIN1:
-            update_entity.origin = IO.read.coord(file), update_entity.origin[1], update_entity.origin[2]
+            update_entity.origin = _IO.read.coord(file), update_entity.origin[1], update_entity.origin[2]
 
         if update_entity.bit_mask & U_ANGLE1:
-            update_entity.angles = IO.read.angle(file), update_entity.angles[1], update_entity.angles[2]
+            update_entity.angles = _IO.read.angle(file), update_entity.angles[1], update_entity.angles[2]
 
         if update_entity.bit_mask & U_ORIGIN2:
-            update_entity.origin = update_entity.origin[0], IO.read.coord(file), update_entity.origin[2]
+            update_entity.origin = update_entity.origin[0], _IO.read.coord(file), update_entity.origin[2]
 
         if update_entity.bit_mask & U_ANGLE2:
-            update_entity.angles = update_entity.angles[0], IO.read.angle(file), update_entity.angles[2]
+            update_entity.angles = update_entity.angles[0], _IO.read.angle(file), update_entity.angles[2]
 
         if update_entity.bit_mask & U_ORIGIN3:
-            update_entity.origin = update_entity.origin[0], update_entity.origin[1], IO.read.coord(file)
+            update_entity.origin = update_entity.origin[0], update_entity.origin[1], _IO.read.coord(file)
 
         if update_entity.bit_mask & U_ANGLE3:
-            update_entity.angles = update_entity.angles[0], update_entity.angles[1], IO.read.angle(file)
+            update_entity.angles = update_entity.angles[0], update_entity.angles[1], _IO.read.angle(file)
 
         return update_entity
 
@@ -1841,10 +1841,10 @@ class MessageBlock:
     @staticmethod
     def write(file, message_block):
         start_of_block = file.tell()
-        IO.write.long(file, 0)
-        IO.write.float(file, message_block.view_angles[0])
-        IO.write.float(file, message_block.view_angles[1])
-        IO.write.float(file, message_block.view_angles[2])
+        _IO.write.long(file, 0)
+        _IO.write.float(file, message_block.view_angles[0])
+        _IO.write.float(file, message_block.view_angles[1])
+        _IO.write.float(file, message_block.view_angles[2])
         start_of_messages = file.tell()
 
         for message in message_block.messages:
@@ -1854,14 +1854,14 @@ class MessageBlock:
         block_size = end_of_messages - start_of_messages
 
         file.seek(start_of_block)
-        IO.write.long(file, block_size)
+        _IO.write.long(file, block_size)
         file.seek(end_of_messages )
 
     @staticmethod
     def read(file):
         message_block = MessageBlock()
-        blocksize = IO.read.long(file)
-        message_block.view_angles = IO.read.float(file), IO.read.float(file), IO.read.float(file)
+        blocksize = _IO.read.long(file)
+        message_block.view_angles = _IO.read.float(file), _IO.read.float(file), _IO.read.float(file)
         message_block_data = file.read(blocksize)
 
         buff = io.BufferedReader(io.BytesIO(message_block_data))

@@ -16,83 +16,17 @@ References:
 import struct
 
 from vgio._core import ReadWriteFile
+from vgio import quake
+
 
 __all__ = ['BadBspFile', 'is_bspfile', 'Bsp']
 
 
+VERSION = 29
+
+
 class BadBspFile(Exception):
     pass
-
-
-# The bsp header structure
-header_format = '<31l'
-header_version = 29
-header_size = struct.calcsize(header_format)
-
-# Indexes of header structure
-_HEADER_VERSION = 0
-_HEADER_ENTITIES_OFFSET = 1
-_HEADER_ENTITIES_SIZE = 2
-_HEADER_PLANES_OFFSET = 3
-_HEADER_PLANES_SIZE = 4
-_HEADER_MIPTEXTURES_OFFSET = 5
-_HEADER_MIPTEXTURES_SIZE = 6
-_HEADER_VERTEXES_OFFSET = 7
-_HEADER_VERTEXES_SIZE = 8
-_HEADER_VISIBILITIES_OFFSET = 9
-_HEADER_VISIBILITIES_SIZE = 10
-_HEADER_NODES_OFFSET = 11
-_HEADER_NODES_SIZE = 12
-_HEADER_TEXTURE_INFOS_OFFSET = 13
-_HEADER_TEXTURE_INFOS_SIZE = 14
-_HEADER_FACES_OFFSET = 15
-_HEADER_FACES_SIZE = 16
-_HEADER_LIGHTING_OFFSET = 17
-_HEADER_LIGHTING_SIZE = 18
-_HEADER_CLIP_NODES_OFFSET = 19
-_HEADER_CLIP_NODES_SIZE = 20
-_HEADER_LEAFS_OFFSET = 21
-_HEADER_LEAFS_SIZE = 22
-_HEADER_MARK_SURFACES_OFFSET = 23
-_HEADER_MARK_SURFACES_SIZE = 24
-_HEADER_EDGES_OFFSET = 25
-_HEADER_EDGES_SIZE = 26
-_HEADER_SURF_EDGES_OFFSET = 27
-_HEADER_SURF_EDGES_SIZE = 28
-_HEADER_MODELS_OFFSET = 29
-_HEADER_MODELS_SIZE = 30
-
-
-# Visibility structure
-def _calculate_visibility_format(size):
-    return '<%dB' % size
-
-visibility_format = None
-visibility_size = None
-
-
-# Lighting structure
-def _calculate_lighting_format(size):
-    return '<%dB' % size
-
-lighting_format = None
-lighting_size = None
-
-
-# Mark Surface structure
-def _calculate_mark_surface_format(size):
-    return '<%dB' % size
-
-mark_surface_format = None
-mark_surface_size = None
-
-
-# Surf Edge structure
-def _calculate_surf_edge_format(size):
-    return '<%di' % (size // 4)
-
-surf_edge_format = None
-surf_edge_size = None
 
 
 def _check_bspfile(fp):
@@ -100,7 +34,7 @@ def _check_bspfile(fp):
     data = fp.read(struct.calcsize('<1l'))
     version = struct.unpack('<1l', data)[0]
 
-    return version == header_version
+    return version == VERSION
 
 
 def is_bspfile(filename):
@@ -119,72 +53,220 @@ def is_bspfile(filename):
         return False
 
 
-default_palette = (
-    (0x00,0x00,0x00),(0x0f,0x0f,0x0f),(0x1f,0x1f,0x1f),(0x2f,0x2f,0x2f),
-    (0x3f,0x3f,0x3f),(0x4b,0x4b,0x4b),(0x5b,0x5b,0x5b),(0x6b,0x6b,0x6b),
-    (0x7b,0x7b,0x7b),(0x8b,0x8b,0x8b),(0x9b,0x9b,0x9b),(0xab,0xab,0xab),
-    (0xbb,0xbb,0xbb),(0xcb,0xcb,0xcb),(0xdb,0xdb,0xdb),(0xeb,0xeb,0xeb),
-    (0x0f,0x0b,0x07),(0x17,0x0f,0x0b),(0x1f,0x17,0x0b),(0x27,0x1b,0x0f),
-    (0x2f,0x23,0x13),(0x37,0x2b,0x17),(0x3f,0x2f,0x17),(0x4b,0x37,0x1b),
-    (0x53,0x3b,0x1b),(0x5b,0x43,0x1f),(0x63,0x4b,0x1f),(0x6b,0x53,0x1f),
-    (0x73,0x57,0x1f),(0x7b,0x5f,0x23),(0x83,0x67,0x23),(0x8f,0x6f,0x23),
-    (0x0b,0x0b,0x0f),(0x13,0x13,0x1b),(0x1b,0x1b,0x27),(0x27,0x27,0x33),
-    (0x2f,0x2f,0x3f),(0x37,0x37,0x4b),(0x3f,0x3f,0x57),(0x47,0x47,0x67),
-    (0x4f,0x4f,0x73),(0x5b,0x5b,0x7f),(0x63,0x63,0x8b),(0x6b,0x6b,0x97),
-    (0x73,0x73,0xa3),(0x7b,0x7b,0xaf),(0x83,0x83,0xbb),(0x8b,0x8b,0xcb),
-    (0x00,0x00,0x00),(0x07,0x07,0x00),(0x0b,0x0b,0x00),(0x13,0x13,0x00),
-    (0x1b,0x1b,0x00),(0x23,0x23,0x00),(0x2b,0x2b,0x07),(0x2f,0x2f,0x07),
-    (0x37,0x37,0x07),(0x3f,0x3f,0x07),(0x47,0x47,0x07),(0x4b,0x4b,0x0b),
-    (0x53,0x53,0x0b),(0x5b,0x5b,0x0b),(0x63,0x63,0x0b),(0x6b,0x6b,0x0f),
-    (0x07,0x00,0x00),(0x0f,0x00,0x00),(0x17,0x00,0x00),(0x1f,0x00,0x00),
-    (0x27,0x00,0x00),(0x2f,0x00,0x00),(0x37,0x00,0x00),(0x3f,0x00,0x00),
-    (0x47,0x00,0x00),(0x4f,0x00,0x00),(0x57,0x00,0x00),(0x5f,0x00,0x00),
-    (0x67,0x00,0x00),(0x6f,0x00,0x00),(0x77,0x00,0x00),(0x7f,0x00,0x00),
-    (0x13,0x13,0x00),(0x1b,0x1b,0x00),(0x23,0x23,0x00),(0x2f,0x2b,0x00),
-    (0x37,0x2f,0x00),(0x43,0x37,0x00),(0x4b,0x3b,0x07),(0x57,0x43,0x07),
-    (0x5f,0x47,0x07),(0x6b,0x4b,0x0b),(0x77,0x53,0x0f),(0x83,0x57,0x13),
-    (0x8b,0x5b,0x13),(0x97,0x5f,0x1b),(0xa3,0x63,0x1f),(0xaf,0x67,0x23),
-    (0x23,0x13,0x07),(0x2f,0x17,0x0b),(0x3b,0x1f,0x0f),(0x4b,0x23,0x13),
-    (0x57,0x2b,0x17),(0x63,0x2f,0x1f),(0x73,0x37,0x23),(0x7f,0x3b,0x2b),
-    (0x8f,0x43,0x33),(0x9f,0x4f,0x33),(0xaf,0x63,0x2f),(0xbf,0x77,0x2f),
-    (0xcf,0x8f,0x2b),(0xdf,0xab,0x27),(0xef,0xcb,0x1f),(0xff,0xf3,0x1b),
-    (0x0b,0x07,0x00),(0x1b,0x13,0x00),(0x2b,0x23,0x0f),(0x37,0x2b,0x13),
-    (0x47,0x33,0x1b),(0x53,0x37,0x23),(0x63,0x3f,0x2b),(0x6f,0x47,0x33),
-    (0x7f,0x53,0x3f),(0x8b,0x5f,0x47),(0x9b,0x6b,0x53),(0xa7,0x7b,0x5f),
-    (0xb7,0x87,0x6b),(0xc3,0x93,0x7b),(0xd3,0xa3,0x8b),(0xe3,0xb3,0x97),
-    (0xab,0x8b,0xa3),(0x9f,0x7f,0x97),(0x93,0x73,0x87),(0x8b,0x67,0x7b),
-    (0x7f,0x5b,0x6f),(0x77,0x53,0x63),(0x6b,0x4b,0x57),(0x5f,0x3f,0x4b),
-    (0x57,0x37,0x43),(0x4b,0x2f,0x37),(0x43,0x27,0x2f),(0x37,0x1f,0x23),
-    (0x2b,0x17,0x1b),(0x23,0x13,0x13),(0x17,0x0b,0x0b),(0x0f,0x07,0x07),
-    (0xbb,0x73,0x9f),(0xaf,0x6b,0x8f),(0xa3,0x5f,0x83),(0x97,0x57,0x77),
-    (0x8b,0x4f,0x6b),(0x7f,0x4b,0x5f),(0x73,0x43,0x53),(0x6b,0x3b,0x4b),
-    (0x5f,0x33,0x3f),(0x53,0x2b,0x37),(0x47,0x23,0x2b),(0x3b,0x1f,0x23),
-    (0x2f,0x17,0x1b),(0x23,0x13,0x13),(0x17,0x0b,0x0b),(0x0f,0x07,0x07),
-    (0xdb,0xc3,0xbb),(0xcb,0xb3,0xa7),(0xbf,0xa3,0x9b),(0xaf,0x97,0x8b),
-    (0xa3,0x87,0x7b),(0x97,0x7b,0x6f),(0x87,0x6f,0x5f),(0x7b,0x63,0x53),
-    (0x6b,0x57,0x47),(0x5f,0x4b,0x3b),(0x53,0x3f,0x33),(0x43,0x33,0x27),
-    (0x37,0x2b,0x1f),(0x27,0x1f,0x17),(0x1b,0x13,0x0f),(0x0f,0x0b,0x07),
-    (0x6f,0x83,0x7b),(0x67,0x7b,0x6f),(0x5f,0x73,0x67),(0x57,0x6b,0x5f),
-    (0x4f,0x63,0x57),(0x47,0x5b,0x4f),(0x3f,0x53,0x47),(0x37,0x4b,0x3f),
-    (0x2f,0x43,0x37),(0x2b,0x3b,0x2f),(0x23,0x33,0x27),(0x1f,0x2b,0x1f),
-    (0x17,0x23,0x17),(0x0f,0x1b,0x13),(0x0b,0x13,0x0b),(0x07,0x0b,0x07),
-    (0xff,0xf3,0x1b),(0xef,0xdf,0x17),(0xdb,0xcb,0x13),(0xcb,0xb7,0x0f),
-    (0xbb,0xa7,0x0f),(0xab,0x97,0x0b),(0x9b,0x83,0x07),(0x8b,0x73,0x07),
-    (0x7b,0x63,0x07),(0x6b,0x53,0x00),(0x5b,0x47,0x00),(0x4b,0x37,0x00),
-    (0x3b,0x2b,0x00),(0x2b,0x1f,0x00),(0x1b,0x0f,0x00),(0x0b,0x07,0x00),
-    (0x00,0x00,0xff),(0x0b,0x0b,0xef),(0x13,0x13,0xdf),(0x1b,0x1b,0xcf),
-    (0x23,0x23,0xbf),(0x2b,0x2b,0xaf),(0x2f,0x2f,0x9f),(0x2f,0x2f,0x8f),
-    (0x2f,0x2f,0x7f),(0x2f,0x2f,0x6f),(0x2f,0x2f,0x5f),(0x2b,0x2b,0x4f),
-    (0x23,0x23,0x3f),(0x1b,0x1b,0x2f),(0x13,0x13,0x1f),(0x0b,0x0b,0x0f),
-    (0x2b,0x00,0x00),(0x3b,0x00,0x00),(0x4b,0x07,0x00),(0x5f,0x07,0x00),
-    (0x6f,0x0f,0x00),(0x7f,0x17,0x07),(0x93,0x1f,0x07),(0xa3,0x27,0x0b),
-    (0xb7,0x33,0x0f),(0xc3,0x4b,0x1b),(0xcf,0x63,0x2b),(0xdb,0x7f,0x3b),
-    (0xe3,0x97,0x4f),(0xe7,0xab,0x5f),(0xef,0xbf,0x77),(0xf7,0xd3,0x8b),
-    (0xa7,0x7b,0x3b),(0xb7,0x9b,0x37),(0xc7,0xc3,0x37),(0xe7,0xe3,0x57),
-    (0x7f,0xbf,0xff),(0xab,0xe7,0xff),(0xd7,0xff,0xff),(0x67,0x00,0x00),
-    (0x8b,0x00,0x00),(0xb3,0x00,0x00),(0xd7,0x00,0x00),(0xff,0x00,0x00),
-    (0xff,0xf3,0x93),(0xff,0xf7,0xc7),(0xff,0xff,0xff),(0x9f,0x5b,0x53),
-)
+class Lump:
+    """Class for representing a lump.
+
+    A lump is a section of data that typically contains a sequence of data
+    structures.
+
+    Attributes:
+        offset: The offset of the lump entry from the start of the file.
+
+        length: The length of the lump entry.
+    """
+
+    format = '<2i'
+    size = struct.calcsize(format)
+
+    __slots__ = (
+        'offset',
+        'length'
+    )
+
+    def __init__(self, offset, length):
+        self.offset = offset
+        self.length = length
+
+    @classmethod
+    def write(cls, file, lump):
+        lump_data = struct.pack(
+            cls.format,
+            lump.offset,
+            lump.length
+        )
+
+        file.write(lump_data)
+
+    @classmethod
+    def read(cls, file):
+        lump_data = file.read(cls.size)
+        lump_struct = struct.unpack(cls.format, lump_data)
+
+        return Lump(*lump_struct)
+
+
+class Header:
+    """Class representing a Bsp file header
+
+    Attributes:
+        version: The file version. Should be 38.
+
+        _lumps: A sequence of fifteen Lump objects
+    """
+    format = f'<i{Lump.format[1:] * 15}'
+    size = struct.calcsize(format)
+
+    __slots__ = (
+        'version',
+        '_lumps'
+    )
+
+    def __init__(self,
+                 version,
+                 lumps):
+        self.version = version
+        self._lumps = lumps
+
+        if len(lumps) != 15:
+            raise Exception
+
+    @property
+    def entities(self):
+        return self._lumps[0]
+
+    @entities.setter
+    def entities(self, value):
+        self._lumps[0] = value
+
+    @property
+    def planes(self):
+        return self._lumps[1]
+
+    @planes.setter
+    def planes(self, value):
+        self._lumps[1] = value
+
+    @property
+    def miptextures(self):
+        return self._lumps[2]
+
+    @miptextures.setter
+    def miptextures(self, value):
+        self._lumps[2] = value
+
+    @property
+    def vertexes(self):
+        return self._lumps[3]
+
+    @vertexes.setter
+    def vertexes(self, value):
+        self._lumps[3] = value
+
+    @property
+    def visibilities(self):
+        return self._lumps[4]
+
+    @visibilities.setter
+    def visibilities(self, value):
+        self._lumps[4] = value
+
+    @property
+    def nodes(self):
+        return self._lumps[5]
+
+    @nodes.setter
+    def nodes(self, value):
+        self._lumps[5] = value
+
+    @property
+    def texture_infos(self):
+        return self._lumps[6]
+
+    @texture_infos.setter
+    def texture_infos(self, value):
+        self._lumps[6] = value
+
+    @property
+    def faces(self):
+        return self._lumps[7]
+
+    @faces.setter
+    def faces(self, value):
+        self._lumps[7] = value
+
+    @property
+    def lighting(self):
+        return self._lumps[8]
+
+    @lighting.setter
+    def lighting(self, value):
+        self._lumps[8] = value
+
+    @property
+    def clip_nodes(self):
+        return self._lumps[9]
+
+    @clip_nodes.setter
+    def clip_nodes(self, value):
+        self._lumps[9] = value
+
+    @property
+    def leafs(self):
+        return self._lumps[10]
+
+    @leafs.setter
+    def leafs(self, value):
+        self._lumps[10] = value
+
+    @property
+    def mark_surfaces(self):
+        return self._lumps[11]
+
+    @mark_surfaces.setter
+    def mark_surfaces(self, value):
+        self._lumps[11] = value
+
+    @property
+    def edges(self):
+        return self._lumps[12]
+
+    @edges.setter
+    def edges(self, value):
+        self._lumps[12] = value
+
+    @property
+    def surf_edges(self):
+        return self._lumps[13]
+
+    @surf_edges.setter
+    def surf_edges(self, value):
+        self._lumps[13] = value
+
+    @property
+    def models(self):
+        return self._lumps[14]
+
+    @models.setter
+    def models(self, value):
+        self._lumps[14] = value
+
+    @classmethod
+    def write(cls, file, header):
+        lump_values = []
+        for lump in header._lumps:
+            lump_values += lump.offset, lump.length
+
+        header_data = struct.pack(
+            cls.format,
+            header.version,
+            *lump_values
+        )
+
+        file.write(header_data)
+
+    @classmethod
+    def read(cls, file):
+        data = file.read(cls.size)
+        lumps_start = struct.calcsize('<i')
+
+        version_data = data[:lumps_start]
+        version_struct = struct.unpack('<i', version_data)
+        version = version_struct[0]
+
+        lumps_data = data[lumps_start:]
+        lumps = [Lump(*l) for l in struct.iter_unpack(Lump.format, lumps_data)]
+
+        return Header(version, lumps)
 
 
 class Plane:
@@ -226,10 +308,12 @@ class Plane:
 
     @classmethod
     def write(cls, file, plane):
-        plane_data = struct.pack(cls.format,
-                                 *plane.normal,
-                                 plane.distance,
-                                 plane.type)
+        plane_data = struct.pack(
+            cls.format,
+            *plane.normal,
+            plane.distance,
+            plane.type
+        )
 
         file.write(plane_data)
 
@@ -292,11 +376,13 @@ class Miptexture:
 
     @classmethod
     def write(cls, file, miptexture):
-        miptexture_data = struct.pack(cls.format,
-                                      miptexture.name.encode('ascii'),
-                                      miptexture.width,
-                                      miptexture.height,
-                                      *miptexture.offsets)
+        miptexture_data = struct.pack(
+            cls.format,
+            miptexture.name.encode('ascii'),
+            miptexture.width,
+            miptexture.height,
+            *miptexture.offsets
+        )
 
         pixels_size = miptexture.width * miptexture.height * 85 // 64
         pixels_format = '<%dB' % pixels_size
@@ -352,21 +438,16 @@ class Vertex:
         self.z = z
 
     def __getitem__(self, item):
-        if type(item) is int:
-            return [self.x, self.y, self.z][item]
-
-        elif type(item) is slice:
-            start = item.start or 0
-            stop = item.stop or 3
-
-            return [self.x, self.y, self.z][start:stop]
+        return (self.x, self.y, self.z)[item]
 
     @classmethod
     def write(cls, file, vertex):
-        vertex_data = struct.pack(cls.format,
-                                  vertex.x,
-                                  vertex.y,
-                                  vertex.z)
+        vertex_data = struct.pack(
+            cls.format,
+            vertex.x,
+            vertex.y,
+            vertex.z
+        )
 
         file.write(vertex_data)
 
@@ -441,13 +522,15 @@ class Node:
 
     @classmethod
     def write(cls, file, node):
-        node_data = struct.pack(cls.format,
-                                node.plane_number,
-                                *node.children,
-                                *node.bounding_box_min,
-                                *node.bounding_box_max,
-                                node.first_face,
-                                node.number_of_faces)
+        node_data = struct.pack(
+            cls.format,
+            node.plane_number,
+            *node.children,
+            *node.bounding_box_min,
+            *node.bounding_box_max,
+            node.first_face,
+            node.number_of_faces
+        )
 
         file.write(node_data)
 
@@ -509,13 +592,16 @@ class TextureInfo:
 
     @classmethod
     def write(cls, file, texture_info):
-        texture_info_data = struct.pack(cls.format,
-                                        *texture_info.s,
-                                        texture_info.s_offset,
-                                        *texture_info.t,
-                                        texture_info.t_offset,
-                                        texture_info.miptexture_number,
-                                        texture_info.flags)
+        texture_info_data = struct.pack(
+            cls.format,
+            *texture_info.s,
+            texture_info.s_offset,
+            *texture_info.t,
+            texture_info.t_offset,
+            texture_info.miptexture_number,
+            texture_info.flags
+        )
+
         file.write(texture_info_data)
 
     @classmethod
@@ -583,14 +669,16 @@ class Face:
 
     @classmethod
     def write(cls, file, plane):
-        face_data = struct.pack(cls.format,
-                                plane.plane_number,
-                                plane.side,
-                                plane.first_edge,
-                                plane.number_of_edges,
-                                plane.texture_info,
-                                *plane.styles,
-                                plane.light_offset)
+        face_data = struct.pack(
+            cls.format,
+            plane.plane_number,
+            plane.side,
+            plane.first_edge,
+            plane.number_of_edges,
+            plane.texture_info,
+            *plane.styles,
+            plane.light_offset
+        )
 
         file.write(face_data)
 
@@ -632,9 +720,11 @@ class ClipNode:
 
     @classmethod
     def write(cls, file, clip_node):
-        clip_node_data = struct.pack(cls.format,
-                                     clip_node.plane_number,
-                                     *clip_node.children)
+        clip_node_data = struct.pack(
+            cls.format,
+            clip_node.plane_number,
+            *clip_node.children
+        )
 
         file.write(clip_node_data)
 
@@ -722,14 +812,16 @@ class Leaf:
 
     @classmethod
     def write(cls, file, leaf):
-        leaf_data = struct.pack(cls.format,
-                                leaf.contents,
-                                leaf.visibilitiy_offset,
-                                *leaf.bounding_box_min,
-                                *leaf.bounding_box_max,
-                                leaf.first_mark_surface,
-                                leaf.number_of_marked_surfaces,
-                                *leaf.ambient_level)
+        leaf_data = struct.pack(
+            cls.format,
+            leaf.contents,
+            leaf.visibilitiy_offset,
+            *leaf.bounding_box_min,
+            *leaf.bounding_box_max,
+            leaf.first_mark_surface,
+            leaf.number_of_marked_surfaces,
+            *leaf.ambient_level
+        )
 
         file.write(leaf_data)
 
@@ -760,15 +852,11 @@ class Edge:
         self.vertexes = vertex_0, vertex_1
 
     def __getitem__(self, item):
-        if item > 1:
-            raise IndexError('list index of out of range')
-
         return self.vertexes[item]
 
     @classmethod
     def write(cls, file, edge):
-        edge_data = struct.pack(cls.format,
-                                *edge.vertexes)
+        edge_data = struct.pack(cls.format, *edge.vertexes)
 
         file.write(edge_data)
 
@@ -844,14 +932,16 @@ class Model:
 
     @classmethod
     def write(cls, file, model):
-        model_data = struct.pack(cls.format,
-                                 *model.bounding_box_min,
-                                 *model.bounding_box_max,
-                                 *model.origin,
-                                 *model.head_node,
-                                 model.visleafs,
-                                 model.first_face,
-                                 model.number_of_faces)
+        model_data = struct.pack(
+            cls.format,
+            *model.bounding_box_min,
+            *model.bounding_box_max,
+            *model.origin,
+            *model.head_node,
+            model.visleafs,
+            model.first_face,
+            model.number_of_faces
+        )
 
         file.write(model_data)
 
@@ -861,6 +951,113 @@ class Model:
         model_struct = struct.unpack(cls.format, model_data)
 
         return Model(*model_struct)
+
+
+class _Entities:
+    """Helper class for working with the entities lump"""
+    @staticmethod
+    def write(file, entities):
+        entities_data = entities.encode('cp437')
+        file.write(entities_data)
+
+    @staticmethod
+    def read(file, size=-1):
+        entities_data = file.read(size)
+        return entities_data.decode('cp437').strip('\x00')
+
+
+class _Miptextures:
+    """Helper class for working with the miptextures lump"""
+    @staticmethod
+    def write(file, miptextures):
+        offset = file.tell()
+        number_of_miptextures = len(miptextures)
+        file.write(struct.pack('<i', number_of_miptextures))
+        offset_format = f'<{number_of_miptextures}i'
+
+        # Stub out directory info
+        miptexture_offsets = [0] * number_of_miptextures
+        file.write(struct.pack(offset_format, *miptexture_offsets))
+
+        for i, miptex in enumerate(miptextures):
+            if not miptex:
+                miptexture_offsets[i] = -1
+                continue
+
+            miptexture_offsets[i] = file.tell() - offset
+            Miptexture.write(file, miptex)
+
+        # Write directory info
+        end_offset = file.tell()
+        file.seek(offset + 4)
+        file.write(struct.pack(offset_format, *miptexture_offsets))
+        file.seek(end_offset)
+
+    @staticmethod
+    def read(file, size=-1):
+        result = []
+
+        miptextures_offset = file.tell()
+        number_of_miptextures = struct.unpack('<i', file.read(4))[0]
+        offset_format = f'<{number_of_miptextures}i'
+        offset_data = file.read(4 * number_of_miptextures)
+        miptexture_offsets = struct.unpack(offset_format, offset_data)
+
+        for miptexture_id in range(number_of_miptextures):
+            if miptexture_offsets[miptexture_id] == -1:
+                result.append(None)
+                continue
+
+            offset = miptextures_offset + miptexture_offsets[miptexture_id]
+            file.seek(offset)
+
+            result.append(Miptexture.read(file))
+
+        return result
+
+
+class _Visibilities:
+    """Helper class for working with the visibilities lump"""
+    @staticmethod
+    def write(file, structures):
+        file.write(structures)
+
+    @staticmethod
+    def read(file, size=-1):
+        return file.read(size)
+
+
+class _Lighting:
+    """Helper class for working with the lighting lump"""
+    @staticmethod
+    def write(file, lighting):
+        file.write(lighting)
+
+    @staticmethod
+    def read(file, size=-1):
+        return file.read(size)
+
+
+class _MarkSurfaces:
+    """Helper class for working with the mark surfaces lump"""
+    @staticmethod
+    def write(file, surfaces):
+        file.write(surfaces)
+
+    @staticmethod
+    def read(file, size=-1):
+        return file.read(size)
+
+
+class _SurfEdges:
+    """Helper class for working with the surfedges lump"""
+    @staticmethod
+    def write(file, surfedges):
+        file.write(surfedges)
+
+    @staticmethod
+    def read(file, size=-1):
+        return file.read(size)
 
 
 class Mesh:
@@ -974,11 +1171,24 @@ class Bsp(ReadWriteFile):
         mode: The file mode for the file-like object.
     """
 
+    class factory:
+        Header = Header
+        Plane = Plane
+        Miptexture = Miptexture
+        Vertex = Vertex
+        Node = Node
+        TextureInfo = TextureInfo
+        Face = Face
+        ClipNode = ClipNode
+        Leaf = Leaf
+        Edge = Edge
+        Model = Model
+
     def __init__(self):
         super().__init__()
 
-        self.version = header_version
-        self.entities = ""
+        self.version = VERSION
+        self.entities = ''
         self.planes = []
         self.miptextures = []
         self.vertexes = []
@@ -994,283 +1204,102 @@ class Bsp(ReadWriteFile):
         self.surf_edges = []
         self.models = []
 
-    Plane = Plane
-    Miptexture = Miptexture
-    Vertex = Vertex
-    Node = Node
-    TextureInfo = TextureInfo
-    Face = Face
-    ClipNode = ClipNode
-    Leaf = Leaf
-    Edge = Edge
-    Model = Model
-
     @classmethod
     def _read_file(cls, file, mode):
-        Bsp = cls.Bsp
+        def _read_iter_lump(lump, class_):
+            """Read iteratively from file unpacking according to format
+            class attribute on the class_ object"""
+            offset, size = lump.offset, lump.length
+            file.seek(offset)
 
-        bsp = Bsp()
+            return [class_(*s) for s in struct.iter_unpack(class_.format, file.read(size))]
+
+        def _read_lump(lump, reader):
+            """Read from file using the provided reader object"""
+            file.seek(lump.offset)
+            return reader.read(file, lump.length)
+
+        bsp = cls()
         bsp.mode = mode
         bsp.fp = file
 
+        factory = bsp.factory
+
         # Header
-        bsp_data = file.read(header_size)
-        bsp_struct = struct.unpack(header_format, bsp_data)
+        header = factory.Header.read(file)
+        bsp.version = header.version
 
-        bsp.version = bsp_struct[_HEADER_VERSION]
-
-        # Entities
-        entities_offset = bsp_struct[_HEADER_ENTITIES_OFFSET]
-        entities_size = bsp_struct[_HEADER_ENTITIES_SIZE]
-
-        file.seek(entities_offset)
-        entities_data = file.read(entities_size)
-        entities = struct.unpack('<{}s'.format(entities_size), entities_data)[0].decode('cp437').strip('\x00')
-        bsp.entities = entities
-
-        # Planes
-        planes_entry = bsp_struct[_HEADER_PLANES_OFFSET], bsp_struct[_HEADER_PLANES_SIZE]
-        bsp.planes = Bsp._read_chunk(file, planes_entry, bsp.Plane)
-
-        # Miptextures
-        miptextures_offset = bsp_struct[_HEADER_MIPTEXTURES_OFFSET]
-
-        # Miptexture directory
-        file.seek(miptextures_offset)
-        number_of_miptextures = struct.unpack('<i', file.read(4))[0]
-        offset_format = '<%di' % number_of_miptextures
-        offset_data = file.read(4 * number_of_miptextures)
-        miptexture_offsets = struct.unpack(offset_format, offset_data)
-
-        for miptexture_id in range(number_of_miptextures):
-            if miptexture_offsets[miptexture_id] == -1:
-                bsp.miptextures.append(None)
-                continue
-
-            offset = miptextures_offset + miptexture_offsets[miptexture_id]
-            file.seek(offset)
-
-            bsp.miptextures.append(bsp.Miptexture.read(file))
-
-        # Vertexes
-        vertexes_entry = bsp_struct[_HEADER_VERTEXES_OFFSET], bsp_struct[_HEADER_VERTEXES_SIZE]
-        bsp.vertexes = Bsp._read_chunk(file, vertexes_entry, bsp.Vertex)
-
-        # Visibilities
-        visibilities_offset = bsp_struct[_HEADER_VISIBILITIES_OFFSET]
-        visibilities_size = bsp_struct[_HEADER_VISIBILITIES_SIZE]
-        visibility_format = _calculate_visibility_format(visibilities_size)
-
-        file.seek(visibilities_offset)
-        visibilities_data = file.read(visibilities_size)
-        bsp.visibilities = struct.unpack(visibility_format, visibilities_data)
-
-        # Nodes
-        nodes_entry = bsp_struct[_HEADER_NODES_OFFSET], bsp_struct[_HEADER_NODES_SIZE]
-        bsp.nodes = Bsp._read_chunk(file, nodes_entry, bsp.Node)
-
-        # Texture Infos
-        texture_infos_entry = bsp_struct[_HEADER_TEXTURE_INFOS_OFFSET], bsp_struct[_HEADER_TEXTURE_INFOS_SIZE]
-        bsp.texture_infos = Bsp._read_chunk(file, texture_infos_entry, bsp.TextureInfo)
-
-        # Faces
-        faces_entry = bsp_struct[_HEADER_FACES_OFFSET], bsp_struct[_HEADER_FACES_SIZE]
-        bsp.faces = Bsp._read_chunk(file, faces_entry, bsp.Face)
-
-        # Lighting
-        lighting_offset = bsp_struct[_HEADER_LIGHTING_OFFSET]
-        lighting_size = bsp_struct[_HEADER_LIGHTING_SIZE]
-        lighting_format = _calculate_lighting_format(lighting_size)
-
-        file.seek(lighting_offset)
-        lighting_data = file.read(lighting_size)
-        bsp.lighting = struct.unpack(lighting_format, lighting_data)
-
-        # Clip Nodes
-        clip_nodes_entry = bsp_struct[_HEADER_CLIP_NODES_OFFSET], bsp_struct[_HEADER_CLIP_NODES_SIZE]
-        bsp.clip_nodes = Bsp._read_chunk(file, clip_nodes_entry, bsp.ClipNode)
-
-        # Leafs
-        leafs_entry = bsp_struct[_HEADER_LEAFS_OFFSET], bsp_struct[_HEADER_LEAFS_SIZE]
-        bsp.leafs = Bsp._read_chunk(file, leafs_entry, bsp.Leaf)
-
-        # Mark Surfaces
-        mark_surfaces_offset = bsp_struct[_HEADER_MARK_SURFACES_OFFSET]
-        mark_surfaces_size = bsp_struct[_HEADER_MARK_SURFACES_SIZE]
-        mark_surfaces_format = _calculate_mark_surface_format(mark_surfaces_size)
-
-        file.seek(mark_surfaces_offset)
-        mark_surfaces_data = file.read(mark_surfaces_size)
-        bsp.mark_surfaces = struct.unpack(mark_surfaces_format,
-                                          mark_surfaces_data)
-
-        # Edges
-        edges_entry = bsp_struct[_HEADER_EDGES_OFFSET], bsp_struct[_HEADER_EDGES_SIZE]
-        bsp.edges = Bsp._read_chunk(file, edges_entry, bsp.Edge)
-
-        # Surf Edges
-        surf_edges_offset = bsp_struct[_HEADER_SURF_EDGES_OFFSET]
-        surf_edges_size = bsp_struct[_HEADER_SURF_EDGES_SIZE]
-        surf_edges_format = _calculate_surf_edge_format(surf_edges_size)
-
-        file.seek(surf_edges_offset)
-        surf_edges_data = file.read(surf_edges_size)
-        bsp.surf_edges = struct.unpack(surf_edges_format, surf_edges_data)
-
-        # Models
-        models_entry = bsp_struct[_HEADER_MODELS_OFFSET], bsp_struct[_HEADER_MODELS_SIZE]
-        bsp.models = Bsp._read_chunk(file, models_entry, bsp.Model)
+        bsp.entities = _read_lump(header.entities, _Entities)
+        bsp.planes = _read_iter_lump(header.planes, factory.Plane)
+        bsp.miptextures = _read_lump(header.miptextures, _Miptextures)
+        bsp.vertexes = _read_iter_lump(header.vertexes, factory.Vertex)
+        bsp.visibilities = _read_lump(header.visibilities, _Visibilities)
+        bsp.nodes = _read_iter_lump(header.nodes, factory.Node)
+        bsp.texture_infos = _read_iter_lump(header.texture_infos, factory.TextureInfo)
+        bsp.faces = _read_iter_lump(header.faces, factory.Face)
+        bsp.lighting = _read_lump(header.lighting, _Lighting)
+        bsp.clip_nodes = _read_iter_lump(header.clip_nodes, factory.ClipNode)
+        bsp.leafs = _read_iter_lump(header.leafs, factory.Leaf)
+        bsp.mark_surfaces = _read_lump(header.mark_surfaces, _MarkSurfaces)
+        bsp.edges = _read_iter_lump(header.edges, factory.Edge)
+        bsp.surf_edges = _read_lump(header.surf_edges, _SurfEdges)
+        bsp.models = _read_iter_lump(header.models, factory.Model)
 
         return bsp
 
     @classmethod
-    def _read_chunk(cls, file, chunk_entry, chunk_class):
-        chunk_offset, chunk_size = chunk_entry
-        file.seek(chunk_offset)
-
-        return [chunk_class(*s) for s in struct.iter_unpack(chunk_class.format, file.read(chunk_size))]
-
-    @classmethod
     def _write_file(cls, file, bsp):
-        Bsp = cls.Bsp
+        factory = cls.factory
 
-        # Stub out header info
-        header_data = struct.pack(header_format,
-                                  bsp.version,
-                                  *([0]*30))
+        def _write_iter_lump(data):
+            offset = file.tell()
 
-        file.write(header_data)
+            if data:
+                class_ = data[0].__class__
 
-        # Entities
-        entities_offset = file.tell()
-        file.write(str.encode(bsp.entities))
-        entities_size = file.tell() - entities_offset
+                for datum in data:
+                    class_.write(file, datum)
 
-        # Planes
-        planes_entry = Bsp._write_chunk(file, bsp.planes)
+            length = file.tell() - offset
 
-        # Miptextures
-        miptextures_offset = file.tell()
+            return Lump(offset, length)
 
-        # Miptexture directory
-        number_of_miptextures = len(bsp.miptextures)
-        file.write(struct.pack('<i', number_of_miptextures))
-        offset_format = '<%di' % number_of_miptextures
+        def _write_lump(data, writer):
+            """Write to file using the provided writer object"""
+            offset = file.tell()
+            writer.write(file, data)
+            length = file.tell() - offset
 
-        # Stub out directory info
-        miptexture_offsets = [0] * number_of_miptextures
-        file.write(struct.pack(offset_format, *miptexture_offsets))
+            return Lump(offset, length)
 
-        for i, miptex in enumerate(bsp.miptextures):
-            if not miptex:
-                miptexture_offsets[i] = -1
-                continue
+        start_of_file = file.tell()
 
-            miptexture_offsets[i] = file.tell() - miptextures_offset
-            Miptexture.write(file, miptex)
+        lumps = [Lump(0, 0) for _ in range(15)]
+        header = factory.Header(bsp.version, lumps)
+        factory.Header.write(file, header)
 
-        # Write directory info
-        vertexes_offset = file.tell()
-        file.seek(miptextures_offset + 4)
-        file.write(struct.pack(offset_format, *miptexture_offsets))
-        file.seek(vertexes_offset)
-
-        miptextures_size = file.tell() - miptextures_offset
-
-        # Vertexes
-        vertexes_entry = Bsp._write_chunk(file, bsp.vertexes)
-
-        # Visibilities
-        visibilities_offset = file.tell()
-        visibilities_format = _calculate_visibility_format(len(bsp.visibilities))
-        file.write(struct.pack(visibilities_format, *bsp.visibilities))
-        visibilities_size = file.tell() - visibilities_offset
-
-        # Nodes
-        nodes_entry = Bsp._write_chunk(file, bsp.nodes)
-
-        # Texture Infos
-        texture_infos_entry = Bsp._write_chunk(file, bsp.texture_infos)
-
-        # Faces
-        faces_entry = Bsp._write_chunk(file, bsp.faces)
-
-        # Lighting
-        lighting_offset = file.tell()
-        lighting_format = _calculate_lighting_format(len(bsp.lighting))
-        file.write(struct.pack(lighting_format, *bsp.lighting))
-        lighting_size = file.tell() - lighting_offset
-
-        # Clip Nodes
-        clip_nodes_entry = Bsp._write_chunk(file, bsp.clip_nodes)
-
-        # Leafs
-        leafs_entry = Bsp._write_chunk(file, bsp.leafs)
-
-        # Mark Surfaces
-        mark_surfaces_offset = file.tell()
-        mark_surface_format = _calculate_mark_surface_format(len(bsp.mark_surfaces))
-        file.write(struct.pack(mark_surface_format, *bsp.mark_surfaces))
-        mark_surfaces_size = file.tell() - mark_surfaces_offset
-
-        # Edges
-        edges_entry = Bsp._write_chunk(file, bsp.edges)
-
-        # Surf Edges
-        surf_edges_offset = file.tell()
-
-        number_of_surf_edges = len(bsp.surf_edges)
-        surf_edge_format = _calculate_surf_edge_format(number_of_surf_edges * 4)
-        file.write(struct.pack(surf_edge_format, *bsp.surf_edges))
-        surf_edges_size = file.tell() - surf_edges_offset
-
-        # Models
-        models_entry = Bsp._write_chunk(file, bsp.models)
+        header.entities = _write_lump(bsp.entities, _Entities)
+        header.planes = _write_iter_lump(bsp.planes)
+        header.miptextures = _write_lump(bsp.miptextures, _Miptextures)
+        header.vertexes = _write_iter_lump(bsp.vertexes)
+        header.visibilities = _write_lump(bsp.visibilities, _Visibilities)
+        header.nodes = _write_iter_lump(bsp.nodes)
+        header.texture_infos = _write_iter_lump(bsp.texture_infos)
+        header.faces = _write_iter_lump(bsp.faces)
+        header.lighting = _write_lump(bsp.lighting, _Lighting)
+        header.clip_nodes = _write_iter_lump(bsp.clip_nodes)
+        header.leafs = _write_iter_lump(bsp.leafs)
+        header.mark_surfaces = _write_lump(bsp.mark_surfaces, _MarkSurfaces)
+        header.edges = _write_iter_lump(bsp.edges)
+        header.surf_edges = _write_lump(bsp.surf_edges, _SurfEdges)
+        header.models = _write_iter_lump(bsp.models)
 
         end_of_file = file.tell()
 
-        # Write header info
-        file.seek(0)
-        header_data = struct.pack(header_format,
-                                  bsp.version,
-                                  entities_offset,
-                                  entities_size,
-                                  *planes_entry,
-                                  miptextures_offset,
-                                  miptextures_size,
-                                  *vertexes_entry,
-                                  visibilities_offset,
-                                  visibilities_size,
-                                  *nodes_entry,
-                                  *texture_infos_entry,
-                                  *faces_entry,
-                                  lighting_offset,
-                                  lighting_size,
-                                  *clip_nodes_entry,
-                                  *leafs_entry,
-                                  mark_surfaces_offset,
-                                  mark_surfaces_size,
-                                  *edges_entry,
-                                  surf_edges_offset,
-                                  surf_edges_size,
-                                  *models_entry)
-
-        file.write(header_data)
+        # Finalize header
+        file.seek(start_of_file)
+        factory.Header.write(file, header)
         file.seek(end_of_file)
-
-    @classmethod
-    def _write_chunk(cls, file, data):
-        offset = file.tell()
-
-        if data:
-            Class = data[0].__class__
-
-            for datum in data:
-                Class.write(file, datum)
-
-        size = file.tell() - offset
-
-        return offset, size
 
     def mesh(self, model=0):
         """Returns a Mesh object
@@ -1372,7 +1401,7 @@ class Bsp(ReadWriteFile):
     def meshes(self):
         return [self.mesh(i) for i in range(len(self.models))]
 
-    def image(self, index=0, palette=default_palette):
+    def image(self, index=0, palette=quake.palette):
         """Returns an Image object.
 
         Args:
@@ -1415,6 +1444,3 @@ class Bsp(ReadWriteFile):
 
     def images(self):
         return [self.image(i) for i in range(len(self.miptextures))]
-
-
-Bsp.Bsp = Bsp

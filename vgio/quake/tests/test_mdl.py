@@ -51,10 +51,7 @@ class TestBspReadWrite(TestCase):
         self.assertEqual(s0.pixels, s1.pixels, 'Pixels should be equal')
 
     def test_st_vertex(self):
-        s0 = mdl.StVertex()
-        s0.on_seam = 0
-        s0.s = 0
-        s0.t = 16
+        s0 = mdl.StVertex(0, 0, 16)
 
         mdl.StVertex.write(self.buff, s0)
         self.buff.seek(0)
@@ -66,9 +63,7 @@ class TestBspReadWrite(TestCase):
         self.assertEqual(s0.t, s1.t, 'T coordinate should be equal')
 
     def test_triangle(self):
-        t0 = mdl.Triangle()
-        t0.faces_front = 0
-        t0.vertices = 0, 1, 2
+        t0 = mdl.Triangle(0, 0, 1, 2)
 
         mdl.Triangle.write(self.buff, t0)
         self.buff.seek(0)
@@ -76,14 +71,10 @@ class TestBspReadWrite(TestCase):
         t1 = mdl.Triangle.read(self.buff)
 
         self.assertEqual(t0.faces_front, t1.faces_front, 'Faces front should be equal')
-        self.assertEqual(t0.vertices, t1.vertices, 'Vertices should be equal')
+        self.assertEqual(t0.vertexes, t1.vertexes, 'Vertices should be equal')
 
     def test_tri_vertex(self):
-        t0 = mdl.TriVertex()
-        t0.x = 0
-        t0.y = 16
-        t0.z = 255
-        t0.light_normal_index = 0
+        t0 = mdl.TriVertex(0, 16, 255, 0)
 
         mdl.TriVertex.write(self.buff, t0)
         self.buff.seek(0)
@@ -99,16 +90,12 @@ class TestBspReadWrite(TestCase):
         f0 = mdl.Frame()
         f0.type = mdl.SINGLE
 
-        tv0 = mdl.TriVertex()
-        tv0.x = 0
-        tv0.y = 16
-        tv0.z = 255
-        tv0.light_normal_index = 1
+        tv0 = mdl.TriVertex(0, 16, 255, 1)
 
         f0.bounding_box_min = tv0
         f0.bounding_box_max = tv0
         f0.name = 'metal_0'
-        f0.vertices = [tv0, tv0]
+        f0.vertexes = [tv0, tv0]
 
         mdl.Frame.write(self.buff, f0, 2)
         self.buff.seek(0)
@@ -123,11 +110,7 @@ class TestBspReadWrite(TestCase):
         f0.type = mdl.GROUP
         f0.number_of_frames = 1
 
-        tv0 = mdl.TriVertex()
-        tv0.x = 0
-        tv0.y = 16
-        tv0.z = 255
-        tv0.light_normal_index = 1
+        tv0 = mdl.TriVertex(0, 16, 255, 1)
 
         f0.bounding_box_min = tv0
         f0.bounding_box_max = tv0
@@ -138,7 +121,7 @@ class TestBspReadWrite(TestCase):
         fr.bounding_box_min = tv0
         fr.bounding_box_max = tv0
         fr.name = 'metal_0'
-        fr.vertices = tv0, tv0
+        fr.vertexes = tv0, tv0
 
         f0.frames = fr,
 
@@ -169,7 +152,7 @@ class TestBspReadWrite(TestCase):
         self.assertEqual(m0.number_of_skins, m1.number_of_skins, 'Number of skins should be equal')
         self.assertEqual(m0.skin_width, m1.skin_width, 'Skin width should be equal')
         self.assertEqual(m0.skin_height, m1.skin_height, 'Skin height should be equal')
-        self.assertEqual(m0.number_of_vertices, m1.number_of_vertices, 'Number of vertices should be equal')
+        self.assertEqual(m0.number_of_vertexes, m1.number_of_vertexes, 'Number of vertexes should be equal')
         self.assertEqual(m0.number_of_triangles, m1.number_of_triangles, 'Number of triangles should be equal')
         self.assertEqual(m0.number_of_frames, m1.number_of_frames, 'Number of frames should be equal')
         self.assertEqual(m0.synctype, m1.synctype, 'Sync type should be equal')

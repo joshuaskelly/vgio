@@ -63,9 +63,11 @@ class Header:
 
     @classmethod
     def write(cls, file, header):
-        header_data = struct.pack(cls.format,
-                                  header.signature,
-                                  header.size_of_directory)
+        header_data = struct.pack(
+            cls.format,
+            header.signature,
+            header.size_of_directory
+        )
 
         file.write(header_data)
 

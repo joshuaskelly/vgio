@@ -37,8 +37,8 @@ class TestBspReadWrite(TestCase):
         self.assertEqual(h0.version, h0.version, 'Versions should be equal')
 
         for i in range(19):
-            l0 = h0.lumps[i]
-            l1 = h1.lumps[i]
+            l0 = h0._lumps[i]
+            l1 = h1._lumps[i]
 
             self.assertEqual(l0.offset, l1.offset, 'Offsets should be equal')
             self.assertEqual(l0.length, l1.length, 'Lengths should be equal')

@@ -17,6 +17,10 @@ from vgio._core import ReadWriteFile
 __all__ = ['BadSp2File', 'is_sp2file', 'Sp2']
 
 
+VERSION = 2
+IDENTITY = b'IDS2'
+
+
 class BadSp2File(Exception):
     pass
 
@@ -26,7 +30,7 @@ def _check_sp2file(fp):
     data = fp.read(struct.calcsize('<4si'))
     identity, version = struct.unpack('<4si', data)
 
-    return identity == b'IDS2' and version == 2
+    return identity == IDENTITY and version == VERSION
 
 
 def is_sp2file(filename):
@@ -75,10 +79,12 @@ class Header:
 
     @classmethod
     def write(cls, file, header):
-        header_data = struct.pack(cls.format,
-                                  header.identity.encode('ascii'),
-                                  header.version,
-                                  header.number_of_frames)
+        header_data = struct.pack(
+            cls.format,
+            header.identity.encode('ascii'),
+            header.version,
+            header.number_of_frames
+        )
 
         file.write(header_data)
 
@@ -127,11 +133,13 @@ class SpriteFrame:
 
     @classmethod
     def write(cls, file, frame):
-        frame_data = struct.pack(cls.format,
-                                 frame.width,
-                                 frame.height,
-                                 *frame.origin,
-                                 frame.name.encode('ascii'))
+        frame_data = struct.pack(
+            cls.format,
+            frame.width,
+            frame.height,
+            *frame.origin,
+            frame.name.encode('ascii')
+        )
 
         file.write(frame_data)
 
@@ -166,8 +174,8 @@ class Sp2(ReadWriteFile):
     def __init__(self):
         super().__init__()
 
-        self.identity = b'IDS2'
-        self.version = 2
+        self.identity = IDENTITY
+        self.version = VERSION
         self.number_of_frames = 0
 
         self.header = None
@@ -181,10 +189,10 @@ class Sp2(ReadWriteFile):
 
         header = sp2.factory.Header.read(file)
 
-        if header.identity != b'IDS2':
+        if header.identity != IDENTITY:
             raise BadSp2File('Bad identity: {}'.format(header.identity))
 
-        if header.version != 2:
+        if header.version != VERSION:
             raise BadSp2File('Bad version number: {}'.format(header.version))
 
         sp2.header = header

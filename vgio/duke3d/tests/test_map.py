@@ -9,29 +9,30 @@ class TestMapReadWrite(TestCase):
         self.assertFalse(map.is_mapfile('./test_data/test.art'))
 
     def test_sector(self):
-        s0 = map.Sector()
-        s0.wall_pointer = 1
-        s0.wall_number = 2
-        s0.ceiling_z = 3
-        s0.floor_z = 4
-        s0.ceiling_stat = 5
-        s0.floor_stat = 6
-        s0.ceiling_picnum = 7
-        s0.ceiling_heinum = 8
-        s0.ceiling_shade = 9
-        s0.ceiling_palette = 10
-        s0.ceiling_x_panning = 11
-        s0.ceiling_y_panning = 12
-        s0.floor_picnum = 13
-        s0.floor_heinum = 14
-        s0.floor_shade = 15
-        s0.floor_palette = 16
-        s0.floor_x_panning = 17
-        s0.floor_y_panning = 18
-        s0.visibility = 19
-        s0.lotag = 20
-        s0.hitag = 21
-        s0.extra = 22
+        s0 = map.Sector(
+            wall_pointer=1,
+            wall_number=2,
+            ceiling_z=3,
+            floor_z=4,
+            ceiling_stat=5,
+            floor_stat=6,
+            ceiling_picnum=7,
+            ceiling_heinum=8,
+            ceiling_shade=9,
+            ceiling_palette=10,
+            ceiling_x_panning=11,
+            ceiling_y_panning=12,
+            floor_picnum=13,
+            floor_heinum=14,
+            floor_shade=15,
+            floor_palette=16,
+            floor_x_panning=17,
+            floor_y_panning=18,
+            visibility=19,
+            lotag=20,
+            hitag=21,
+            extra=22
+        )
 
         map.Sector.write(self.buff, s0)
         self.buff.seek(0)
@@ -62,24 +63,25 @@ class TestMapReadWrite(TestCase):
         self.assertEqual(s0.extra, s1.extra, 'Extra values should be equal')
 
     def test_wall(self):
-        w0 = map.Wall()
-        w0.x = 0
-        w0.y = 1
-        w0.point2 = 2
-        w0.next_wall = -1
-        w0.next_sector = 4
-        w0.cstat = 5
-        w0.picnum = 6
-        w0.over_picnum = 7
-        w0.shade = 8
-        w0.palette = 9
-        w0.x_repeat = 10
-        w0.y_repeat = 11
-        w0.x_panning = 12
-        w0.y_panning = 13
-        w0.lotag = 14
-        w0.hitag = 15
-        w0.extra = 16
+        w0 = map.Wall(
+            x=0,
+            y=1,
+            point2=2,
+            next_wall=-1,
+            next_sector=4,
+            cstat=5,
+            picnum=6,
+            over_picnum=7,
+            shade=8,
+            palette=9,
+            x_repeat=10,
+            y_repeat=11,
+            x_panning=12,
+            y_panning=13,
+            lotag=14,
+            hitag=15,
+            extra=16
+        )
 
         map.Wall.write(self.buff, w0)
         self.buff.seek(0)
@@ -104,29 +106,30 @@ class TestMapReadWrite(TestCase):
         self.assertEqual(w0.extra, w1.extra, 'Extra values should be equal')
 
     def test_sprite(self):
-        s0 = map.Sprite()
-        s0.x = 0
-        s0.y = 1
-        s0.z = 2
-        s0.cstat = 3
-        s0.picnum = 4
-        s0.shade = 5
-        s0.palette = 6
-        s0.clip_distance = 7
-        s0.x_repeat = 8
-        s0.y_repeat = 9
-        s0.x_offset = 10
-        s0.y_offset = 11
-        s0.sector_number = 12
-        s0.status_number = 13
-        s0.angle = 14
-        s0.owner = 15
-        s0.x_velocity = 16
-        s0.y_velocity = 17
-        s0.z_velocity = 18
-        s0.lotag = 19
-        s0.hitag = 20
-        s0.extra = 21
+        s0 = map.Sprite(
+            x=0,
+            y=1,
+            z=2,
+            cstat=3,
+            picnum=4,
+            shade=5,
+            palette=6,
+            clip_distance=7,
+            x_repeat=8,
+            y_repeat=9,
+            x_offset=10,
+            y_offset=11,
+            sector_number=12,
+            status_number=13,
+            angle=14,
+            owner=15,
+            x_velocity=16,
+            y_velocity=17,
+            z_velocity=18,
+            lotag=19,
+            hitag=20,
+            extra=21
+        )
 
         map.Sprite.write(self.buff, s0)
         self.buff.seek(0)

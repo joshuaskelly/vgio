@@ -16,6 +16,9 @@ from vgio._core import ArchiveFile, _ArchiveWriteFile
 __all__ = ['BadGrpFile', 'is_grpfile', 'GrpInfo', 'GrpFile']
 
 
+IDENTITY = b'KenSilverman'
+
+
 class BadGrpFile(Exception):
     pass
 
@@ -24,7 +27,7 @@ def _check_grpfile(fp):
     fp.seek(0)
     data = fp.read(struct.calcsize('<12s'))
 
-    return data == b'KenSilverman'
+    return data == IDENTITY
 
 
 def is_grpfile(filename):
@@ -114,7 +117,10 @@ class GrpInfo:
         'file_size'
     )
 
-    def __init__(self, filename, file_offset=0, file_size=0):
+    def __init__(self,
+                 filename,
+                 file_offset=0,
+                 file_size=0):
         self.filename = filename
         self.file_offset = file_offset
         self.file_size = file_size
@@ -173,7 +179,7 @@ class GrpFile(ArchiveFile):
         self.fp.seek(0)
         header = Header.read(self.fp)
 
-        if header.signature != b'KenSilverman':
+        if header.signature != IDENTITY:
             raise BadGrpFile(f'Bad magic number: {header.signature}')
 
         size_of_directory = header.number_of_entries * Entry.size
@@ -194,7 +200,7 @@ class GrpFile(ArchiveFile):
     def _write_directory(self):
         self.fp.seek(0)
 
-        header = Header(b'KenSilverman', len(self.file_list))
+        header = Header(IDENTITY, len(self.file_list))
         Header.write(self.fp, header)
 
         for info in self.file_list:

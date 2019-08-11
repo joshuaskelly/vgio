@@ -73,7 +73,7 @@ class TestSprReadWrite(TestCase):
 
         s1 = spr.Spr.open(self.buff)
 
-        self.assertEqual(s0.identifier, s1.identifier, 'Identifier should be equal')
+        self.assertEqual(s0.identity, s1.identity, 'Identifier should be equal')
         self.assertEqual(s0.version, s1.version, 'Version numbers should be equal')
         self.assertEqual(s0.type, s1.type, 'Types should be equal')
         self.assertEqual(s0.bounding_radius, s1.bounding_radius, 'Bounding radii should be equal')

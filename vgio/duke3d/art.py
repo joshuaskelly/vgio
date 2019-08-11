@@ -18,6 +18,9 @@ from vgio._core import ArchiveFile, _ArchiveWriteFile
 __all__ = ['BadArtFile', 'is_artfile', 'ArtInfo', 'ArtFile']
 
 
+VERSION = 1
+
+
 class BadArtFile(Exception):
     pass
 
@@ -96,7 +99,11 @@ class ArtInfo:
         'file_size'
     )
 
-    def __init__(self, tile_index, tile_dimensions=(0, 0), file_offset=0, file_size=0):
+    def __init__(self,
+                 tile_index,
+                 tile_dimensions=(0, 0),
+                 file_offset=0,
+                 file_size=0):
         self.tile_index = tile_index
         self.tile_dimensions = tile_dimensions
         self.picanim = 0
@@ -144,7 +151,7 @@ class ArtFile(ArchiveFile):
         self.end_of_data = 0
 
         self.data_buffer = io.BytesIO()
-        self.version = 1
+        self.version = VERSION
         self.number_of_tiles = 0
         self.local_tile_start = 0
         self.local_tile_end = -1
@@ -159,7 +166,7 @@ class ArtFile(ArchiveFile):
         self.fp.seek(0)
         header = Header.read(self.fp)
 
-        if header.version != 1:
+        if header.version != VERSION:
             raise BadArtFile(f'Bad version number: {header.version}')
 
         self.local_tile_start = header.local_tiles_start_id

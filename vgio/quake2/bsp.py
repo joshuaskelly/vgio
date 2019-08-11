@@ -21,6 +21,10 @@ from vgio._core import ReadWriteFile
 __all__ = ['BadBspFile', 'is_bspfile', 'Bsp']
 
 
+VERSION = 38
+IDENTITY = b'IBSP'
+
+
 class BadBspFile(Exception):
     pass
 
@@ -30,7 +34,7 @@ def _check_bspfile(fp):
     data = fp.read(struct.calcsize('<4si'))
     identity, version = struct.unpack('<4si', data)[0]
 
-    return identity is b'IBSP' and version is 38
+    return identity is IDENTITY and version is VERSION
 
 
 def is_bspfile(filename):
@@ -47,33 +51,6 @@ def is_bspfile(filename):
 
     except Exception:
         return False
-
-
-class ClassSequence:
-    """Class for reading a sequence of data structures"""
-    Class = None
-
-    @classmethod
-    def write(cls, file, structures):
-        for structure in structures:
-            cls.Class.write(file, structure)
-
-    @classmethod
-    def read(cls, file):
-        return [cls.Class(*c) for c in struct.iter_unpack(cls.Class.format, file.read())]
-
-
-class Entities:
-    """Class for representing the entities lump"""
-    @classmethod
-    def write(cls, file, entities):
-        entities_data = entities.encode('cp437')
-        file.write(entities_data)
-
-    @classmethod
-    def read(cls, file):
-        entities_data = file.read()
-        return entities_data.decode('cp437')
 
 
 class Plane:
@@ -115,10 +92,12 @@ class Plane:
 
     @classmethod
     def write(cls, file, plane):
-        plane_data = struct.pack(cls.format,
-                                 *plane.normal,
-                                 plane.distance,
-                                 plane.type)
+        plane_data = struct.pack(
+            cls.format,
+            *plane.normal,
+            plane.distance,
+            plane.type
+        )
 
         file.write(plane_data)
 
@@ -128,10 +107,6 @@ class Plane:
         plane_struct = struct.unpack(cls.format, plane_data)
 
         return Plane(*plane_struct)
-
-
-class Planes(ClassSequence):
-    Class = Plane
 
 
 class Vertex:
@@ -162,21 +137,16 @@ class Vertex:
         self.z = z
 
     def __getitem__(self, item):
-        if type(item) is int:
-            return [self.x, self.y, self.z][item]
-
-        elif type(item) is slice:
-            start = item.start or 0
-            stop = item.stop or 3
-
-            return [self.x, self.y, self.z][start:stop]
+        return (self.x, self.y, self.z)[item]
 
     @classmethod
     def write(cls, file, vertex):
-        vertex_data = struct.pack(cls.format,
-                                  vertex.x,
-                                  vertex.y,
-                                  vertex.z)
+        vertex_data = struct.pack(
+            cls.format,
+            vertex.x,
+            vertex.y,
+            vertex.z
+        )
 
         file.write(vertex_data)
 
@@ -186,20 +156,6 @@ class Vertex:
         vertex_struct = struct.unpack(cls.format, vertex_data)
 
         return Vertex(*vertex_struct)
-
-
-class Vertexes(ClassSequence):
-    Class = Vertex
-
-
-class Visibilities:
-    @classmethod
-    def write(cls, file, structures):
-        file.write(structures)
-
-    @classmethod
-    def read(cls, file):
-        return file.read()
 
 
 class Node:
@@ -265,13 +221,15 @@ class Node:
 
     @classmethod
     def write(cls, file, node):
-        node_data = struct.pack(cls.format,
-                                node.plane_number,
-                                *node.children,
-                                *node.bounding_box_min,
-                                *node.bounding_box_max,
-                                node.first_face,
-                                node.number_of_faces)
+        node_data = struct.pack(
+            cls.format,
+            node.plane_number,
+            *node.children,
+            *node.bounding_box_min,
+            *node.bounding_box_max,
+            node.first_face,
+            node.number_of_faces
+        )
 
         file.write(node_data)
 
@@ -281,10 +239,6 @@ class Node:
         node_struct = struct.unpack(cls.format, node_data)
 
         return Node(*node_struct)
-
-
-class Nodes(ClassSequence):
-    Class = Node
 
 
 class SurfaceFlag:
@@ -365,15 +319,17 @@ class TextureInfo:
 
     @classmethod
     def write(cls, file, texture_info):
-        texture_info_data = struct.pack(cls.format,
-                                        *texture_info.s,
-                                        texture_info.s_offset,
-                                        *texture_info.t,
-                                        texture_info.t_offset,
-                                        texture_info.flags,
-                                        texture_info.value,
-                                        texture_info.texture_name.encode('ascii'),
-                                        texture_info.next_texture_info)
+        texture_info_data = struct.pack(
+            cls.format,
+            *texture_info.s,
+            texture_info.s_offset,
+            *texture_info.t,
+            texture_info.t_offset,
+            texture_info.flags,
+            texture_info.value,
+            texture_info.texture_name.encode('ascii'),
+            texture_info.next_texture_info
+        )
         file.write(texture_info_data)
 
     @classmethod
@@ -382,10 +338,6 @@ class TextureInfo:
         texture_info_struct = struct.unpack(cls.format, texture_info_data)
 
         return TextureInfo(*texture_info_struct)
-
-
-class TextureInfos(ClassSequence):
-    Class = TextureInfo
 
 
 class Face:
@@ -445,14 +397,16 @@ class Face:
 
     @classmethod
     def write(cls, file, plane):
-        face_data = struct.pack(cls.format,
-                                plane.plane_number,
-                                plane.side,
-                                plane.first_edge,
-                                plane.number_of_edges,
-                                plane.texture_info,
-                                *plane.styles,
-                                plane.light_offset)
+        face_data = struct.pack(
+            cls.format,
+            plane.plane_number,
+            plane.side,
+            plane.first_edge,
+            plane.number_of_edges,
+            plane.texture_info,
+            *plane.styles,
+            plane.light_offset
+        )
 
         file.write(face_data)
 
@@ -462,20 +416,6 @@ class Face:
         face_struct = struct.unpack(cls.format, face_data)
 
         return Face(*face_struct)
-
-
-class Faces(ClassSequence):
-    Class = Face
-
-
-class Lighting:
-    @classmethod
-    def write(cls, file, lighting):
-        file.write(lighting)
-
-    @classmethod
-    def read(cls, file):
-        return file.read()
 
 
 class Contents:
@@ -575,16 +515,18 @@ class Leaf:
 
     @classmethod
     def write(cls, file, leaf):
-        leaf_data = struct.pack(cls.format,
-                                leaf.contents,
-                                leaf.cluster,
-                                leaf.area,
-                                *leaf.bounding_box_min,
-                                *leaf.bounding_box_max,
-                                leaf.first_leaf_face,
-                                leaf.number_of_leaf_faces,
-                                leaf.first_leaf_brush,
-                                leaf.number_of_leaf_brushes)
+        leaf_data = struct.pack(
+            cls.format,
+            leaf.contents,
+            leaf.cluster,
+            leaf.area,
+            *leaf.bounding_box_min,
+            *leaf.bounding_box_max,
+            leaf.first_leaf_face,
+            leaf.number_of_leaf_faces,
+            leaf.first_leaf_brush,
+            leaf.number_of_leaf_brushes
+        )
 
         file.write(leaf_data)
 
@@ -594,36 +536,6 @@ class Leaf:
         leaf_struct = struct.unpack(cls.format, leaf_data)
 
         return Leaf(*leaf_struct)
-
-
-class Leafs(ClassSequence):
-    Class = Leaf
-
-
-class LeafFaces:
-    @classmethod
-    def write(cls, file, leaf_faces):
-        leaf_faces_format = '<{}H'.format(len(leaf_faces))
-        leaf_faces_data = struct.pack(leaf_faces_format, *leaf_faces)
-
-        file.write(leaf_faces_data)
-
-    @classmethod
-    def read(cls, file):
-        return [lf[0] for lf in struct.iter_unpack('<H', file.read())]
-
-
-class LeafBrushes:
-    @classmethod
-    def write(cls, file, leaf_brushes):
-        leaf_brushes_format = '<{}H'.format(len(leaf_brushes))
-        leaf_brushes_data = struct.pack(leaf_brushes_format, *leaf_brushes)
-
-        file.write(leaf_brushes_data)
-
-    @classmethod
-    def read(cls, file):
-        return [lb[0] for lb in struct.iter_unpack('<H', file.read())]
 
 
 class Edge:
@@ -645,15 +557,14 @@ class Edge:
         self.vertexes = vertex_0, vertex_1
 
     def __getitem__(self, item):
-        if item > 1:
-            raise IndexError('list index of out of range')
-
         return self.vertexes[item]
 
     @classmethod
     def write(cls, file, edge):
-        edge_data = struct.pack(cls.format,
-                                *edge.vertexes)
+        edge_data = struct.pack(
+            cls.format,
+            *edge.vertexes
+        )
 
         file.write(edge_data)
 
@@ -663,23 +574,6 @@ class Edge:
         edge_struct = struct.unpack(cls.format, edge_data)
 
         return Edge(*edge_struct)
-
-
-class Edges(ClassSequence):
-    Class = Edge
-
-
-class SurfEdges:
-    @classmethod
-    def write(cls, file, surf_edges):
-        surf_edges_format = '<{}H'.format(len(surf_edges))
-        surf_edges_data = struct.pack(surf_edges_format, *surf_edges)
-
-        file.write(surf_edges_data)
-
-    @classmethod
-    def read(cls, file):
-        return [se[0] for se in struct.iter_unpack('<H', file.read())]
 
 
 class Model:
@@ -740,13 +634,15 @@ class Model:
 
     @classmethod
     def write(cls, file, model):
-        model_data = struct.pack(cls.format,
-                                 *model.bounding_box_min,
-                                 *model.bounding_box_max,
-                                 *model.origin,
-                                 model.head_node,
-                                 model.first_face,
-                                 model.number_of_faces)
+        model_data = struct.pack(
+            cls.format,
+            *model.bounding_box_min,
+            *model.bounding_box_max,
+            *model.origin,
+            model.head_node,
+            model.first_face,
+            model.number_of_faces
+        )
 
         file.write(model_data)
 
@@ -756,10 +652,6 @@ class Model:
         model_struct = struct.unpack(cls.format, model_data)
 
         return Model(*model_struct)
-
-
-class Models(ClassSequence):
-    Class = Model
 
 
 class Brush:
@@ -783,10 +675,12 @@ class Brush:
 
     @classmethod
     def write(cls, file, brush):
-        brush_data = struct.pack(cls.format,
-                                 brush.first_side,
-                                 brush.number_of_sides,
-                                 brush.contents)
+        brush_data = struct.pack(
+            cls.format,
+            brush.first_side,
+            brush.number_of_sides,
+            brush.contents
+        )
 
         file.write(brush_data)
 
@@ -796,10 +690,6 @@ class Brush:
         brush_struct = struct.unpack(cls.format, brush_data)
 
         return Brush(*brush_struct)
-
-
-class Brushes(ClassSequence):
-    Class = Brush
 
 
 class BrushSide:
@@ -820,9 +710,11 @@ class BrushSide:
 
     @classmethod
     def write(cls, file, brush_side):
-        brush_side_data = struct.pack(cls.format,
-                                      brush_side.plane_number,
-                                      brush_side.texture_info)
+        brush_side_data = struct.pack(
+            cls.format,
+            brush_side.plane_number,
+            brush_side.texture_info
+        )
 
         file.write(brush_side_data)
 
@@ -832,20 +724,6 @@ class BrushSide:
         brush_side_struct = struct.unpack(cls.format, brush_side_data)
 
         return BrushSide(*brush_side_struct)
-
-
-class BrushSides(ClassSequence):
-    Class = BrushSide
-
-
-class Pop:
-    @classmethod
-    def write(cls, file, structures):
-        file.write(structures)
-
-    @classmethod
-    def read(cls, file):
-        return file.read()
 
 
 class Area:
@@ -866,9 +744,11 @@ class Area:
 
     @classmethod
     def write(cls, file, area):
-        area_data = struct.pack(cls.format,
-                                area.number_of_area_portals,
-                                area.first_area_portal)
+        area_data = struct.pack(
+            cls.format,
+            area.number_of_area_portals,
+            area.first_area_portal
+        )
 
         file.write(area_data)
 
@@ -878,10 +758,6 @@ class Area:
         area_struct = struct.unpack(cls.format, area_data)
 
         return Area(*area_struct)
-
-
-class Areas(ClassSequence):
-    Class = Area
 
 
 class AreaPortal:
@@ -901,9 +777,11 @@ class AreaPortal:
 
     @classmethod
     def write(cls, file, area):
-        area_data = struct.pack(cls.format,
-                                area.portal_number,
-                                area.other_area)
+        area_data = struct.pack(
+            cls.format,
+            area.portal_number,
+            area.other_area
+        )
 
         file.write(area_data)
 
@@ -915,8 +793,91 @@ class AreaPortal:
         return AreaPortal(*area_struct)
 
 
-class AreaPortals(ClassSequence):
-    Class = AreaPortal
+class _Entities:
+    """Helper class for working with the entities lump"""
+    @staticmethod
+    def write(file, entities):
+        entities_data = entities.encode('cp437')
+        file.write(entities_data)
+
+    @staticmethod
+    def read(file, size=-1):
+        entities_data = file.read(size)
+        return entities_data.decode('cp437').strip('\x00')
+
+
+class _Visibilities:
+    """Helper class for working with the visibilities lump"""
+    @staticmethod
+    def write(file, structures):
+        file.write(structures)
+
+    @staticmethod
+    def read(file, size=-1):
+        return file.read(size)
+
+
+class _Lighting:
+    """Helper class for working with the lighting lump"""
+    @staticmethod
+    def write(file, lighting):
+        file.write(lighting)
+
+    @staticmethod
+    def read(file, size=-1):
+        return file.read(size)
+
+
+class _LeafFaces:
+    """Helper class for working with the leaf faces lump"""
+    @staticmethod
+    def write(file, leaf_faces):
+        leaf_faces_format = '<{}H'.format(len(leaf_faces))
+        leaf_faces_data = struct.pack(leaf_faces_format, *leaf_faces)
+
+        file.write(leaf_faces_data)
+
+    @staticmethod
+    def read(file, size=-1):
+        return [lf[0] for lf in struct.iter_unpack('<H', file.read(size))]
+
+
+class _LeafBrushes:
+    """Helper class for working with the leaf brushes lump"""
+    @staticmethod
+    def write(file, leaf_brushes):
+        leaf_brushes_format = '<{}H'.format(len(leaf_brushes))
+        leaf_brushes_data = struct.pack(leaf_brushes_format, *leaf_brushes)
+
+        file.write(leaf_brushes_data)
+
+    @staticmethod
+    def read(file, size=-1):
+        return [lb[0] for lb in struct.iter_unpack('<H', file.read(size))]
+
+
+class _SurfEdges:
+    """Helper class for working with the surfedges lump"""
+    @staticmethod
+    def write(file, surf_edges):
+        surf_edges_format = '<{}H'.format(len(surf_edges))
+        surf_edges_data = struct.pack(surf_edges_format, *surf_edges)
+
+        file.write(surf_edges_data)
+
+    @staticmethod
+    def read(file, size=-1):
+        return [se[0] for se in struct.iter_unpack('<H', file.read(size))]
+
+
+class _Pop:
+    @staticmethod
+    def write(file, structures):
+        file.write(structures)
+
+    @staticmethod
+    def read(file, size=-1):
+        return file.read(size)
 
 
 class Lump:
@@ -945,9 +906,11 @@ class Lump:
 
     @classmethod
     def write(cls, file, lump):
-        lump_data = struct.pack(cls.format,
-                                lump.offset,
-                                lump.length)
+        lump_data = struct.pack(
+            cls.format,
+            lump.offset,
+            lump.length
+        )
 
         file.write(lump_data)
 
@@ -967,58 +930,193 @@ class Header:
 
         version: The file version. Should be 38.
 
-        lumps: A sequence of nineteen Lumps
+        lumps: A sequence of nineteen Lump objects
     """
 
     format = '<4si{}'.format(Lump.format[1:] * 19)
     size = struct.calcsize(format)
-    order = [
-        Entities,
-        Planes,
-        Vertexes,
-        Visibilities,
-        Nodes,
-        TextureInfos,
-        Faces,
-        Lighting,
-        Leafs,
-        LeafFaces,
-        LeafBrushes,
-        Edges,
-        SurfEdges,
-        Models,
-        Brushes,
-        BrushSides,
-        Pop,
-        Areas,
-        AreaPortals
-    ]
 
     __slots__ = (
         'identity',
         'version',
-        'lumps'
+        '_lumps'
     )
 
     def __init__(self,
                  identity,
                  version,
                  lumps):
-
         self.identity = identity
         self.version = version
-        self.lumps = lumps
+        self._lumps = lumps
+
+        if len(lumps) != 19:
+            raise Exception
+
+    @property
+    def entities(self):
+        return self._lumps[0]
+
+    @entities.setter
+    def entities(self, value):
+        self._lumps[0] = value
+
+    @property
+    def planes(self):
+        return self._lumps[1]
+
+    @planes.setter
+    def planes(self, value):
+        self._lumps[1] = value
+
+    @property
+    def vertexes(self):
+        return self._lumps[2]
+
+    @vertexes.setter
+    def vertexes(self, value):
+        self._lumps[2] = value
+
+    @property
+    def visibilities(self):
+        return self._lumps[3]
+
+    @visibilities.setter
+    def visibilities(self, value):
+        self._lumps[3] = value
+
+    @property
+    def nodes(self):
+        return self._lumps[4]
+
+    @nodes.setter
+    def nodes(self, value):
+        self._lumps[4] = value
+
+    @property
+    def texture_infos(self):
+        return self._lumps[5]
+
+    @texture_infos.setter
+    def texture_infos(self, value):
+        self._lumps[5] = value
+
+    @property
+    def faces(self):
+        return self._lumps[6]
+
+    @faces.setter
+    def faces(self, value):
+        self._lumps[6] = value
+
+    @property
+    def lighting(self):
+        return self._lumps[7]
+
+    @lighting.setter
+    def lighting(self, value):
+        self._lumps[7] = value
+
+    @property
+    def leafs(self):
+        return self._lumps[8]
+
+    @leafs.setter
+    def leafs(self, value):
+        self._lumps[8] = value
+
+    @property
+    def leaf_faces(self):
+        return self._lumps[9]
+
+    @leaf_faces.setter
+    def leaf_faces(self, value):
+        self._lumps[9] = value
+
+    @property
+    def leaf_brushes(self):
+        return self._lumps[10]
+
+    @leaf_brushes.setter
+    def leaf_brushes(self, value):
+        self._lumps[10] = value
+
+    @property
+    def edges(self):
+        return self._lumps[11]
+
+    @edges.setter
+    def edges(self, value):
+        self._lumps[11] = value
+
+    @property
+    def surf_edges(self):
+        return self._lumps[12]
+
+    @surf_edges.setter
+    def surf_edges(self, value):
+        self._lumps[12] = value
+
+    @property
+    def models(self):
+        return self._lumps[13]
+
+    @models.setter
+    def models(self, value):
+        self._lumps[13] = value
+
+    @property
+    def brushes(self):
+        return self._lumps[14]
+
+    @brushes.setter
+    def brushes(self, value):
+        self._lumps[14] = value
+
+    @property
+    def brush_sides(self):
+        return self._lumps[15]
+
+    @brush_sides.setter
+    def brush_sides(self, value):
+        self._lumps[15] = value
+
+    @property
+    def pop(self):
+        return self._lumps[16]
+
+    @pop.setter
+    def pop(self, value):
+        self._lumps[16] = value
+
+    @property
+    def areas(self):
+        return self._lumps[17]
+
+    @areas.setter
+    def areas(self, value):
+        self._lumps[17] = value
+
+    @property
+    def area_portals(self):
+        return self._lumps[18]
+
+    @area_portals.setter
+    def area_portals(self, value):
+        self._lumps[18] = value
 
     @classmethod
     def write(cls, file, header):
         lump_values = []
-        for lump in header.lumps:
+        for lump in header._lumps:
             lump_values += lump.offset, lump.length
 
-        header_data = struct.pack(cls.format,
-                                  header.identity,
-                                  header.version,
-                                  *lump_values)
+        header_data = struct.pack(
+            cls.format,
+            header.identity,
+            header.version,
+            *lump_values
+        )
 
         file.write(header_data)
 
@@ -1093,32 +1191,26 @@ class Bsp(ReadWriteFile):
     class factory:
         Lump = Lump
         Header = Header
-        Entities = Entities
-        Planes = Planes
-        Vertexes = Vertexes
-        Visibilities = Visibilities
-        Nodes = Nodes
-        TextureInfos = TextureInfos
-        Faces = Faces
-        Lighting = Lighting
-        Leafs = Leafs
-        LeafFaces = LeafFaces
-        LeafBrushes = LeafBrushes
-        Edges = Edges
-        SurfEdges = SurfEdges
-        Models = Models
-        Brushes = Brushes
-        BrushSides = BrushSides
-        Pop = Pop
-        Areas = Areas
-        AreaPortals = AreaPortals
+        Plane = Plane
+        Vertex = Vertex
+        Node = Node
+        TextureInfo = TextureInfo
+        Face = Face
+        Leaf = Leaf
+        Edge = Edge
+        Model = Model
+        Brush = Brush
+        BrushSide = BrushSide
+        Pop = _Pop
+        Area = Area
+        AreaPortal = AreaPortal
 
     def __init__(self):
         super().__init__()
 
-        self.identity = b'IBSP'
-        self.version = 38
-        self.entities = ""
+        self.identity = IDENTITY
+        self.version = VERSION
+        self.entities = ''
         self.planes = []
         self.vertexes = []
         self.visibilities = []
@@ -1140,11 +1232,17 @@ class Bsp(ReadWriteFile):
 
     @classmethod
     def _read_file(cls, file, mode):
-        def _read_lump(class_):
-            lump = header.lumps[header.order.index(class_)]
+        def _read_iter_lump(lump, class_):
+            """Read iteratively from file unpacking according to format
+            class attribute on the class_ object"""
             file.seek(lump.offset)
 
-            return class_.read(io.BytesIO(file.read(lump.length)))
+            return [class_(*s) for s in struct.iter_unpack(class_.format, file.read(lump.length))]
+
+        def _read_lump(lump, reader):
+            """Read from file using the provided reader object"""
+            file.seek(lump.offset)
+            return reader.read(file, lump.length)
 
         bsp = cls()
         bsp.mode = mode
@@ -1157,25 +1255,25 @@ class Bsp(ReadWriteFile):
         bsp.identity = header.identity
         bsp.version = header.version
 
-        bsp.entities = _read_lump(factory.Entities)
-        bsp.planes = _read_lump(factory.Planes)
-        bsp.vertexes = _read_lump(factory.Vertexes)
-        bsp.visibilities = _read_lump(factory.Visibilities)
-        bsp.nodes = _read_lump(factory.Nodes)
-        bsp.texture_infos = _read_lump(factory.TextureInfos)
-        bsp.faces = _read_lump(factory.Faces)
-        bsp.lighting = _read_lump(factory.Lighting)
-        bsp.leafs = _read_lump(factory.Leafs)
-        bsp.leaf_faces = _read_lump(factory.LeafFaces)
-        bsp.leaf_brushes = _read_lump(factory.LeafBrushes)
-        bsp.edges = _read_lump(factory.Edges)
-        bsp.surf_edges = _read_lump(factory.SurfEdges)
-        bsp.models = _read_lump(factory.Models)
-        bsp.brushes = _read_lump(factory.Brushes)
-        bsp.brush_sides = _read_lump(factory.BrushSides)
-        bsp.pop = _read_lump(factory.Pop)
-        bsp.areas = _read_lump(factory.Areas)
-        bsp.area_portals = _read_lump(factory.AreaPortals)
+        bsp.entities = _read_lump(header.entities, _Entities)
+        bsp.planes = _read_iter_lump(header.planes, factory.Plane)
+        bsp.vertexes = _read_iter_lump(header.vertexes, factory.Vertex)
+        bsp.visibilities = _read_lump(header.visibilities, _Visibilities)
+        bsp.nodes = _read_iter_lump(header.nodes, factory.Node)
+        bsp.texture_infos = _read_iter_lump(header.texture_infos, factory.TextureInfo)
+        bsp.faces = _read_iter_lump(header.faces, factory.Face)
+        bsp.lighting = _read_lump(header.lighting, _Lighting)
+        bsp.leafs = _read_iter_lump(header.leafs, factory.Leaf)
+        bsp.leaf_faces = _read_lump(header.leaf_faces, _LeafFaces)
+        bsp.leaf_brushes = _read_lump(header.leaf_brushes, _LeafBrushes)
+        bsp.edges = _read_iter_lump(header.edges, factory.Edge)
+        bsp.surf_edges = _read_lump(header.surf_edges, _SurfEdges)
+        bsp.models = _read_iter_lump(header.models, factory.Model)
+        bsp.brushes = _read_iter_lump(header.brushes, factory.Brush)
+        bsp.brush_sides = _read_iter_lump(header.brush_sides, factory.BrushSide)
+        bsp.pop = _read_lump(header.pop, _Pop)
+        bsp.areas = _read_iter_lump(header.areas, factory.Area)
+        bsp.area_portals = _read_iter_lump(header.area_portals, factory.AreaPortal)
 
         return bsp
 
@@ -1183,43 +1281,58 @@ class Bsp(ReadWriteFile):
     def _write_file(cls, file, bsp):
         factory = cls.factory
 
-        def _write_lump(class_, data):
+        def _write_iter_lump(data):
+            """Write iteratively to file unpacking according to format
+            class attribute on the class_ object"""
             offset = file.tell()
-            class_.write(file, data)
-            size = file.tell() - offset
 
-            return factory.Lump(offset, size)
+            if data:
+                class_ = data[0].__class__
+
+                for datum in data:
+                    class_.write(file, datum)
+
+            length = file.tell() - offset
+
+            return factory.Lump(offset, length)
+
+        def _write_lump(data, writer):
+            """Write to file using the provided writer object"""
+            offset = file.tell()
+            writer.write(file, data)
+            length = file.tell() - offset
+
+            return factory.Lump(offset, length)
+
+        start_of_file = file.tell()
 
         lumps = [factory.Lump(0, 0) for _ in range(19)]
         header = factory.Header(bsp.identity, bsp.version, lumps)
-        lump_index = header.order.index
-
-        # Stub out header info
         factory.Header.write(file, header)
 
-        lumps[lump_index(factory.Entities)] = _write_lump(factory.Entities, bsp.entities)
-        lumps[lump_index(factory.Planes)] = _write_lump(factory.Planes, bsp.planes)
-        lumps[lump_index(factory.Vertexes)] = _write_lump(factory.Vertexes, bsp.vertexes)
-        lumps[lump_index(factory.Visibilities)] = _write_lump(factory.Visibilities, bsp.visibilities)
-        lumps[lump_index(factory.Nodes)] = _write_lump(factory.Nodes, bsp.nodes)
-        lumps[lump_index(factory.TextureInfos)] = _write_lump(factory.TextureInfos, bsp.texture_infos)
-        lumps[lump_index(factory.Faces)] = _write_lump(factory.Faces, bsp.faces)
-        lumps[lump_index(factory.Lighting)] = _write_lump(factory.Lighting, bsp.lighting)
-        lumps[lump_index(factory.Leafs)] = _write_lump(factory.Leafs, bsp.leafs)
-        lumps[lump_index(factory.LeafFaces)] = _write_lump(factory.LeafFaces, bsp.leaf_faces)
-        lumps[lump_index(factory.LeafBrushes)] = _write_lump(factory.LeafBrushes, bsp.leaf_brushes)
-        lumps[lump_index(factory.Edges)] = _write_lump(factory.Edges, bsp.edges)
-        lumps[lump_index(factory.SurfEdges)] = _write_lump(factory.SurfEdges, bsp.surf_edges)
-        lumps[lump_index(factory.Models)] = _write_lump(factory.Models, bsp.models)
-        lumps[lump_index(factory.Brushes)] = _write_lump(factory.Brushes, bsp.brushes)
-        lumps[lump_index(factory.BrushSides)] = _write_lump(factory.BrushSides, bsp.brush_sides)
-        lumps[lump_index(factory.Pop)] = _write_lump(factory.Pop, bsp.pop)
-        lumps[lump_index(factory.Areas)] = _write_lump(factory.Areas, bsp.areas)
-        lumps[lump_index(factory.AreaPortals)] = _write_lump(factory.AreaPortals, bsp.area_portals)
+        header.entities = _write_lump(bsp.entities, _Entities)
+        header.planes = _write_iter_lump(bsp.planes)
+        header.vertexes = _write_iter_lump(bsp.vertexes)
+        header.visibilities = _write_lump(bsp.visibilities, _Visibilities)
+        header.nodes = _write_iter_lump(bsp.nodes)
+        header.texture_infos = _write_iter_lump(bsp.texture_infos)
+        header.faces = _write_iter_lump(bsp.faces)
+        header.lighting = _write_lump(bsp.lighting, _Lighting)
+        header.leafs = _write_iter_lump(bsp.leafs)
+        header.leaf_faces = _write_lump(bsp.leaf_faces, _LeafFaces)
+        header.leaf_brushes = _write_lump(bsp.leaf_brushes, _LeafBrushes)
+        header.edges = _write_iter_lump(bsp.edges)
+        header.surf_edges = _write_lump(bsp.surf_edges, _SurfEdges)
+        header.models = _write_iter_lump(bsp.models)
+        header.brushes = _write_iter_lump(bsp.brushes)
+        header.brush_sides = _write_iter_lump(bsp.brush_sides)
+        header.pop = _write_lump(bsp.pop, _Pop)
+        header.areas = _write_iter_lump(bsp.areas)
+        header.area_portals = _write_iter_lump(bsp.area_portals)
 
         end_of_file = file.tell()
 
         # Finalize header
-        file.seek(0)
+        file.seek(start_of_file)
         factory.Header.write(file, header)
         file.seek(end_of_file)

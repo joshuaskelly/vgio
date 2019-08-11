@@ -46,7 +46,7 @@ class Dem(ReadWriteFile):
         dem.fp = file
 
         # CD Track
-        dem.cd_track = protocol.IO.read.string(file, b'\n')
+        dem.cd_track = protocol._IO.read.string(file, b'\n')
 
         # Message Blocks
         while file.peek(4)[:4] != b'':
@@ -57,7 +57,7 @@ class Dem(ReadWriteFile):
 
     @staticmethod
     def _write_file(file, dem):
-        protocol.IO.write.string(file, dem.cd_track, b'\n')
+        protocol._IO.write.string(file, dem.cd_track, b'\n')
 
         for message_block in dem.message_blocks:
             protocol.MessageBlock.write(file, message_block)

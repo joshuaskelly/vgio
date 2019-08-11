@@ -18,6 +18,9 @@ from vgio._core import ArchiveFile
 __all__ = ['BadPakFile', 'is_pakfile', 'PakInfo', 'PakFile']
 
 
+IDENTITY = b'PACK'
+
+
 class BadPakFile(Exception):
     pass
 
@@ -26,7 +29,7 @@ def _check_pakfile(fp):
     fp.seek(0)
     data = fp.read(struct.calcsize('<4s'))
 
-    return data == b'PACK'
+    return data == IDENTITY
 
 
 def is_pakfile(filename):
@@ -176,7 +179,7 @@ class PakFile(ArchiveFile):
         self.fp.seek(0)
         header = Header.read(self.fp)
 
-        if header.identity != b'PACK':
+        if header.identity != IDENTITY:
             raise BadPakFile(f'Bad magic number: {header.identity}')
 
         self.end_of_data = header.directory_offset
@@ -199,5 +202,5 @@ class PakFile(ArchiveFile):
         end = self.end_of_data if hasattr(self, 'end_of_data') else Header.size
         directory_size = len(self.file_list) * Entry.size
 
-        header = Header(b'PACK', end, directory_size)
+        header = Header(IDENTITY, end, directory_size)
         Header.write(self.fp, header)

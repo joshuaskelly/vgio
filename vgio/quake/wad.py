@@ -23,6 +23,9 @@ from vgio._core import ArchiveFile
 __all__ = ['BadWadFile', 'is_wadfile', 'WadInfo', 'WadFile']
 
 
+IDENTITY = b'WAD2'
+
+
 class BadWadFile(Exception):
     pass
 
@@ -31,7 +34,7 @@ def _check_wadfile(fp):
     fp.seek(0)
     data = fp.read(struct.calcsize('<4s'))
 
-    return data == b'WAD2'
+    return data == IDENTITY
 
 
 def is_wadfile(filename):
@@ -295,7 +298,7 @@ class WadFile(ArchiveFile):
         self.fp.seek(0)
         header = Header.read(self.fp)
 
-        if header.identity != b'WAD2':
+        if header.identity != IDENTITY:
             raise BadWadFile(f'Bad magic number: {header.identity}')
 
         self.end_of_data = header.directory_offset
@@ -321,5 +324,5 @@ class WadFile(ArchiveFile):
         self.fp.seek(0)
         end = self.end_of_data if hasattr(self, 'end_of_data') else Header.size
 
-        header = Header(b'WAD2', len(self.file_list), end)
+        header = Header(IDENTITY, len(self.file_list), end)
         Header.write(self.fp, header)

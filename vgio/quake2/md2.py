@@ -17,6 +17,10 @@ from vgio._core import ReadWriteFile
 __all__ = ['BadMd2File', 'is_md2file', 'Md2']
 
 
+VERSION = 8
+IDENTITY = b'IDP2'
+
+
 class BadMd2File(Exception):
     pass
 
@@ -26,7 +30,7 @@ def _check_md2file(fp):
     data = fp.read(struct.calcsize('<4si'))
     identity, version = struct.unpack('<4si', data)
 
-    return identity == b'IDP2' and version == 8
+    return identity == IDENTITY and version == VERSION
 
 
 def is_md2file(filename):
@@ -68,7 +72,6 @@ class Header:
                  frame_offset,
                  gl_command_offset,
                  end_offset):
-
         self.identity = identity
         self.version = version
         self.skin_width = skin_width
@@ -134,7 +137,10 @@ class Skin:
 
     @classmethod
     def write(cls, file, skin):
-        skin_data = struct.pack(cls.format, skin.name.encode('ascii'))
+        skin_data = struct.pack(
+            cls.format,
+            skin.name.encode('ascii')
+        )
 
         file.write(skin_data)
 
@@ -599,8 +605,8 @@ class Md2(ReadWriteFile):
     def __init__(self):
         super().__init__()
 
-        self.identity = b'IDP2'
-        self.version = 8
+        self.identity = IDENTITY
+        self.version = VERSION
         self.skin_width = 0
         self.skin_height = 0
 
@@ -626,10 +632,10 @@ class Md2(ReadWriteFile):
 
         header = factory.Header.read(file)
 
-        if header.identity != b'IDP2':
+        if header.identity != IDENTITY:
             raise BadMd2File('Bad identity: {}'.format(header.identity))
 
-        if header.version != 8:
+        if header.version != VERSION:
             raise BadMd2File('Bad version number: {}'.format(header.version))
 
         md2.skin_width = header.skin_width
@@ -701,10 +707,10 @@ class Md2(ReadWriteFile):
         file.seek(header.end_offset)
 
     def validate(self):
-        if self.identity != b'IDP2':
+        if self.identity != IDENTITY:
             raise BadMd2File('Bad identity: {}'.format(self.identity))
 
-        if self.version != 8:
+        if self.version != VERSION:
             raise BadMd2File('Bad version number: {}'.format(self.version))
 
         if len(set([len(f.vertexes) for f in self.frames])) != 1:
