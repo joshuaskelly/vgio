@@ -349,6 +349,20 @@ class TestBsp29ReadWrite(TestCase):
         self.assertTrue(fp.closed, 'File should be closed')
         self.assertIsNone(bsp_file.fp, 'File pointer should be cleaned up')
 
+    def test_surf_edges(self):
+        b0 = bsp29.Bsp.open('./test_data/test.bsp')
+        b0.close()
+
+        b0.save(self.buff)
+        self.buff.seek(0)
+
+        b1 = bsp29.Bsp.open(self.buff)
+        b1.close()
+
+        expected = (1, 2, 3, 4, 5, 6, 7, 8, 9, -4, 10, 11, -10, -3, 12, 13, -12, -2, 14, 15, -14, -1, -9, 16, -16, -11, -13, -15, 17, 18, 19, 20, -17, 21, -5, 22, 23, -18, -22, -8, 24, -19, -23, -7, -21, -20, -24, -6)
+        self.assertEqual(b0.surf_edges, expected)
+        self.assertEqual(b1.surf_edges, expected)
+
 
 class TestBsp29aReadWrite(TestCase):
     def test_check_file_type(self):

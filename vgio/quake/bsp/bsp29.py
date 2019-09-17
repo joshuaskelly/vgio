@@ -1053,11 +1053,13 @@ class _SurfEdges:
     """Helper class for working with the surfedges lump"""
     @staticmethod
     def write(file, surfedges):
-        file.write(surfedges)
+        data = struct.pack(f'<{len(surfedges)}i', *surfedges)
+        file.write(data)
 
     @staticmethod
     def read(file, size=-1):
-        return file.read(size)
+        data = file.read(size)
+        return struct.unpack(f'<{len(data) // 4}i', data)
 
 
 class Mesh:
