@@ -25,8 +25,8 @@ class Entity:
     Attributes:
         brushes: A list of Brush objects.
     """
-    def __init__(self):
-        self.brushes = []
+    def __init__(self, brushes):
+        self.brushes = brushes
 
 
 class Brush:
@@ -40,8 +40,8 @@ class Brush:
         'planes'
     )
 
-    def __init__(self):
-        self.planes = []
+    def __init__(self, planes):
+        self.planes = planes
 
 
 class Plane:
@@ -53,41 +53,50 @@ class Plane:
 
         texture_name: Name of the bsp.Miptexture
 
-        u: An XYZ triple representing the u-vector of the plane in world space.
+        s: An XYZ triple representing the s-vector of the texture plane in
+            world space.
 
-        u_offset: The offset along the u-vector.
+        s_offset: The offset along the s-vector.
 
-        v: An XYZ triple representing the v-vector of the plane in world space.
+        t: An XYZ triple representing the t-vector of the texture plane in
+            world space.
 
-        v_offset: The offset along the v-vector.
-
-        offset: The texture offset represented as an XY two-tuple.
+        t_offset: The offset along the t-vector.
 
         rotation: The texture rotation angle in degrees.
 
-        scale: The texture scale represented as an XY two-tuple.
+        scale: The texture scale represented as an ST two-tuple.
     """
 
     __slots__ = (
         'points',
         'texture_name',
-        'u',
-        'u_offset',
-        'v',
-        'v_offset',
+        's',
+        's_offset',
+        't',
+        't_offset',
         'rotation',
         'scale'
     )
 
-    def __init__(self):
-        self.points = None
-        self.texture_name = None
-        self.u = None
-        self.u_offset = None
-        self.v = None
-        self.v_offset = None
-        self.rotation = None
-        self.scale = None
+    def __init__(self,
+                 points,
+                 texture_name,
+                 s,
+                 s_offset,
+                 t,
+                 t_offset,
+                 rotation,
+                 scale):
+
+        self.points = points
+        self.texture_name = texture_name
+        self.s = s
+        self.s_offset = s_offset
+        self.t = t
+        self.t_offset = t_offset
+        self.rotation = rotation
+        self.scale = scale
 
 
 def loads(s):
@@ -258,7 +267,7 @@ def loads(s):
         """
 
         nonlocal token
-        e = Entity()
+        e = Entity([])
         advance('{')
 
         while token.id != '}':
@@ -302,15 +311,12 @@ def loads(s):
         Returns:
             A Brush object.
         """
-
         nonlocal token
-        b = Brush()
         advance('{')
 
         # Parse planes
+        planes = []
         while token.id != '}':
-            p = Plane()
-
             # Parse points that define the plane
             advance('(')
             coord_0 = advance(NumericLiteral).id, advance(NumericLiteral).id, advance(NumericLiteral).id
@@ -322,32 +328,42 @@ def loads(s):
             coord_2 = advance(NumericLiteral).id, advance(NumericLiteral).id, advance(NumericLiteral).id
             advance(')')
 
-            p.points = coord_0, coord_1, coord_2
+            points = coord_0, coord_1, coord_2
 
             # Parse texture name
-            p.texture_name = advance(StringLiteral).id
+            texture_name = advance(StringLiteral).id
 
-            # Parse U vector information
+            # Parse s-vector information
             advance('[')
-            p.u = advance(NumericLiteral).id, advance(NumericLiteral).id, advance(NumericLiteral).id
-            p.u_offset = advance(NumericLiteral).id
+            s = advance(NumericLiteral).id, advance(NumericLiteral).id, advance(NumericLiteral).id
+            s_offset = advance(NumericLiteral).id
             advance(']')
 
-            # Parse V vector information
+            # Parse t-vector information
             advance('[')
-            p.v = advance(NumericLiteral).id, advance(NumericLiteral).id, advance(NumericLiteral).id
-            p.v_offset = advance(NumericLiteral).id
+            t = advance(NumericLiteral).id, advance(NumericLiteral).id, advance(NumericLiteral).id
+            t_offset = advance(NumericLiteral).id
             advance(']')
 
             # Parse rotation and scale
-            p.rotation = advance(NumericLiteral).id
-            p.scale = advance(NumericLiteral).id, advance(NumericLiteral).id
+            rotation = advance(NumericLiteral).id
+            scale = advance(NumericLiteral).id, advance(NumericLiteral).id
 
-            b.planes.append(p)
+            plane = Plane(
+                points,
+                texture_name,
+                s,
+                s_offset,
+                t,
+                t_offset,
+                rotation,
+                scale
+            )
+            planes.append(plane)
 
         advance('}')
 
-        return b
+        return Brush(planes)
 
     def error(message):
         """Raises an exception with the given message. Also provides the
@@ -361,7 +377,6 @@ def loads(s):
         """
 
         nonlocal line, column
-        #location = ' line {0}, column {1}'.format(line, column)
         location = line, column
 
         raise ParseError(message, location)
@@ -419,16 +434,16 @@ def dumps(entities):
 
                 x_coord, y_coord, z_coord = plane.points
                 name = plane.texture_name
-                u_info = plane.u + (plane.u_offset,)
-                v_info = plane.v + (plane.v_offset,)
+                s_info = plane.s + (plane.s_offset,)
+                t_info = plane.t + (plane.t_offset,)
                 translation_info = (plane.rotation,) + plane.scale
 
                 plane_text = f'( {format(x_coord)} ) ' \
                              f'( {format(y_coord)} ) ' \
                              f'( {format(z_coord)} ) ' \
                              f'{name} ' \
-                             f'[ {format(u_info)} ] ' \
-                             f'[ {format(v_info)} ] ' \
+                             f'[ {format(s_info)} ] ' \
+                             f'[ {format(t_info)} ] ' \
                              f'{format(translation_info)}'
 
                 result += plane_text
