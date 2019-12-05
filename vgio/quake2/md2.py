@@ -162,7 +162,7 @@ class Skins:
 
     @classmethod
     def read(cls, file):
-        return [Skin(s) for s in struct.iter_unpack(cls.Class.format, file.read())]
+        return [Skin(*s) for s in struct.iter_unpack(cls.Class.format, file.read())]
 
 
 class TriVertex:

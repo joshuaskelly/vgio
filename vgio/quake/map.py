@@ -373,8 +373,6 @@ def dumps(entities):
         return float_value
 
     for entity in entities:
-        assert(isinstance(entity, Entity))
-
         result += '{\n'
         attrs = tuple(set(entity.__dict__.keys()) - {'brushes'})
 
@@ -383,13 +381,9 @@ def dumps(entities):
             result += '"{0}" "{1}"\n'.format(attr, value)
 
         for brush in entity.brushes:
-            assert(isinstance(brush, Brush))
-
             result += '{\n'
 
             for plane in brush.planes:
-                assert(isinstance(plane, Plane))
-
                 coords = plane.points
                 name = plane.texture_name
                 offset = plane.offset
@@ -407,9 +401,9 @@ def dumps(entities):
                                                number(coords[2][1]),
                                                number(coords[2][2]),
                                                name,
-                                               int(offset[0]),
-                                               int(offset[1]),
-                                               int(rotation),
+                                               number(offset[0]),
+                                               number(offset[1]),
+                                               number(rotation),
                                                scale[0],
                                                scale[1])
 
