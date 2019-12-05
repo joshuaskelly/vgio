@@ -415,7 +415,6 @@ def dumps(entities):
         return " ".join(map(str, numbers(seq)))
 
     for entity in entities:
-        assert(isinstance(entity, Entity))
 
         result += '{\n'
         attrs = tuple(set(entity.__dict__.keys()) - {'brushes'})
@@ -425,12 +424,10 @@ def dumps(entities):
             result += '"{0}" "{1}"\n'.format(attr, value)
 
         for brush in entity.brushes:
-            assert(isinstance(brush, Brush))
 
             result += '{\n'
 
             for plane in brush.planes:
-                assert(isinstance(plane, Plane))
 
                 x_coord, y_coord, z_coord = plane.points
                 name = plane.texture_name
@@ -444,7 +441,7 @@ def dumps(entities):
                              f'{name} ' \
                              f'[ {format(s_info)} ] ' \
                              f'[ {format(t_info)} ] ' \
-                             f'{format(translation_info)}'
+                             f'{format(translation_info)}\n'
 
                 result += plane_text
 
