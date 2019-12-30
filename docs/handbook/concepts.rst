@@ -24,7 +24,8 @@ Archive data is a container for other types of data typically represented as
 files. The :py:class:`~vgio._core.ArchiveFile` serves as a base class for
 working with such data. By design the :py:class:`~vgio._core.ArchiveFile`
 interace is identical to Python's
-`ZipFile <https://docs.python.org/3/library/zipfile.html>`_ object interface.
+`ZipFile <https://docs.python.org/3/library/zipfile.html#zipfile-objects>`_
+object interface.
 
 Markup Data
 -----------

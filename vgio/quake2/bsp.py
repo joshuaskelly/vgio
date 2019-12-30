@@ -1217,6 +1217,8 @@ class Bsp(ReadWriteFile):
         AreaPortal = AreaPortal
 
     def __init__(self):
+        """Constructs a Bsp object."""
+
         super().__init__()
 
         self.identity = IDENTITY

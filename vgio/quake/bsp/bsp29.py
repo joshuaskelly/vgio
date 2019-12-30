@@ -284,12 +284,13 @@ class Plane:
         distance: The distance from world (0, 0, 0) to a point on the plane
 
         type: Planes are classified as follows:
-            0: Axial plane aligned to the x-axis.
-            1: Axial plane aligned to the y-axis.
-            2: Axial plane aligned to the z-axis.
-            3: Non-axial plane roughly aligned to the x-axis.
-            4: Non-axial plane roughly aligned to the y-axis.
-            5: Non-axial plane roughly aligned to the z-axis.
+
+            0. Axial plane aligned to the x-axis.
+            1. Axial plane aligned to the y-axis.
+            2. Axial plane aligned to the z-axis.
+            3. Non-axial plane roughly aligned to the x-axis.
+            4. Non-axial plane roughly aligned to the y-axis.
+            5. Non-axial plane roughly aligned to the z-axis.
     """
 
     format = '<4fi'
@@ -307,6 +308,7 @@ class Plane:
                  normal_z,
                  distance,
                  type):
+        """Constructs a Plane object."""
 
         self.normal = normal_x, normal_y, normal_z
         self.distance = distance
@@ -342,10 +344,12 @@ class Miptexture:
         name: The name of the miptexture.
 
         width: The width of the miptexture.
-            Note: this is the width at mipmap level 0.
+            Note:
+                This is the width at mipmap level 0.
 
         height: The height of the miptexture.
-            Note: this is the height at mipmap level 0.
+            Note:
+                This is the height at mipmap level 0.
 
         offsets: The offsets for each of the mipmaps. This is a tuple of size
             four (this is the number of mipmap levels).
@@ -353,13 +357,14 @@ class Miptexture:
         pixels: A tuple of unstructured pixel data represented as integers. A
             palette must be used to obtain RGB data.
 
-            Note: this is the pixel data for all four mip levels. The size is
-            calculated using the simplified form of the geometric series where
-            r = 1/4 and n = 4.
+            Note:
+                This is the pixel data for all four mip levels. The size is
+                calculated using the simplified form of the geometric series where
+                r = 1/4 and n = 4.
 
             The size of this tuple is:
 
-            miptexture.width * miptexture.height * 85 / 64
+                miptexture.width * miptexture.height * 85 / 64
     """
 
     format = '<16s6I'
@@ -374,6 +379,8 @@ class Miptexture:
     )
 
     def __init__(self):
+        """Constructs a MipTexture object."""
+
         self.name = None
         self.width = None
         self.height = None
@@ -439,6 +446,8 @@ class Vertex:
     )
 
     def __init__(self, x, y, z):
+        """Constructs a Vertex object."""
+
         self.x = x
         self.y = y
         self.z = z
@@ -477,9 +486,11 @@ class Node:
         children: A two-tuple of the two sub-spaces formed by the partitioning
             plane.
 
-            Note: Child 0 is the front sub-space, and 1 is the back sub-space.
+            Note:
+                Child 0 is the front sub-space, and 1 is the back sub-space.
 
-            Note: If bit 15 is set, the child is a leaf.
+            Note:
+                If bit 15 is set, the child is a leaf.
 
         bounding_box_min: The minimum coordinate of the bounding box containing
             this node and all of its children.
@@ -518,6 +529,7 @@ class Node:
                  bounding_box_max_z,
                  first_face,
                  number_of_faces):
+        """Constructs a Node object."""
 
         self.plane_number = plane_number
         self.children = child_front, child_back
@@ -588,6 +600,7 @@ class TextureInfo:
                  t_offset,
                  miptexture_number,
                  flags):
+        """Constructs a TextureInfo object"""
 
         self.s = s_x, s_y, s_z
         self.s_offset = s_offset
@@ -664,6 +677,7 @@ class Face:
                  style_2,
                  style_3,
                  light_offset):
+        """Constructs a Face object."""
 
         self.plane_number = plane_number
         self.side = side
@@ -705,7 +719,8 @@ class ClipNode:
         children: A two-tuple of the two sub-spaces formed by the partitioning
             plane.
 
-            Note: Child 0 is the front sub-space, and 1 is the back sub-space.
+            Note:
+                Child 0 is the front sub-space, and 1 is the back sub-space.
     """
 
     format = '<i2h'
@@ -720,6 +735,7 @@ class ClipNode:
                  plane_number,
                  child_front,
                  child_back):
+        """Constructs a ClipNode object."""
 
         self.plane_number = plane_number
         self.children = child_front, child_back
@@ -807,6 +823,7 @@ class Leaf:
                  ambient_level_1,
                  ambient_level_2,
                  ambient_level_3):
+        """Constructs a Leaf object."""
 
         self.contents = contents
         self.visibilitiy_offset = visibilitiy_offset
@@ -855,6 +872,8 @@ class Edge:
     )
 
     def __init__(self, vertex_0, vertex_1):
+        """Constructs an Edge object."""
+
         self.vertexes = vertex_0, vertex_1
 
     def __getitem__(self, item):
@@ -927,6 +946,7 @@ class Model:
                  visleafs,
                  first_face,
                  number_of_faces):
+        """Constructs a Model object."""
 
         self.bounding_box_min = bounding_box_min_x, bounding_box_min_y, bounding_box_min_z
         self.bounding_box_max = bounding_box_max_x, bounding_box_max_y, bounding_box_max_z
@@ -1175,7 +1195,8 @@ class Bsp(ReadWriteFile):
 
         models: A list of Models.
 
-            Note: The first model is the entire level.
+            Note:
+                The first model is the entire level.
 
         fp: The file-like object to read data from.
 
@@ -1424,7 +1445,8 @@ class Bsp(ReadWriteFile):
         Returns:
             An Image object or None.
 
-            Note: Not all indices are valid miptextures.
+            Note:
+                Not all indices are valid miptextures.
         """
 
         if index > len(self.miptextures):

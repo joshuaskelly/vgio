@@ -4,6 +4,10 @@
 :py:mod:`protocol` Module
 =========================
 
+**Source code:** protocol.py_
+
+.. _protocol.py: https://github.com/joshuaskelly/vgio/tree/master/vgio/quake/protocol.py
+
 :py:class:`~vgio.quake.protocol.Bad` Class
 ------------------------------------------
 

@@ -22,4 +22,7 @@ quake Subpackage
    wad
 
 .. autodata:: palette
+    :annotation:
+
 .. autodata:: anorms
+    :annotation:

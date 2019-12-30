@@ -4,9 +4,9 @@
 quake2 Subpackage
 =================
 
-**Source code:** quake_
+**Source code:** quake2_
 
-.. _quake: https://github.com/joshuaskelly/vgio/tree/master/vgio/quake2/__init__.py
+.. _quake2: https://github.com/joshuaskelly/vgio/tree/master/vgio/quake2/__init__.py
 
 .. toctree::
    :maxdepth: 1
@@ -20,3 +20,4 @@ quake2 Subpackage
    wal
 
 .. autodata:: anorms
+    :annotation:

@@ -114,7 +114,8 @@ class Bsp(Bsp29):
 
         models: A list of Models.
 
-            Note: The first model is the entire level.
+            Note:
+                The first model is the entire level.
 
         fp: The file-like object to read data from.
 
