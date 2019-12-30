@@ -69,6 +69,8 @@ class HxShader(ReadWriteFile):
     """
 
     def __init__(self):
+        """Constructs an HxShader object."""
+
         super().__init__()
 
         self.name = ''

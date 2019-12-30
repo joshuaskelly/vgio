@@ -37,6 +37,12 @@ def is_md2file(filename):
     """Quickly see if a file is a md2 file by checking the magic number.
 
     The filename argument may be a file for file-like object.
+
+    Args:
+        filename: File to check as string or file-like object.
+
+    Returns:
+        True if given file's magic number is correct.
     """
     try:
         if hasattr(filename, 'read'):
@@ -576,6 +582,7 @@ class Md2(ReadWriteFile):
     Example:
         Basic usage::
 
+            from vgio.quake2.md2 import Md2
             m = Md2.open(file)
 
     Attributes:
@@ -701,7 +708,7 @@ class Md2(ReadWriteFile):
         )
 
         header.skin_offset, _ = _write_chunk(factory.Skins, md2.skins)
-        header.st_vertex_offset, _ = _write_chunk(factory.StVerexes, md2.st_vertexes)
+        header.st_vertex_offset, _ = _write_chunk(factory.StVertexes, md2.st_vertexes)
         header.triangle_offset, _ = _write_chunk(factory.Triangles, md2.triangles)
 
         header.frame_offset = file.tell()

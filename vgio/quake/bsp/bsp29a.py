@@ -27,6 +27,12 @@ def is_bspfile(filename):
     """Quickly see if a file is a bsp file by checking the magic number.
 
     The filename argument may be a file for file-like object.
+
+    Args:
+        filename: File to check as string or file-like object.
+
+    Returns:
+        True if given file's magic number is correct.
     """
     try:
         if hasattr(filename, 'read'):
@@ -65,6 +71,55 @@ class Edge(Bsp29.factory.Edge):
 
 
 class Bsp(Bsp29):
+    """Class for working with Bsp files
+
+    Example:
+        Basic usage::
+
+            from vgio.quake.bsp.bsp29a import Bsp
+            b = Bsp.open('ad_sepulcher.bsp')
+
+    Attributes:
+        version: Version of the map file. Vanilla Quake is 29.
+
+        entities: A string containing the entity definitions.
+
+        planes: A list of Planes used by the bsp tree data structure.
+
+        miptextures: A list of Miptextures.
+
+        vertexes: A list of Vertexes.
+
+        visibilities: A list of ints representing visibility data.
+
+        nodes: A list of Nodes used by the bsp tree data structure.
+
+        texture_infos: A list of TextureInfo objects.
+
+        faces: A list of Faces.
+
+        lighting: A list of ints representing lighting data.
+
+        clip_nodes: A list of ClipNodes used by the bsp tree data structure.
+
+        leafs: A list of Leafs used by the bsp tree data structure.
+
+        mark_surfaces: A list of ints representing lists of consecutive faces
+            used by the Node objects.
+
+        edges: A list of Edges.
+
+        surf_edges: A list of ints representing  list of consecutive edges used
+            by the Face objects.
+
+        models: A list of Models.
+
+            Note: The first model is the entire level.
+
+        fp: The file-like object to read data from.
+
+        mode: The file mode for the file-like object.
+    """
     class factory(Bsp29.factory):
         Node = Node
         Face = Face

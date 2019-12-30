@@ -41,6 +41,12 @@ def is_wadfile(filename):
     """Quickly see if a file is a wad file by checking the magic number.
 
     The filename argument may be a file for file-like object.
+
+    Args:
+        filename: File to check as string or file-like object.
+
+    Returns:
+        True if given file's magic number is correct.
     """
     try:
         if hasattr(filename, 'read'):
@@ -298,6 +304,7 @@ class WadFile(ArchiveFile):
     Example:
         Basic usage::
 
+            from vgio.quake.wad import WadFile
             p = WadFile(file, mode='r')
 
     Args:

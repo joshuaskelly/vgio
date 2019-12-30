@@ -192,6 +192,13 @@ class GrpFile(ArchiveFile):
         ArchiveWriteFile = _GrpWriteFile
 
     def __init__(self, file, mode='r'):
+        """Open an Grp file, where *file* can be a path to a file (a string), or
+        a file-like object.
+
+        The mode parameter should be 'r' to read an existing file, 'w' to
+        truncate and write a new file, or 'a' to append to an existing file.
+        """
+
         self.end_of_data = 0
         self.data_buffer = io.BytesIO()
 

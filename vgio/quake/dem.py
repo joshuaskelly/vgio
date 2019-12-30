@@ -24,13 +24,14 @@ class Dem(ReadWriteFile):
     Example:
         Basic usage::
 
+            from vgio.quake.dem import Dem
             d = Dem.open(file)
 
     Attributes:
         cd_track: The number of the cd track to play. The track will be '-1' if
             no music.
 
-        message_blocks: A sequence of Message objects
+        message_blocks: A sequence of MessageBlock objects
     """
 
     def __init__(self):

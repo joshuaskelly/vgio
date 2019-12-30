@@ -21,6 +21,6 @@
 
 .. autoclass:: vgio.quake.bsp.Bsp
     :members:
-    :exclude-members: image, mesh, validate
+    :exclude-members: open
 
 .. automethod:: vgio.quake.bsp.Bsp.open

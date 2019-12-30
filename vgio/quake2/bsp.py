@@ -41,6 +41,12 @@ def is_bspfile(filename):
     """Quickly see if a file is a bsp file by checking the magic number.
 
     The filename argument may be a file for file-like object.
+
+    Args:
+        filename: File to check as string or file-like object.
+
+    Returns:
+        True if given file's magic number is correct.
     """
     try:
         if hasattr(filename, 'read'):
@@ -1144,6 +1150,7 @@ class Bsp(ReadWriteFile):
     Example:
         Basic usage::
 
+            from vgio.quake2.bsp import Bsp
             b = Bsp.open(file)
 
     Attributes:

@@ -705,6 +705,7 @@ class Mdl(ReadWriteFile):
     Example:
         Basic usage::
 
+            from vgio.quake.mdl import Mdl
             m = Mdl.open(file)
 
     Attributes:

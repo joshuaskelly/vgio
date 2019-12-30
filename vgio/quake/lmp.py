@@ -76,6 +76,7 @@ class Lmp(ReadWriteFile):
     """Class for working with Lmp files
 
     There are three different types of lump files:
+
         1. 2D image - The majority of the lump files are 2D images. If a lump
             is a 2D image it will have width, height, and pixels attributes.
 
@@ -90,6 +91,7 @@ class Lmp(ReadWriteFile):
     Example:
         Basic usage::
 
+            from vgio.quake.lmp import Lmp
             l = Lmp.open(file)
 
     Attributes:

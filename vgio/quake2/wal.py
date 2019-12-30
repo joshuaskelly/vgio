@@ -103,8 +103,9 @@ class Wal(ReadWriteFile):
     Example:
         Basic usage::
 
+            from vgio.quake2.wal import Wal
             with open(path) as file:
-                w = wal.Wal.read(file)
+                w = Wal.read(file)
 
     Attributes:
         name: The name of the wal texture.

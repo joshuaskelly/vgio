@@ -17,6 +17,7 @@ lmp data.
 
 .. autoclass:: vgio.quake.lmp.Lmp
     :members:
+    :exclude-members: image
 
 .. automethod:: vgio.quake.lmp.Lmp.__init__
 .. automethod:: vgio.quake.lmp.Lmp.open

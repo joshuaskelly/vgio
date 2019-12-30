@@ -41,6 +41,12 @@ def is_pakfile(filename):
     """Quickly see if a file is a pak file by checking the magic number.
 
     The filename argument may be a file for file-like object.
+
+    Args:
+        filename: File to check as string or file-like object.
+
+    Returns:
+        True if given file's magic number is correct.
     """
     try:
         if hasattr(filename, 'read'):
@@ -171,12 +177,17 @@ class PakInfo:
 class PakFile(ArchiveFile):
     """Class with methods to open, read, close, and list pak files.
 
-     p = PakFile(file, mode='r')
+    Example:
+        Basic usage::
 
-    file: Either the path to the file, or a file-like object. If it is a path,
-        the file will be opened and closed by PakFile.
+            from vgio.quake.pak import PakFile
+            p = PakFile(file, mode='r')
 
-    mode: The file mode for the file-like object.
+    Args:
+        file: Either the path to the file, or a file-like object. If it is a path,
+            the file will be opened and closed by PakFile.
+
+        mode: The file mode for the file-like object.
     """
 
     class factory(ArchiveFile.factory):

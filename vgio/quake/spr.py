@@ -306,6 +306,7 @@ class Spr(ReadWriteFile):
     Example:
         Basic usage::
 
+            from vgio.quake.spr import Spr
             s = Spr.open(file)
 
     Attributes:
