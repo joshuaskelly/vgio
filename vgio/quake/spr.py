@@ -51,6 +51,12 @@ def is_sprfile(filename):
     """Quickly see if a file is an spr file by checking the magic number.
 
     The filename argument may be a file for file-like object.
+
+    Args:
+        filename: File to check as string or file-like object.
+
+    Returns:
+        True if given file's magic number is correct.
     """
     try:
         if hasattr(filename, 'read'):
@@ -298,7 +304,9 @@ class Spr(ReadWriteFile):
     """Class for working with Spr files
 
     Example:
-        s = Spr.open(file)
+        Basic usage::
+
+            s = Spr.open(file)
 
     Attributes:
         identity: The magic number of the model, must be b'IDSP'

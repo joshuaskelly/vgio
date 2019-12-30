@@ -236,7 +236,23 @@ class Entry:
 
 
 class WadInfo:
-    """Class with attributes describing each entry in the wad file archive."""
+    """Instances of the WadInfo class are returned by the getinfo() and
+    infolist() methods of WadFile objects. Each object stores information about
+    a single member of the WadFile archive.
+
+    Attributes:
+        filename: Name of file.
+
+        file_offset: Offset of file in bytes.
+
+        file_size: Size of the file in bytes.
+
+        compression: Type of compression.
+
+        disk_size: Size of file on disk in bytes.
+
+        type: Type of entry.
+    """
 
     __slots__ = (
         'filename',
@@ -279,12 +295,16 @@ class WadInfo:
 class WadFile(ArchiveFile):
     """Class with methods to open, read, close, and list wad files.
 
-     p = WadFile(file, mode='r')
+    Example:
+        Basic usage::
 
-    file: Either the path to the file, or a file-like object. If it is a path,
-        the file will be opened and closed by WadFile.
+            p = WadFile(file, mode='r')
 
-    mode: The file mode for the file-like object.
+    Args:
+        file: Either the path to the file, or a file-like object. If it is a path,
+            the file will be opened and closed by WadFile.
+
+        mode: The file mode for the file-like object.
     """
 
     class factory(ArchiveFile.factory):

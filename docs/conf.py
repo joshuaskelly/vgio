@@ -17,6 +17,7 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
+import datetime
 import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
@@ -48,15 +49,16 @@ templates_path = ['_templates']
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
-#
 source_suffix = '.rst'
 
 # The master toctree document.
 master_doc = 'index'
 
+now = datetime.datetime.now()
+
 # General information about the project.
 project = 'vgio'
-copyright = '2016, Joshua Skelton'
+copyright = f'2016-{now.year} Joshua Skelton'
 author = 'Joshua Skelton'
 
 # The version info for the project you're documenting, acts as replacement for

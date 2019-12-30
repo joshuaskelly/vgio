@@ -128,7 +128,16 @@ class Entry:
 
 
 class PakInfo:
-    """Class with attributes describing each entry in the pak file archive."""
+    """Instances of the PakInfo class are returned by the getinfo() and
+    infolist() methods of PakFile objects. Each object stores information about
+    a single member of the PakFile archive.
+
+    Attributes:
+        filename: Name of file.
+
+        file_offset: Offset of file in bytes.
+
+        file_size: Size of the file in bytes."""
 
     __slots__ = (
         'filename',

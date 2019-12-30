@@ -2,8 +2,8 @@ duke3d Subpackage
 =================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
-   art.rst
-   grp.rst
-   map.rst
+   art
+   grp
+   map

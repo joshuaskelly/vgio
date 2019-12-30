@@ -1,6 +1,9 @@
-"""This module provides file I/O for Devil Daggers shader files.
+"""
+Description:
+    This module provides file I/O for Devil Daggers shader files.
 
-Example:
+Example::
+
     hxshader_file = hxshader.HxShader.open('boid')
 """
 

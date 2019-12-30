@@ -34,6 +34,12 @@ def is_grpfile(filename):
     """Quickly see if a file is a grp file by checking the magic number.
 
     The filename argument may be a file for file-like object.
+
+    Args:
+        filename: File to check as string or file-like object.
+
+    Returns:
+        True if given file's magic number is correct.
     """
     try:
         if hasattr(filename, 'read'):
@@ -109,7 +115,17 @@ class Entry:
 
 
 class GrpInfo:
-    """Class with attributes describing each entry in the grp file archive."""
+    """Instances of the GrpInfo class are returned by the getinfo() and
+    infolist() methods of GrpFile objects. Each object stores information about
+    a single member of the GrpFile archive.
+
+    Attributes:
+        filename: Name of file.
+
+        file_offset: Offset of file in bytes.
+
+        file_size: Size of the file in bytes.
+    """
 
     __slots__ = (
         'filename',
@@ -121,6 +137,8 @@ class GrpInfo:
                  filename,
                  file_offset=0,
                  file_size=0):
+        """Constructs a GrpInfo object."""
+
         self.filename = filename
         self.file_offset = file_offset
         self.file_size = file_size
@@ -156,12 +174,17 @@ class _GrpWriteFile(_ArchiveWriteFile):
 class GrpFile(ArchiveFile):
     """Class with methods to open, read, close, and list grp files.
 
-     p = GrpFile(file, mode='r')
+    Example:
+        Basic usage::
 
-    file: Either the path to the file, or a file-like object. If it is a path,
-        the file will be opened and closed by GrpFile.
+            from vgio.duke3d.grp import GrpFile
+            grp_file = GrpFile(file, mode='r')
 
-    mode: The file mode for the file-like object.
+    Attributes:
+        file: Either the path to the file, or a file-like object. If it is a path,
+            the file will be opened and closed by GrpFile.
+
+        mode: The file mode for the file-like object.
     """
 
     class factory(ArchiveFile.factory):

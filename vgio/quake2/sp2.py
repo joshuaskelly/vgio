@@ -125,6 +125,7 @@ class SpriteFrame:
                  origin_x,
                  origin_y,
                  name):
+        """Constructs a SpriteFrame object."""
 
         self.width = width
         self.height = height
@@ -155,8 +156,10 @@ class Sp2(ReadWriteFile):
     """Class for working with Sp2 files
 
     Example:
-        with open('s_bubble.sp2') as file:
-            sp2_file = sp2.Sp2.read(file)
+        Basic usage::
+
+            with open('s_bubble.sp2') as file:
+                sp2_file = sp2.Sp2.read(file)
 
     Attributes:
         identity: The identity of the file. Should be b'IDS2'
@@ -172,6 +175,8 @@ class Sp2(ReadWriteFile):
         SpriteFrame = SpriteFrame
 
     def __init__(self):
+        """Constructs a Sp2 object."""
+
         super().__init__()
 
         self.identity = IDENTITY

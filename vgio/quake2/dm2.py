@@ -21,7 +21,9 @@ class Dm2(ReadWriteFile):
     """Class for working with Dm2 files
 
     Example:
-        d = Dm2.open(file)
+        Basic usage::
+
+            d = Dm2.open(file)
 
     Attributes:
         message_blocks: A sequence of Message objects

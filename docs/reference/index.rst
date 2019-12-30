@@ -2,9 +2,9 @@ Reference
 =========
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
-   devildaggers/index.rst
-   duke3d/index.rst
-   quake/index.rst
-   quake2/index.rst
+   devildaggers/index
+   duke3d/index
+   quake/index
+   quake2/index

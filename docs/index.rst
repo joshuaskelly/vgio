@@ -2,10 +2,10 @@ vgio Documentation
 ==================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
-   installation.rst
-   handbook/index.rst
-   reference/index.rst
-   about.rst
-   releasenotes/index.rst
+   installation
+   handbook/index
+   reference/index
+   about
+   releasenotes/index

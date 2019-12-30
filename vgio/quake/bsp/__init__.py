@@ -13,9 +13,24 @@ def is_bspfile(filename):
 
 
 class Bsp:
+    """Factory class for working with bsp files. Will automatically detect the
+    version of the provided file and open it with the correct versioned Bsp
+    object."""
+
     @staticmethod
     def open(file, mode='r'):
-        # Open for read or append
+        """Open a Bsp object where file can be a path to a file (a
+        string), or a file-like object.
+
+        Args:
+            file: Either the path to the file, a file-like object, or bytes.
+
+            mode: An optional string that indicates which mode to open the file.
+
+        Returns:
+            A Bsp object.
+        """
+
         if mode == 'r' or mode == 'a':
             if bsp29.is_bspfile(file):
                 return bsp29.Bsp.open(file, mode)

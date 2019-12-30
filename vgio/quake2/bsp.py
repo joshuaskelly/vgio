@@ -170,9 +170,11 @@ class Node:
         children: A two-tuple of the two sub-spaces formed by the partitioning
             plane.
 
-            Note: Child 0 is the front sub-space, and 1 is the back sub-space.
+            Note:
+                Child 0 is the front sub-space, and 1 is the back sub-space.
 
-            Note: If bit 15 is set, the child is a leaf.
+            Note:
+                If bit 15 is set, the child is a leaf.
 
         bounding_box_min: The minimum coordinate of the bounding box containing
             this node and all of its children.
@@ -1140,7 +1142,9 @@ class Bsp(ReadWriteFile):
     """Class for working with Bsp files
 
     Example:
-        b = Bsp.open(file)
+        Basic usage::
+
+            b = Bsp.open(file)
 
     Attributes:
         identity: Identity of the Bsp file. Should be b'IBSP'

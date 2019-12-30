@@ -23,7 +23,16 @@ class ReadWriteFile(object):
 
     @classmethod
     def open(cls, file, mode='r'):
-        """Returns a ReadWriteFile object
+        """Open a ReadWriteFile object where file can be a path to a file (a
+        string), or a file-like object.
+
+        The mode parameter should be ‘r’ to read an existing file, ‘w’ to
+        truncate and write a new file, or ‘a’ to append to an existing file.
+
+        open() is also a context manager and supports the with statement::
+
+            with ReadWriteFile.open('file.ext') as file:
+                file.save('file2.ext')
 
         Args:
             file: Either the path to the file, a file-like object, or bytes.
@@ -94,7 +103,7 @@ class ReadWriteFile(object):
         raise NotImplementedError
 
     def save(self, file):
-        """Writes data to file
+        """Writes data to file.
 
         Args:
             file: Either the path to the file, or a file-like object.
@@ -153,6 +162,16 @@ class ArchiveInfo:
 
     @classmethod
     def from_file(cls, filename):
+        """Construct an ArchiveInfo instance for a file on the filesystem, in
+        preparation for adding it to an archive file. filename should be the
+        path to a file or directory on the filesystem.
+
+        Args:
+            filename: A path to a file or directory.
+
+        Returns:
+            An ArchiveInfo object.
+        """
         raise NotImplementedError
 
 
@@ -334,12 +353,11 @@ class _ArchiveWriteFile(io.BufferedIOBase):
 class ArchiveFile:
     """Class with methods to open, read, close, and list archive files.
 
-     p = ArchiveFile(file, mode='r')
+    Attributes:
+        file: Either the path to the file, or a file-like object. If it is a path,
+            the file will be opened and closed by ArchiveFile.
 
-    file: Either the path to the file, or a file-like object. If it is a path,
-        the file will be opened and closed by ArchiveFile.
-
-    mode: Currently the only supported mode is 'r'
+        mode: Currently the only supported mode is 'r'
     """
 
     fp = None
@@ -412,18 +430,39 @@ class ArchiveFile:
         raise NotImplementedError
 
     def namelist(self):
-        """Return a list of file names in the archive file."""
+        """Return a list of archive members by name.
+
+        Returns:
+            A sequence of filenames.
+        """
 
         return [data.filename for data in self.file_list]
 
     def infolist(self):
-        """Return a list of ArchiveInfo instances for all of the files in the
-        archive file."""
+        """Return a list containing an ArchiveInfo object for each member of the
+        archive. The objects are in the same order as their entries in the
+        actual archive file on disk if an existing archive was opened.
+
+        Returns:
+            A sequence of ArchiveInfo objects.
+        """
 
         return self.file_list
 
     def getinfo(self, name):
-        """Return an instance of ArchiveInfo given 'name'."""
+        """Return a ArchiveInfo object with information about the archive member
+        name. Calling getinfo() for a name not currently contained in the
+        archive will raise a KeyError.
+
+        Args:
+            name: AchiveInfo name.
+
+        Returns:
+            An ArchiveInfo object.
+
+        Raises:
+            KeyError: If no archive item exists for the given name.
+        """
 
         info = self.NameToInfo.get(name)
 
@@ -433,7 +472,16 @@ class ArchiveFile:
         return info
 
     def read(self, name):
-        """Return file bytes (as a string) for 'name'."""
+        """Return the bytes of the file name in the archive. name is the name of
+        the file in the archive, or a ArchiveInfo object. The archive must be
+        open for read or append.
+
+        Args:
+            name: ArchiveInfo name.
+
+        Returns:
+            File as bytes.
+        """
 
         info = self.getinfo(name)
 
@@ -441,7 +489,29 @@ class ArchiveFile:
             return fp.read(info.file_size)
 
     def open(self, name, mode='r'):
-        """Return a file-like object for 'name'."""
+        """Access a member of the archive as a binary file-like object. name can
+        be either the name of a file within the archive or an ArchiveInfo object.
+        The mode parameter, if included, must be 'r' (the default) or 'w'.
+
+        open() is also a context manager and supports the with statement::
+
+            with ArchiveFile('archive.file') as archive_file:
+                with archive_file.open('entry') as entry_file:
+                    print(entry_file.read())
+
+        Args:
+            name: Name or ArchiveInfo object.
+
+            mode: File mode to open object.
+
+        Returns:
+            A binary file-like object.
+
+        Raises:
+            ValueError: If mode isn't 'r' or 'w'.
+
+            RuntimeError: If file was already closed.
+        """
 
         if mode not in ('r', 'w'):
             raise ValueError("open() requires mode 'r' or 'w'")
@@ -483,13 +553,21 @@ class ArchiveFile:
         return self.factory.ArchiveWriteFile(self, archive_info)
 
     def extract(self, member, path=None):
-        """Extract a member from the archive file to the current working directory
-        using its full name. Note: archive files do not store file metadata.
+        """Extract a member from the archive to the current working directory;
+        member must be its full name or a ArchiveInfo object. Its file
+        information is extracted as accurately as possible. path specifies a
+        different directory to extract to. member can be a filename or an
+        ArchiveInfo object.
 
-        member: Either the name of the member to extract or a ArchiveInfo instance.
+        Args:
+            member: Either the name of the member to extract or a ArchiveInfo
+                instance.
 
-        path: The directory to extract to. The current working directory will
-        be used if None.
+            path: The directory to extract to. The current working directory
+                will be used if None.
+
+        Returns:
+            Path to extracted file.
         """
 
         if not isinstance(member, self.factory.ArchiveInfo):
@@ -501,15 +579,17 @@ class ArchiveFile:
         return self._extract_member(member, path)
 
     def extractall(self, path=None, members=None):
-        """Extract all members from the archive file to the current working
-        directory.
+        """Extract all members from the archive to the current working
+        directory. path specifies a different directory to extract to. members
+        is optional and must be a subset of the list returned by namelist().
 
-        path: The directory to extract to. The current working directory will
-            be used if None.
+        Args:
+            path: The directory to extract to. The current working directory
+                will be used if None.
 
-        members: The names of the members to extract. This must be a subset of
-            the list returned by namelist(). All members will be extracted if
-            None.
+            members: The names of the members to extract. This must be a subset
+                of the list returned by namelist(). All members will be
+                extracted if None.
         """
 
         if members is None:
@@ -580,7 +660,10 @@ class ArchiveFile:
         return target_path
 
     def write(self, filename, arcname=None):
-        """Puts bytes from filename into the archive file under the name arcname.
+        """Write the file named filename to the archive, giving it the archive
+        name arcname (by default, this will be the same as filename, but without
+        a drive letter and with leading path separators removed). The archive
+        must be open with mode 'w', or 'a'.
 
         Args:
             filename:
@@ -610,6 +693,18 @@ class ArchiveFile:
                 shutil.copyfileobj(src, dest, 8*1024)
 
     def writestr(self, info_or_arcname, data):
+        """Write a file into the archive. The contents is data, which may be
+        either a string or a bytes instance; if it is a string, it is encoded as
+        UTF-8 first. info_or_arcname is either the file name it will be given in
+        the archive, or a ArchiveInfo instance. If it’s an instance, at least
+        the filename must be given. The archive must be opened with mode 'w'
+        or 'a'.
+
+        Args:
+            info_or_arcname:
+
+            data: Data to be written. Either a string or bytes.
+        """
         if not self.fp:
             raise ValueError('Attempting to write to archive that was'
                              ' already closed')
@@ -647,7 +742,12 @@ class ArchiveFile:
             data.close()
 
     def close(self):
-        """Close the file."""
+        """Close the archive file. You must call close() before exiting your
+        program or essential records will not be written.
+
+        Raises:
+            ValueError: If open writing handles exist.
+        """
 
         if self.fp is None:
             return

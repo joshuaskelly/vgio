@@ -56,6 +56,12 @@ def is_mdlfile(filename):
     """Quickly see if a file is a mdl file by checking the magic number.
 
     The filename argument may be a file for file-like object.
+
+    Args:
+        filename: File to check as string or file-like object.
+
+    Returns:
+        True if given file's magic number is correct.
     """
     try:
         if hasattr(filename, 'read'):
@@ -697,12 +703,14 @@ class Mdl(ReadWriteFile):
     """Class for working with Mdl files
 
     Example:
-        m = Mdl.open(file)
+        Basic usage::
+
+            m = Mdl.open(file)
 
     Attributes:
-        identifier: The magic number of the model, must be b'IDPO'
+        identifier: The magic number of the file, must be b'IDPO'
 
-        version: The version of the model, should be 6.
+        version: The version of the file, should be 6.
 
         scale: The scale of the model. Used to correctly resize the model as
             the frame vertexes are packed into a (0, 0, 0) to (255, 255, 255)
@@ -747,11 +755,6 @@ class Mdl(ReadWriteFile):
         frames: The list of Frame or FrameGroup objects. Use the type
             attribute to identify the object. The type is either
             SINGLE or GROUP.
-
-
-        fp: The file-like object to read data from.
-
-        mode: The file mode for the file-like object.
     """
     class factory:
         Header = Header
@@ -764,6 +767,7 @@ class Mdl(ReadWriteFile):
         FrameGroup = FrameGroup
 
     def __init__(self):
+        """Constructs an Mdl object."""
         super().__init__()
 
         self.identifier = IDENTITY

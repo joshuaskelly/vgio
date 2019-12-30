@@ -1,10 +1,14 @@
 devildaggers Subpackage
 =======================
 
-.. toctree::
-   :maxdepth: 2
+**Source code:** devildaggers_
 
-   hxmesh.rst
-   hxresourcegroup.rst
-   hxshader.rst
-   hxtexture.rst
+.. _devildaggers: https://github.com/joshuaskelly/vgio/tree/master/vgio/devildaggers/__init__.py
+
+.. toctree::
+   :maxdepth: 1
+
+   hxmesh
+   hxresourcegroup
+   hxshader
+   hxtexture
