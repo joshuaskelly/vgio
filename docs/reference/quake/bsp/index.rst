@@ -17,7 +17,7 @@
 .. autofunction:: is_bspfile
 
 :py:class:`~vgio.quake.bsp.Bsp` Class
----------------------------------------------
+-------------------------------------
 
 .. autoclass:: vgio.quake.bsp.Bsp
     :members:

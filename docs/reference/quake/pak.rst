@@ -9,7 +9,7 @@
 .. _pak.py: https://github.com/joshuaskelly/vgio/tree/master/vgio/quake/pak.py
 
 The :py:mod:`pak` module provides an :py:class:`PakFile` class which
-derives from :py:class:`ArchiveFile` and is used to read and write
+derives from :py:class:`~vgio._core.ArchiveFile` and is used to read and write
 Quake archive data.
 
 .. autofunction:: vgio.quake.pak.is_pakfile

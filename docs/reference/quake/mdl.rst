@@ -9,7 +9,8 @@
 .. _mdl.py: https://github.com/joshuaskelly/vgio/tree/master/vgio/quake/mdl.py
 
 The :py:mod:`mdl` module provides an :py:class:`Mdl` class which derives
-from :py:class:`ReadWriteFile` and is used to read and write Quake mdl data.
+from :py:class:`~vgio._core.ReadWriteFile` and is used to read and write Quake
+mdl data.
 
 .. autofunction:: vgio.quake.mdl.is_mdlfile
 

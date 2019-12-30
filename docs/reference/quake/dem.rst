@@ -8,7 +8,8 @@
 .. _dem.py: https://github.com/joshuaskelly/vgio/tree/master/vgio/quake/dem.py
 
 The :py:mod:`dem` module provides an :py:class:`Dem` class which derives
-from :py:class:`ReadWriteFile` and is used to read and write Quake demo data.
+from :py:class:`~vgio._core.ReadWriteFile` and is used to read and write Quake
+demo data.
 
 :py:class:`~vgio.quake.dem.Dem` Class
 -------------------------------------

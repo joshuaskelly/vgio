@@ -9,7 +9,8 @@
 .. _sp2.py: https://github.com/joshuaskelly/vgio/tree/master/vgio/quake2/sp2.py
 
 The :py:mod:`sp2` module provides an :py:class:`Sp2` class which derives
-from :py:class:`ReadWriteFile` and is used to read and write Quake sp2 data.
+from :py:class:`~vgio._core.ReadWriteFile` and is used to read and write Quake
+sp2 data.
 
 .. autofunction:: is_sp2file
 

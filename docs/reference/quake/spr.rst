@@ -9,7 +9,8 @@
 .. _spr.py: https://github.com/joshuaskelly/vgio/tree/master/vgio/quake/spr.py
 
 The :py:mod:`spr` module provides an :py:class:`Spr` class which derives
-from :py:class:`ReadWriteFile` and is used to read and write Quake spr data.
+from :py:class:`~vgio._core.ReadWriteFile` and is used to read and write Quake
+spr data.
 
 .. autofunction:: vgio.quake.spr.is_sprfile
 

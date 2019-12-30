@@ -9,7 +9,8 @@
 .. _lmp.py: https://github.com/joshuaskelly/vgio/tree/master/vgio/quake/lmp.py
 
 The :py:mod:`lmp` module provides an :py:class:`Lmp` class which derives
-from :py:class:`ReadWriteFile` and is used to read and write Quake lmp data.
+from :py:class:`~vgio._core.ReadWriteFile` and is used to read and write Quake
+lmp data.
 
 :py:class:`~vgio.quake.lmp.Lmp` Class
 -------------------------------------

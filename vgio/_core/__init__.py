@@ -1,3 +1,11 @@
+"""The _core module provides several base classes for creating binary
+serialization classes.
+
+Note:
+    These classes must be subclassed as the don't do anything useful on
+    their own.
+"""
+
 import io
 import os
 import shutil
@@ -16,7 +24,17 @@ __all__ = ['ReadWriteFile', 'ArchiveInfo', 'ArchiveFile']
 
 
 class ReadWriteFile(object):
+    """ReadWriteFile serves as base class for serializing/deserialing
+    binary data.
+
+    Attributes:
+        fp: The handle to the open file. Will be None if file closed.
+
+        mode: File mode. Is one of 'r', 'w', or 'a'.
+    """
     def __init__(self):
+        """Initializes a ReadWriteFile object. Derving classes must call this."""
+
         self.fp = None
         self.mode = None
         self._did_modify = False
@@ -149,7 +167,17 @@ class ReadWriteFile(object):
 
 
 class ArchiveInfo:
-    """Class with attributes describing each entry in the archive."""
+    """ArchiveInfo objects store information about a single entry in the
+    ArchiveFile archive. Instances of the ArchiveInfo class are returned by the getinfo() and
+    infolist() methods of ArchiveFile objects.
+
+    Attributes:
+        filename: Name of file.
+
+        file_offset: Offset of file in bytes.
+
+        file_size: Size of the file in bytes.
+    """
 
     __slots__ = (
         'filename',
@@ -351,13 +379,13 @@ class _ArchiveWriteFile(io.BufferedIOBase):
 
 
 class ArchiveFile:
-    """Class with methods to open, read, close, and list archive files.
+    """ArchiveFile serves as base class for working with binary archive data.
 
     Attributes:
         file: Either the path to the file, or a file-like object. If it is a path,
             the file will be opened and closed by ArchiveFile.
 
-        mode: Currently the only supported mode is 'r'
+        mode: File mode. Is one of 'r', 'w', or 'a'.
     """
 
     fp = None

@@ -9,7 +9,8 @@
 .. _bsp29a.py: https://github.com/joshuaskelly/vgio/tree/master/vgio/quake/bsp/bsp29a.py
 
 The :py:mod:`bsp29a` module provides an :py:class:`Bsp` class which derives
-from :py:class:`ReadWriteFile` and is used to read and write Quake bsp29a data.
+from :py:class:`~vgio._core.ReadWriteFile` and is used to read and write Quake
+bsp29a data.
 
 .. autofunction:: is_bspfile
 

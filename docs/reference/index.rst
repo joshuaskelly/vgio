@@ -8,3 +8,4 @@ Reference
    duke3d/index
    quake/index
    quake2/index
+   _core

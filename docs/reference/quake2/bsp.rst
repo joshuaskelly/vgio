@@ -9,7 +9,8 @@
 .. _bsp.py: https://github.com/joshuaskelly/vgio/tree/master/vgio/quake2/bsp.py
 
 The :py:mod:`bsp` module provides an :py:class:`Bsp` class which derives
-from :py:class:`ReadWriteFile` and is used to read and write Quake bsp data.
+from :py:class:`~vgio._core.ReadWriteFile` and is used to read and write Quake
+bsp data.
 
 .. autofunction:: is_bspfile
 

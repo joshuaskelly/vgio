@@ -12,4 +12,4 @@ Mission
 License
 -------
 
-vgio is `licensed under the open source MIT Software License <https://raw.githubusercontent.com/joshuaskelly/vgio/master/LICENSE>`_
+vgio is licensed under the open source `MIT Software License <https://raw.githubusercontent.com/joshuaskelly/vgio/master/LICENSE>`_

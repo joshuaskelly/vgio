@@ -9,7 +9,8 @@
 .. _wal.py: https://github.com/joshuaskelly/vgio/tree/master/vgio/quake2/wal.py
 
 The :py:mod:`wal` module provides an :py:class:`Wal` class which derives
-from :py:class:`ReadWriteFile` and is used to read and write Quake wal data.
+from :py:class:`~vgio._core.ReadWriteFile` and is used to read and write Quake
+wal data.
 
 :py:class:`~vgio.quake2.wal.Wal` Class
 --------------------------------------

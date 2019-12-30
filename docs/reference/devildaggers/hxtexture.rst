@@ -9,7 +9,7 @@
 .. _hxtexture.py: https://github.com/joshuaskelly/vgio/tree/master/vgio/devildaggers/hxtexture.py
 
 The :py:mod:`hxtexture` module provides an :py:class:`HxTexture` class which
-derives from :py:class:`ReadWriteFile` and is used to read and write
+derives from :py:class:`~vgio._core.ReadWriteFile` and is used to read and write
 Devil Daggers texture data.
 
 :py:class:`~vgio.devildaggers.hxtexture.HxTexture` Class

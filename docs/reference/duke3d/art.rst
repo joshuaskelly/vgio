@@ -9,7 +9,7 @@
 .. _art.py: https://github.com/joshuaskelly/vgio/tree/master/vgio/duke3d/art.py
 
 The :py:mod:`art` module provides an :py:class:`ArtFile` class which
-derives from :py:class:`ArchiveFile` and is used to read and write
+derives from :py:class:`~vgio._core.ArchiveFile` and is used to read and write
 Duke3D texture data.
 
 .. autofunction:: vgio.duke3d.art.is_artfile

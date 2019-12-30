@@ -9,7 +9,7 @@
 .. _map.py: https://github.com/joshuaskelly/vgio/tree/master/vgio/duke3d/map.py
 
 The :py:mod:`map` module provides an :py:class:`Map` class which
-derives from :py:class:`ReadWriteFile` and is used to read and write
+derives from :py:class:`~vgio._core.ReadWriteFile` and is used to read and write
 Duke3D map data.
 
 .. autofunction:: vgio.duke3d.map.is_mapfile

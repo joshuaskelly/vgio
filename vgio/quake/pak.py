@@ -137,7 +137,8 @@ class PakInfo:
 
         file_offset: Offset of file in bytes.
 
-        file_size: Size of the file in bytes."""
+        file_size: Size of the file in bytes.
+    """
 
     __slots__ = (
         'filename',

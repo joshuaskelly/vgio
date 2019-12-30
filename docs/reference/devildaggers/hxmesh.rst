@@ -9,7 +9,7 @@
 .. _hxmesh.py: https://github.com/joshuaskelly/vgio/tree/master/vgio/devildaggers/hxmesh.py
 
 The :py:mod:`hxmesh` module provides an :py:class:`HxMesh` class which derives
-from :py:class:`ReadWriteFile` and is used to read and write Devil Daggers
+from :py:class:`~vgio._core.ReadWriteFile` and is used to read and write Devil Daggers
 mesh data.
 
 :py:class:`~vgio.devildaggers.hxmesh.HxMesh` Class
