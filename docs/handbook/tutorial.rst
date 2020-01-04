@@ -29,20 +29,24 @@ can now use instance attributes to examine the file contents::
 Using an ArchiveFile Class
 --------------------------
 
-It is a common for video games to bundle their files in an archive and
+It is common for video games to bundle their files in an archive and
 the :py:mod:`vgio` library provides classes derived from
-:py:class:`~vgio._core.ArchiveFile` to work with that data.
+:py:class:`~vgio._core.ArchiveFile` and :py:class:`~vgio._core.ArchiveInfo` to
+work with that data.
 
-An :py:class:`~vgio._core.ArchiveFile` object must be created using a file or
-file-like object. The :py:class:`~vgio._core.ArchiveFile` is a base class so
-this example will use the Duke3D :py:class:`~vgio.duke3d.grp.GrpFile` archive
-format::
+.. note::
+        An :py:class:`~vgio._core.ArchiveFile` object must be created using a file or
+        file-like object.
+
+Since the :py:class:`~vgio._core.ArchiveFile` is a base class, this example will
+use the Duke3D :py:class:`~vgio.duke3d.grp.GrpFile` archive format::
 
     >>> from vgio.duke3d.grp import GrpFile
     >>> grp_file = GrpFile('DUKE3D.GRP')
 
 If successful, it will return an :py:class:`~vgio.duke3d.grp.GrpFile` object.
-You can now use instance attributes and methods to examine the file contents::
+You can now get a :py:class:`~vgio.duke3d.grp.GrpInfo` object and can use the
+instance attributes to examine the file contents::
 
     >>> info = grp_file.infolist()[0]
     >>> print(info.filename)
