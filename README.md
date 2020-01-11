@@ -31,6 +31,9 @@ with Bsp.open('./maps/start.bsp') as bsp_file:
    """Do rad stuff with the BSP data structure!"""
 ```
 
+## Documentation
+API documentation is available on [readthedocs](https://vgio.readthedocs.org/en/latest).
+
 ## Tests
 `$ python -m unittest discover`
 
