@@ -134,7 +134,21 @@ class Entry:
 
 
 class ResourceGroupInfo:
-    """Class with attributes describing each entry in the grp file archive."""
+    """Instances of the ResourceGroupInfo class are returned by the
+    getinfo() and infolist() methods of HxResourceGroupFile objects. Each object
+    stores information about a single member of the HxResourceGroupFile archive.
+
+    Attributes:
+        type: Type of the file.
+
+        filename: Name of the file in the archive.
+
+        file_offset:
+
+        file_size: Size of file in bytes.
+
+        date_time: Last modified date as Unix timestamp.
+    """
 
     __slots__ = (
         'type',
@@ -150,6 +164,8 @@ class ResourceGroupInfo:
                  file_offset=0,
                  file_size=0,
                  date_time=0):
+        """Constructs a ResourceGroupInfo object."""
+
         self.type = type_
         self.filename = filename
         self.file_offset = file_offset
@@ -158,6 +174,16 @@ class ResourceGroupInfo:
 
     @classmethod
     def from_file(cls, filename):
+        """Construct an ResourceGroupInfo instance for a file on the filesystem,
+        in preparation for adding it to an archive file. filename should be the
+        path to a file or directory on the filesystem.
+
+        Args:
+            filename: A path to a file or directory.
+
+        Returns:
+            A ResourceGroupInfo object.
+        """
         st = os.stat(filename)
         isdir = os.stat.S_ISDIR(st.st_mode)
         arcname = os.path.normpath(os.path.splitdrive(filename)[1])[-12:]
@@ -197,19 +223,37 @@ class ResourceType:
 class HxResourceGroupFile(ArchiveFile):
     """Class with methods to open, read, close, and list resource group files.
 
-        rg = HxResourceGroupFile(file, mode='r')
+    Example:
+        Print out file name and type of all entries in a resource group::
 
+            from vgio.devildaggers.hxresourcegroup import HxResourceGroupFile
+            with HxResourceGroupFile('dd') as resource_group:
+                for info in resource_group.infolist():
+                    print(f'{info.filename}: {info.type}')
+
+    Attributes:
        file: Either the path to the file, or a file-like object. If it is a path,
            the file will be opened and closed by HxResourceGroupFile.
 
        mode: The file mode for the file-like object.
-       """
+    """
 
     class factory(ArchiveFile.factory):
         ArchiveInfo = ResourceGroupInfo
         ArchiveWriteFile = _ResourceGroupWriteFile
 
     def __init__(self, file, mode='r'):
+        """Open an HxResourceGroup file, where *file* can be a path to a file (a
+        string), or a file-like object.
+
+        The mode parameter should be 'r' to read an existing file, 'w' to
+        truncate and write a new file, or 'a' to append to an existing file.
+
+        Args:
+            file: A path or a file-like object.
+
+            mode: File mode for the file-like object.
+        """
         self.end_of_data = 0
         self.data_buffer = io.BytesIO()
 

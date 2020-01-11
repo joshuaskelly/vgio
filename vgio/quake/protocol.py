@@ -475,7 +475,7 @@ class StuffText:
     Attributes:
         text: The text to send to the client console.
 
-            Note: This string is '\n' terminated.
+            Note: This string is terminated with the newline character.
     """
 
     __slots__ = (

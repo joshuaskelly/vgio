@@ -1,0 +1,20 @@
+v1.0.0
+======
+
+API Additions
+-------------
+
+Duke3D Subpackage
+^^^^^^^^^^^^^^^^^
+
+vgio now supports file formats for Duke3D.
+
+Quake Subpackage
+^^^^^^^^^^^^^^^^
+
+vgio now supports file formats for Quake.
+
+Quake2 Subpackage
+^^^^^^^^^^^^^^^^^
+
+vgio now supports file formats for Quake2.

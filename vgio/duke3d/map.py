@@ -189,6 +189,8 @@ class Sector:
                  lotag,
                  hitag,
                  extra):
+        """Constructs a Sector object."""
+
         self.wall_pointer = wall_pointer
         self.wall_number = wall_number
         self.ceiling_z = ceiling_z
@@ -331,6 +333,8 @@ class Wall:
                  lotag,
                  hitag,
                  extra):
+        """Constructs a Wall object."""
+
         self.x = x
         self.y = y
         self.point2 = point2
@@ -480,6 +484,8 @@ class Sprite:
                  lotag,
                  hitag,
                  extra):
+        """Constructs a Sprite object."""
+
         self.x = x
         self.y = y
         self.z = z
@@ -545,7 +551,10 @@ class Map(ReadWriteFile):
     """Class for working with map files
 
     Example:
-        m = Map.open(file)
+        Basic usage::
+
+            from vgio.duke3d.map import Map
+            m = Map.open(file)
 
     Attributes:
         version: Version of the map file. Build is 7
@@ -560,11 +569,11 @@ class Map(ReadWriteFile):
 
         start_sector: Sector of player start.
 
-        sectors: A list of Sector objects.
+        sectors: A sequence of Sector objects.
 
-        walls: A list of Wall objects.
+        walls: A sequence of Wall objects.
 
-        sprites: A list of Sprite objects.
+        sprites: A sequence of Sprite objects.
     """
     class factory:
         Header = Header
@@ -573,6 +582,7 @@ class Map(ReadWriteFile):
         Sprite = Sprite
 
     def __init__(self):
+        """Constructs a Map object."""
         super().__init__()
 
         self.version = VERSION

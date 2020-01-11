@@ -76,19 +76,23 @@ class Lmp(ReadWriteFile):
     """Class for working with Lmp files
 
     There are three different types of lump files:
-        1. 2D image - The majority of the lump files are 2D images. If a lump 
+
+        1. 2D image - The majority of the lump files are 2D images. If a lump
             is a 2D image it will have width, height, and pixels attributes.
 
-        2. Palette - The palette lump has the palette attribute which is a 
-            list of 256 RGB tuples. This is used to map color indexes to 
+        2. Palette - The palette lump has the palette attribute which is a
+            list of 256 RGB tuples. This is used to map color indexes to
             actual RGB triples.
 
         3. Colormap - The colormap lump has the colormap attribute which is a
-            list of 16384 color indexes. It functions as a 256 x 64 table for 
+            list of 16384 color indexes. It functions as a 256 x 64 table for
             mapping colors to different values for lighting.
-    
+
     Example:
-        l = Lmp.open(file)
+        Basic usage::
+
+            from vgio.quake.lmp import Lmp
+            l = Lmp.open(file)
 
     Attributes:
         width: (2D image lump only) The width of the lump.
@@ -97,9 +101,9 @@ class Lmp(ReadWriteFile):
 
         pixels: (2D image lump only) The raw pixel data.
 
-        palette: (Palette lump only) A list of 256 RGB tuples.
+        palette: (Palette lump only) A sequence of 256 RGB tuples.
 
-        colormap: (Color Map lump only) A list of 16384 color indexes.
+        colormap: (Color Map lump only) A sequence of 16384 color indexes.
     """
 
     def __init__(self):
@@ -133,7 +137,7 @@ class Lmp(ReadWriteFile):
     @staticmethod
     def _read_lmp(data):
         """Returns a 2D image lump.
-        
+
         Args:
             data: A byte array
         """
@@ -156,7 +160,7 @@ class Lmp(ReadWriteFile):
     @staticmethod
     def _read_palette(data):
         """Returns a palette lump
-        
+
         Args:
             data: A byte array.
         """
@@ -178,7 +182,7 @@ class Lmp(ReadWriteFile):
     @staticmethod
     def _read_colormap(data):
         """Returns a colormap lump
-        
+
         Args:
             data: A byte array.
         """
@@ -265,7 +269,7 @@ class Lmp(ReadWriteFile):
         if hasattr(self, 'palette'):
             image.width = 16
             image.height = 16
-            
+
             p = []
             for i, entry in enumerate(self.palette):
                 p += (entry)
@@ -276,7 +280,7 @@ class Lmp(ReadWriteFile):
         elif hasattr(self, 'colormap'):
             image.width = 256
             image.height = 64
-            
+
             p = []
             for index in self.colormap:
                 p += palette[index]
@@ -287,7 +291,7 @@ class Lmp(ReadWriteFile):
         else:
             image.width = self.width
             image.height = self.height
-            
+
             p = []
             for index in self.pixels:
                 p += palette[index]

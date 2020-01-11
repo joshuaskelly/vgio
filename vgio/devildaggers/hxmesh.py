@@ -1,8 +1,4 @@
-"""This module provides file I/O for Devil Daggers texture files.
-
-Example:
-    hxmesh_file = hxmesh.HxMesh.open('boid')
-"""
+"""This module provides file I/O for Devil Daggers texture files."""
 
 import struct
 
@@ -63,7 +59,16 @@ class Header:
 
 
 class Vertex:
-    """Class for representing a HxMesh vertex.
+    """Class for representing an HxMesh vertex.
+
+    Example:
+        Create a vertex object::
+
+            from vgio.devildaggers.hxmesh import Vertex
+            position = 0, 0, 0
+            normal = 0, 0, 1
+            uv = 0, 1
+            vertex = Vertex(*position, *normal, *uv)
 
     Attributes:
         position:  Vertex position.
@@ -91,6 +96,26 @@ class Vertex:
                  normal_z,
                  u,
                  v):
+        """Constructs an HxMesh Vertex object.
+
+        Args:
+            position_x: The position x-coordinate
+
+            position_y: The position y-coordinate
+
+            position_z: The position z-coordinate
+
+            normal_x: The normal x-coordinate
+
+            normal_y: The normal y-coordinate
+
+            normal_z: The normal z-coordinate
+
+            u: The UV u-coordinate
+
+            v: The UV v-coordinate
+        """
+
         self.position = position_x, position_y, position_z
         self.normal = normal_x, normal_y, normal_z
         self.uv = u, v
@@ -117,6 +142,14 @@ class Vertex:
 class HxMesh(ReadWriteFile):
     """Class for working with HxMesh files.
 
+    Example:
+        Load a file named "boid" and access mesh object attributes::
+
+            from vgio.devildaggers.hxmesh import HxMesh
+            with HxMesh.open('boid') as boid:
+                indices = boid.indices
+                vertices = boid.vertices
+
     Attributes:
         indices: An unstructured sequence of triangle indices.
 
@@ -124,6 +157,7 @@ class HxMesh(ReadWriteFile):
     """
 
     def __init__(self):
+        """Constructs an HxMesh object."""
         super().__init__()
 
         self.indices = []

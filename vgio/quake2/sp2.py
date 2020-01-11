@@ -37,6 +37,12 @@ def is_sp2file(filename):
     """Quickly see if a file is a sp2 file by checking the magic number.
 
     The filename argument may be a file for file-like object.
+
+    Args:
+        filename: File to check as string or file-like object.
+
+    Returns:
+        True if given file's magic number is correct.
     """
     try:
         if hasattr(filename, 'read'):
@@ -125,6 +131,7 @@ class SpriteFrame:
                  origin_x,
                  origin_y,
                  name):
+        """Constructs a SpriteFrame object."""
 
         self.width = width
         self.height = height
@@ -155,8 +162,10 @@ class Sp2(ReadWriteFile):
     """Class for working with Sp2 files
 
     Example:
-        with open('s_bubble.sp2') as file:
-            sp2_file = sp2.Sp2.read(file)
+        Basic usage::
+
+            from vgio.quake2.sp2 import Sp2
+            s = sp2.Sp2.open(file)
 
     Attributes:
         identity: The identity of the file. Should be b'IDS2'
@@ -165,13 +174,15 @@ class Sp2(ReadWriteFile):
 
         number_of_frames: The number of sprite frames.
 
-        frames: A list of SpriteFrame objects.
+        frames: A sequence of SpriteFrame objects.
     """
     class factory:
         Header = Header
         SpriteFrame = SpriteFrame
 
     def __init__(self):
+        """Constructs a Sp2 object."""
+
         super().__init__()
 
         self.identity = IDENTITY

@@ -37,6 +37,12 @@ def is_artfile(filename):
     """Quickly see if a file is a art file by checking the magic number.
 
     The filename argument may be a file for file-like object.
+
+    Args:
+        filename: File to check as string or file-like object.
+
+    Returns:
+        True if given file's magic number is correct.
     """
     try:
         if hasattr(filename, 'read'):
@@ -89,7 +95,21 @@ class Header:
 
 
 class ArtInfo:
-    """Class with attributes describing each entry in the art file archive."""
+    """Instances of the ArtInfo class are returned by the getinfo() and
+    infolist() methods of ArtFile objects. Each object stores information about
+    a single member of the ArtFile archive.
+
+    Attributes:
+        tile_index: Index of the tile in the archive.
+
+        tile_dimensions: The size of the tile.
+
+        picanim: A sequence of bitmasked tile attributes.
+
+        file_offset: Offset of file in bytes.
+
+        file_size: Size of the file in bytes.
+    """
 
     __slots__ = (
         'tile_index',
@@ -104,6 +124,8 @@ class ArtInfo:
                  tile_dimensions=(0, 0),
                  file_offset=0,
                  file_size=0):
+        """Constructs an ArtInfo object."""
+
         self.tile_index = tile_index
         self.tile_dimensions = tile_dimensions
         self.picanim = 0
@@ -135,12 +157,17 @@ class _ArtWriteFile(_ArchiveWriteFile):
 class ArtFile(ArchiveFile):
     """Class with methods to open, read, close, and list art files.
 
-     p = ArtFile(file, mode='r')
+    Example:
+        Basic usage::
 
-    file: Either the path to the file, or a file-like object. If it is a path,
-        the file will be opened and closed by ArtFile.
+            from vgio.duke3d.art import ArtFile
+            art_file = ArtFile(file, mode='r')
 
-    mode: The file mode for the file-like object.
+    Attributes:
+        file: Either the path to the file, or a file-like object. If it is a
+            path, the file will be opened and closed by ArtFile.
+
+        mode: The file mode for the file-like object.
     """
 
     class factory(ArchiveFile.factory):
@@ -148,6 +175,17 @@ class ArtFile(ArchiveFile):
         ArchiveWriteFile = _ArtWriteFile
 
     def __init__(self, file, mode='r'):
+        """Open an Art file, where *file* can be a path to a file (a string), or
+        a file-like object.
+
+        The mode parameter should be 'r' to read an existing file, 'w' to
+        truncate and write a new file, or 'a' to append to an existing file.
+
+        Args:
+            file: A path or a file-like object.
+
+            mode: File mode for the file-like object.
+        """
         self.end_of_data = 0
 
         self.data_buffer = io.BytesIO()
