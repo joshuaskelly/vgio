@@ -174,7 +174,7 @@ class Sp2(ReadWriteFile):
 
         number_of_frames: The number of sprite frames.
 
-        frames: A list of SpriteFrame objects.
+        frames: A sequence of SpriteFrame objects.
     """
     class factory:
         Header = Header

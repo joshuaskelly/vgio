@@ -101,9 +101,9 @@ class Lmp(ReadWriteFile):
 
         pixels: (2D image lump only) The raw pixel data.
 
-        palette: (Palette lump only) A list of 256 RGB tuples.
+        palette: (Palette lump only) A sequence of 256 RGB tuples.
 
-        colormap: (Color Map lump only) A list of 16384 color indexes.
+        colormap: (Color Map lump only) A sequence of 16384 color indexes.
     """
 
     def __init__(self):

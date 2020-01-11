@@ -84,35 +84,35 @@ class Bsp(Bsp29):
 
         entities: A string containing the entity definitions.
 
-        planes: A list of Planes used by the bsp tree data structure.
+        planes: A sequence of Planes used by the bsp tree data structure.
 
-        miptextures: A list of Miptextures.
+        miptextures: A sequence of Miptextures.
 
-        vertexes: A list of Vertexes.
+        vertexes: A sequence of Vertexes.
 
-        visibilities: A list of ints representing visibility data.
+        visibilities: A sequence of ints representing visibility data.
 
-        nodes: A list of Nodes used by the bsp tree data structure.
+        nodes: A sequence of Nodes used by the bsp tree data structure.
 
-        texture_infos: A list of TextureInfo objects.
+        texture_infos: A sequence of TextureInfo objects.
 
-        faces: A list of Faces.
+        faces: A sequence of Faces.
 
-        lighting: A list of ints representing lighting data.
+        lighting: A sequence of ints representing lighting data.
 
-        clip_nodes: A list of ClipNodes used by the bsp tree data structure.
+        clip_nodes: A sequence of ClipNodes used by the bsp tree data structure.
 
-        leafs: A list of Leafs used by the bsp tree data structure.
+        leafs: A sequence of Leafs used by the bsp tree data structure.
 
-        mark_surfaces: A list of ints representing lists of consecutive faces
+        mark_surfaces: A sequence of ints representing lists of consecutive faces
             used by the Node objects.
 
-        edges: A list of Edges.
+        edges: A sequence of Edges.
 
-        surf_edges: A list of ints representing  list of consecutive edges used
+        surf_edges: A sequence of ints representing  list of consecutive edges used
             by the Face objects.
 
-        models: A list of Models.
+        models: A sequence of Models.
 
             Note:
                 The first model is the entire level.

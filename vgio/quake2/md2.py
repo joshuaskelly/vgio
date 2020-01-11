@@ -422,7 +422,7 @@ class Frame:
 
         name: The name of the frame.
 
-        vertexes: A list of TriVertex objects.
+        vertexes: A sequence of TriVertex objects.
     """
 
     format = '<6f16s'

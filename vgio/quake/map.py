@@ -29,7 +29,7 @@ class Entity:
         Entity properties will be set as attributes.
 
     Attributes:
-        brushes: A list of Brush objects.
+        brushes: A sequence of Brush objects.
     """
     def __init__(self):
         self.brushes = []
@@ -39,7 +39,7 @@ class Brush:
     """Class for representing Brush data
 
     Attributes:
-        planes: A list of Plane objects
+        planes: A sequence of Plane objects
     """
 
     __slots__ = (
@@ -89,7 +89,7 @@ def loads(s):
         s: A string containing a Map document.
 
     Returns:
-        A list of Entity objects.
+        A sequence of Entity objects.
 
     Raises:
         ParseError: If fails to parse given document
@@ -232,7 +232,7 @@ def loads(s):
         Entity objects from the token stream.
 
         Returns:
-            A list of Entity objects
+            A sequence of Entity objects
         """
         nonlocal token
         entities = []

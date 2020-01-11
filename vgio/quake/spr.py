@@ -211,7 +211,7 @@ class SpriteGroup:
 
         intervals: A sequence of timings for each frame.
 
-        frames: A list of SprSpriteFrame objects.
+        frames: A sequence of SprSpriteFrame objects.
     """
 
     __slots__ = (

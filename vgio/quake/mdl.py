@@ -530,7 +530,7 @@ class Frame:
 
         name: The name of the frame.
 
-        vertexes: A list of TriVertex objects.
+        vertexes: A sequence of TriVertex objects.
     """
 
     __slots__ = (
@@ -584,7 +584,7 @@ class FrameGroup:
 
         intervals: A sequence of timings for each frame.
 
-        frames: A list of Frame objects.
+        frames: A sequence of Frame objects.
     """
 
     __slots__ = (
@@ -644,14 +644,14 @@ class Mesh:
     """Class for representing mesh data
 
     Attributes:
-        vertexes: A list of vertex data represented as XYZ three-tuples.
+        vertexes: A sequence of vertex data represented as XYZ three-tuples.
 
-        triangles: A list of triangle data represented by a three-tuple of
+        triangles: A sequence of triangle data represented by a three-tuple of
             vertex indexes.
 
-        uvs: A list of uv coordinates represented as UV tuples.
+        uvs: A sequence of uv coordinates represented as UV tuples.
 
-        normals: A list of vertex normal data represented as XYZ three-tuples.
+        normals: A sequence of vertex normal data represented as XYZ three-tuples.
     """
 
     __slots = (
