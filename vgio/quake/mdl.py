@@ -56,6 +56,12 @@ def is_mdlfile(filename):
     """Quickly see if a file is a mdl file by checking the magic number.
 
     The filename argument may be a file for file-like object.
+
+    Args:
+        filename: File to check as string or file-like object.
+
+    Returns:
+        True if given file's magic number is correct.
     """
     try:
         if hasattr(filename, 'read'):
@@ -524,7 +530,7 @@ class Frame:
 
         name: The name of the frame.
 
-        vertexes: A list of TriVertex objects.
+        vertexes: A sequence of TriVertex objects.
     """
 
     __slots__ = (
@@ -578,7 +584,7 @@ class FrameGroup:
 
         intervals: A sequence of timings for each frame.
 
-        frames: A list of Frame objects.
+        frames: A sequence of Frame objects.
     """
 
     __slots__ = (
@@ -638,14 +644,14 @@ class Mesh:
     """Class for representing mesh data
 
     Attributes:
-        vertexes: A list of vertex data represented as XYZ three-tuples.
+        vertexes: A sequence of vertex data represented as XYZ three-tuples.
 
-        triangles: A list of triangle data represented by a three-tuple of
+        triangles: A sequence of triangle data represented by a three-tuple of
             vertex indexes.
 
-        uvs: A list of uv coordinates represented as UV tuples.
+        uvs: A sequence of uv coordinates represented as UV tuples.
 
-        normals: A list of vertex normal data represented as XYZ three-tuples.
+        normals: A sequence of vertex normal data represented as XYZ three-tuples.
     """
 
     __slots = (
@@ -697,12 +703,15 @@ class Mdl(ReadWriteFile):
     """Class for working with Mdl files
 
     Example:
-        m = Mdl.open(file)
+        Basic usage::
+
+            from vgio.quake.mdl import Mdl
+            m = Mdl.open(file)
 
     Attributes:
-        identifier: The magic number of the model, must be b'IDPO'
+        identifier: The magic number of the file, must be b'IDPO'
 
-        version: The version of the model, should be 6.
+        version: The version of the file, should be 6.
 
         scale: The scale of the model. Used to correctly resize the model as
             the frame vertexes are packed into a (0, 0, 0) to (255, 255, 255)
@@ -747,11 +756,6 @@ class Mdl(ReadWriteFile):
         frames: The list of Frame or FrameGroup objects. Use the type
             attribute to identify the object. The type is either
             SINGLE or GROUP.
-
-
-        fp: The file-like object to read data from.
-
-        mode: The file mode for the file-like object.
     """
     class factory:
         Header = Header
@@ -764,6 +768,7 @@ class Mdl(ReadWriteFile):
         FrameGroup = FrameGroup
 
     def __init__(self):
+        """Constructs an Mdl object."""
         super().__init__()
 
         self.identifier = IDENTITY

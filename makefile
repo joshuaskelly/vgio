@@ -18,7 +18,11 @@ publish-test: package
 test:
 	python -m unittest discover
 
+docs:
+	cd ./docs && $(MAKE) html
+
 clean:
 	find . -name "*.pyc" -delete
 	rm -rf dist
 	rm -rf *.egg-info
+	$(MAKE) -C ./docs clean

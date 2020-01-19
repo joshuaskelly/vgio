@@ -21,10 +21,13 @@ class Dm2(ReadWriteFile):
     """Class for working with Dm2 files
 
     Example:
-        d = Dm2.open(file)
+        Basic usage::
+
+            from vgio.quake2.dm2 import Dm2
+            d = Dm2.open(file)
 
     Attributes:
-        message_blocks: A sequence of Message objects
+        message_blocks: A sequence of MessageBlock objects
     """
 
     def __init__(self):

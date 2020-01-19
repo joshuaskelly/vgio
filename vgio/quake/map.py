@@ -1,16 +1,13 @@
 """This module provides file I/O for Quake MAP map files.
 
 Example:
-    map_file = map.Map.open('e1m1.map')
+    Basic usage::
+
+        map_file = map.Map.open('e1m1.map')
 
 References:
-    Quake Source
-    - id Software
-    - https://github.com/id-Software/Quake
-
-    Quake Documentation Version 3.4
-    - Olivier Montanuy, et al.
-    - http://www.gamers.org/dEngine/quake/spec/quake-spec34/qkspec_2.htm
+    - id Software. `Quake Source`. https://github.com/id-Software/Quake.
+    - Olivier Montanuy, et al. `Quake Documentation Version 3.4`. http://www.gamers.org/dEngine/quake/spec/quake-spec34/qkspec_2.htm.
 """
 
 import re
@@ -32,7 +29,7 @@ class Entity:
         Entity properties will be set as attributes.
 
     Attributes:
-        brushes: A list of Brush objects.
+        brushes: A sequence of Brush objects.
     """
     def __init__(self):
         self.brushes = []
@@ -42,7 +39,7 @@ class Brush:
     """Class for representing Brush data
 
     Attributes:
-        planes: A list of Plane objects
+        planes: A sequence of Plane objects
     """
 
     __slots__ = (
@@ -60,7 +57,7 @@ class Plane:
         points: A triple of XYZ three-tuples representing three non-collinear
             points contained in the plane.
 
-        texture_name: Name of the bsp.Miptexture
+        texture_name: Name of the Miptexture
 
         offset: The texture offset represented as an XY two-tuple.
 
@@ -92,7 +89,7 @@ def loads(s):
         s: A string containing a Map document.
 
     Returns:
-        A list of Entity objects.
+        A sequence of Entity objects.
 
     Raises:
         ParseError: If fails to parse given document
@@ -235,7 +232,7 @@ def loads(s):
         Entity objects from the token stream.
 
         Returns:
-            A list of Entity objects
+            A sequence of Entity objects
         """
         nonlocal token
         entities = []

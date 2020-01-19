@@ -37,6 +37,12 @@ def is_md2file(filename):
     """Quickly see if a file is a md2 file by checking the magic number.
 
     The filename argument may be a file for file-like object.
+
+    Args:
+        filename: File to check as string or file-like object.
+
+    Returns:
+        True if given file's magic number is correct.
     """
     try:
         if hasattr(filename, 'read'):
@@ -416,7 +422,7 @@ class Frame:
 
         name: The name of the frame.
 
-        vertexes: A list of TriVertex objects.
+        vertexes: A sequence of TriVertex objects.
     """
 
     format = '<6f16s'
@@ -574,19 +580,29 @@ class Md2(ReadWriteFile):
     """Class for working with Md2 files
 
     Example:
-        m = Md2.open(file)
+        Basic usage::
+
+            from vgio.quake2.md2 import Md2
+            m = Md2.open(file)
 
     Attributes:
-        identity
-        version
-        skin_width
-        skin_height
-        header
-        frames
-        skins
-        st_vertexes
-        triangles
-        gl_commands
+        identity: The magic number of the file, must be b'IDP2'
+
+        version: The version of the file, should be 8.
+
+        skin_width: The pixel width of the skin texture.
+
+        skin_height: The pixel height of the skin texture.
+
+        frames: A sequence of Frame objects.
+
+        skins: A sequence of Skin objects.
+
+        st_vertexes: A sequence of StVertex objects.
+
+        triangles: A sequence of Triangle objects.
+
+        gl_commands: A sequence of GlCommand objects.
     """
     class factory:
         Header = Header
@@ -603,6 +619,7 @@ class Md2(ReadWriteFile):
         GlCommands = GlCommands
 
     def __init__(self):
+        """Constructs an Md2 object."""
         super().__init__()
 
         self.identity = IDENTITY
@@ -691,7 +708,7 @@ class Md2(ReadWriteFile):
         )
 
         header.skin_offset, _ = _write_chunk(factory.Skins, md2.skins)
-        header.st_vertex_offset, _ = _write_chunk(factory.StVerexes, md2.st_vertexes)
+        header.st_vertex_offset, _ = _write_chunk(factory.StVertexes, md2.st_vertexes)
         header.triangle_offset, _ = _write_chunk(factory.Triangles, md2.triangles)
 
         header.frame_offset = file.tell()

@@ -41,6 +41,12 @@ def is_bspfile(filename):
     """Quickly see if a file is a bsp file by checking the magic number.
 
     The filename argument may be a file for file-like object.
+
+    Args:
+        filename: File to check as string or file-like object.
+
+    Returns:
+        True if given file's magic number is correct.
     """
     try:
         if hasattr(filename, 'read'):
@@ -170,9 +176,11 @@ class Node:
         children: A two-tuple of the two sub-spaces formed by the partitioning
             plane.
 
-            Note: Child 0 is the front sub-space, and 1 is the back sub-space.
+            Note:
+                Child 0 is the front sub-space, and 1 is the back sub-space.
 
-            Note: If bit 15 is set, the child is a leaf.
+            Note:
+                If bit 15 is set, the child is a leaf.
 
         bounding_box_min: The minimum coordinate of the bounding box containing
             this node and all of its children.
@@ -1140,7 +1148,10 @@ class Bsp(ReadWriteFile):
     """Class for working with Bsp files
 
     Example:
-        b = Bsp.open(file)
+        Basic usage::
+
+            from vgio.quake2.bsp import Bsp
+            b = Bsp.open(file)
 
     Attributes:
         identity: Identity of the Bsp file. Should be b'IBSP'
@@ -1149,44 +1160,44 @@ class Bsp(ReadWriteFile):
 
         entities: A string containing the entity definitions.
 
-        planes: A list of Plane objects used by the bsp tree data structure.
+        planes: A sequence of Plane objects used by the bsp tree data structure.
 
-        vertexes: A list of Vertex objects.
+        vertexes: A sequence of Vertex objects.
 
-        visibilities: A list of integers representing visibility data.
+        visibilities: A sequence of integers representing visibility data.
 
-        nodes: A list of Node objects used by the bsp tree data structure.
+        nodes: A sequence of Node objects used by the bsp tree data structure.
 
-        texture_infos: A list of TextureInfo objects.
+        texture_infos: A sequence of TextureInfo objects.
 
-        faces: A list of Face objects.
+        faces: A sequence of Face objects.
 
-        lighting: A list of ints representing lighting data.
+        lighting: A sequence of ints representing lighting data.
 
-        leafs: A list of Leaf objects used by the bsp tree data structure.
+        leafs: A sequence of Leaf objects used by the bsp tree data structure.
 
-        leaf_faces: A list of ints representing a consecutive list of faces
+        leaf_faces: A sequence of ints representing a consecutive list of faces
             used by the Leaf objects.
 
-        leaf_brushes: A list of ints representing a consecutive list of edges
+        leaf_brushes: A sequence of ints representing a consecutive list of edges
             used by the Leaf objects.
 
-        edges: A list of Edge objects.
+        edges: A sequence of Edge objects.
 
-        surf_edges: A list of ints representing a consecutive list of edges
+        surf_edges: A sequence of ints representing a consecutive list of edges
             used by the Face objects.
 
-        models: A list of Model objects.
+        models: A sequence of Model objects.
 
-        brushes: A list of Brush objects.
+        brushes: A sequence of Brush objects.
 
-        brush_sides: A list of BrushSide objects.
+        brush_sides: A sequence of BrushSide objects.
 
         pop: Proof of purchase? Always 256 bytes of null data if present.
 
-        areas: A list of Area objects.
+        areas: A sequence of Area objects.
 
-        area_portals: A list of AreaPortal objects.
+        area_portals: A sequence of AreaPortal objects.
     """
     class factory:
         Lump = Lump
@@ -1206,6 +1217,8 @@ class Bsp(ReadWriteFile):
         AreaPortal = AreaPortal
 
     def __init__(self):
+        """Constructs a Bsp object."""
+
         super().__init__()
 
         self.identity = IDENTITY

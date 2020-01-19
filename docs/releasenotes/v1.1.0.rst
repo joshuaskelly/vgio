@@ -1,0 +1,18 @@
+v1.1.0
+======
+
+API Additions
+-------------
+
+Devil Daggers Subpackage
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+vgio now supports file formats for Devil Daggers.
+
+API Changes
+-----------
+
+Core Subpackage
+^^^^^^^^^^^^^^^
+
+The _core subpackage provides base classes for common class patterns.

@@ -101,17 +101,24 @@ class Wal(ReadWriteFile):
     """Class for working with Wal files
 
     Example:
-        with open(path) as file:
-            w = wal.Wal.read(file)
+        Basic usage::
+
+            from vgio.quake2.wal import Wal
+            with open(path) as file:
+                w = Wal.read(file)
 
     Attributes:
         name: The name of the wal texture.
 
         width: The width of the wal texture.
-            Note: This is the width at mipmap level 0.
+
+            Note:
+                This is the width at mipmap level 0.
 
         height: The height of the wal texture.
-            Note: This is the height at mipmap level 0.
+
+            Note:
+                This is the height at mipmap level 0.
 
         offsets: The offsets for each of the mipmaps. This is a tuple of size
             four (this is the number of mipmap levels).
@@ -128,13 +135,14 @@ class Wal(ReadWriteFile):
         pixels: A bytes object of unstructured indexed color data. A
             palette must be used to obtain RGB data.
 
-            Note: this is the pixel data for all four mip levels. The size is
-            calculated using the simplified form of the geometric series where
-            r = 1/4 and n = 4.
+            Note:
+                This is the pixel data for all four mip levels. The size is
+                calculated using the simplified form of the geometric series
+                where r = 1/4 and n = 4.
 
             The size of this tuple is:
 
-            wal.width * wal.height * 85 / 64
+                wal.width * wal.height * 85 / 64
     """
 
     class factory:

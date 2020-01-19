@@ -77,6 +77,8 @@ class HxTexture(ReadWriteFile):
         pixels: An unstructured sequence of interleaved RGBA data as bytes.
     """
     def __init__(self):
+        """Constructs an HxTexture object."""
+
         super().__init__()
 
         self.texture_format = 0x4011
