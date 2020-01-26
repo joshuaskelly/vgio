@@ -421,7 +421,7 @@ class Miptexture:
 
         if any(miptexture.offsets):
             file.write(miptexture.pixels)
-            file.write(b'\x00\x01')
+            file.write(struct.pack('<H', len(miptexture.palette // 3)))
             file.write(miptexture.palette)
             file.write(b'\x00\x00')
 
@@ -440,8 +440,8 @@ class Miptexture:
         if any(offsets):
             pixels_size = width * height * 85 // 64
             pixels = file.read(pixels_size)
-            file.read(2)
-            palette = file.read(struct.calcsize('<768B'))
+            palette_size = struct.unpack('<H', file.read(2))[0]
+            palette = file.read(struct.calcsize(f'<{palette_size * 3}B'))
             file.read(2)
 
         return Miptexture(
