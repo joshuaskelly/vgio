@@ -421,7 +421,7 @@ class Miptexture:
 
         if any(miptexture.offsets):
             file.write(miptexture.pixels)
-            file.write(struct.pack('<H', len(miptexture.palette // 3)))
+            file.write(struct.pack('<H', len(miptexture.palette) // 3))
             file.write(miptexture.palette)
             file.write(b'\x00\x00')
 
