@@ -13,25 +13,14 @@ class TestMapReadWrite(TestCase):
         map_text = map_file.read(-1)
         map_file.close()
 
-        world_spawn, info_player_start = map.loads(map_text)
+        world_spawn, info_player_start, light = map.loads(map_text)
 
         self.assertEqual(world_spawn.classname, 'worldspawn')
-        self.assertEqual(world_spawn.sounds, '1')
-        self.assertEqual(world_spawn.wad, '/gfx/base.wad')
-        self.assertEqual(world_spawn.worldtype, '0')
+        self.assertEqual(world_spawn.wad, 'half-life\\valve\\halflife.wad')
+        self.assertEqual(world_spawn.mapversion, '220')
 
-        brush = world_spawn.brushes[0]
-        self.assertEqual(len(brush.planes), 6)
-
-        first_plane = brush.planes[0]
-        self.assertEqual(first_plane.points, ((128, 0, 0), (128, 1, 0), (128, 0, 1)))
-        self.assertEqual(first_plane.texture_name, 'GROUND1_6')
-        self.assertEqual(first_plane.s, (0, 1, 0))
-        self.assertEqual(first_plane.s_offset, 0)
-        self.assertEqual(first_plane.t, (0, 0, -1))
-        self.assertEqual(first_plane.t_offset, 0)
-        self.assertEqual(first_plane.rotation, 0.0)
-        self.assertEqual(first_plane.scale, (1.0, 1.0))
+        self.assertEqual(info_player_start.classname, 'info_player_start')
+        self.assertEqual(light.classname, 'light')
 
     def test_special_texture_names(self):
         map_text = """
@@ -64,25 +53,14 @@ class TestMapReadWrite(TestCase):
 
         m0_text = map.dumps(entities)
 
-        world_spawn, info_player_start = map.loads(m0_text)
+        world_spawn, info_player_start, light = map.loads(map_text)
 
         self.assertEqual(world_spawn.classname, 'worldspawn')
-        self.assertEqual(world_spawn.sounds, '1')
-        self.assertEqual(world_spawn.wad, '/gfx/base.wad')
-        self.assertEqual(world_spawn.worldtype, '0')
+        self.assertEqual(world_spawn.wad, 'half-life\\valve\\halflife.wad')
+        self.assertEqual(world_spawn.mapversion, '220')
 
-        brush = world_spawn.brushes[0]
-        self.assertEqual(len(brush.planes), 6)
-
-        first_plane = brush.planes[0]
-        self.assertEqual(first_plane.points, ((128, 0, 0), (128, 1, 0), (128, 0, 1)))
-        self.assertEqual(first_plane.texture_name, 'GROUND1_6')
-        self.assertEqual(first_plane.s, (0, 1, 0))
-        self.assertEqual(first_plane.s_offset, 0)
-        self.assertEqual(first_plane.t, (0, 0, -1))
-        self.assertEqual(first_plane.t_offset, 0)
-        self.assertEqual(first_plane.rotation, 0.0)
-        self.assertEqual(first_plane.scale, (1.0, 1.0))
+        self.assertEqual(info_player_start.classname, 'info_player_start')
+        self.assertEqual(light.classname, 'light')
 
     def test_parse_error(self):
         map_text = """
