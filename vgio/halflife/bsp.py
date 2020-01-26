@@ -364,7 +364,7 @@ class Miptexture:
         offsets: The offsets for each of the mipmaps. This is a tuple of size
             four (this is the number of mipmap levels).
 
-        pixels: A tuple of unstructured pixel data represented as integers. A
+        pixels: Unstructured pixel data represented as bytes. A
             palette must be used to obtain RGB data.
 
             Note:
@@ -375,6 +375,8 @@ class Miptexture:
             The size of this tuple is:
 
                 miptexture.width * miptexture.height * 85 / 64
+
+        palette: A sequence of 768 bytes representing a 256 RGB color palette.
     """
 
     format = '<16s6I'
@@ -385,7 +387,8 @@ class Miptexture:
         'width',
         'height',
         'offsets',
-        'pixels'
+        'pixels',
+        'palette'
     )
 
     def __init__(self,
@@ -393,7 +396,8 @@ class Miptexture:
                  width,
                  height,
                  offsets=(0, 0, 0, 0),
-                 pixels=b''):
+                 pixels=b'',
+                 palette=b''):
         """Constructs a MipTexture object."""
 
         self.name = name
@@ -401,6 +405,7 @@ class Miptexture:
         self.height = height
         self.offsets = offsets
         self.pixels = pixels
+        self.palette = palette
 
     @classmethod
     def write(cls, file, miptexture):
@@ -415,10 +420,10 @@ class Miptexture:
         file.write(miptexture_data)
 
         if any(miptexture.offsets):
-            pixels_size = miptexture.width * miptexture.height * 85 // 64
-            pixels_format = '<%dB' % pixels_size
-            pixels_data = struct.pack(pixels_format, *miptexture.pixels)
-            file.write(pixels_data)
+            file.write(miptexture.pixels)
+            file.write(b'\x00\x01')
+            file.write(miptexture.palette)
+            file.write(b'\x00\x00')
 
     @classmethod
     def read(cls, file):
@@ -430,22 +435,23 @@ class Miptexture:
         height = miptexture_struct[2]
         offsets = miptexture_struct[3:]
         pixels = b''
+        palette = b''
 
-        miptexture = Miptexture(
+        if any(offsets):
+            pixels_size = width * height * 85 // 64
+            pixels = file.read(pixels_size)
+            file.read(2)
+            palette = file.read(struct.calcsize('<768B'))
+            file.read(2)
+
+        return Miptexture(
             name,
             width,
             height,
             offsets,
-            pixels
+            pixels,
+            palette
         )
-
-        if any(miptexture.offsets):
-            pixels_size = miptexture.width * miptexture.height * 85 // 64
-            pixels_data = file.read(pixels_size)
-
-            miptexture.pixels = pixels_data
-
-        return miptexture
 
 
 class _Textures:
@@ -1151,7 +1157,7 @@ class Bsp(ReadWriteFile):
     def __init__(self,
                  entities,
                  planes,
-                 miptextures,
+                 textures,
                  vertexes,
                  visibilities,
                  nodes,
@@ -1170,7 +1176,7 @@ class Bsp(ReadWriteFile):
         self.version = VERSION
         self.entities = entities
         self.planes = planes
-        self.miptextures = miptextures
+        self.textures = textures
         self.vertexes = vertexes
         self.visibilities = visibilities
         self.nodes = nodes
@@ -1271,7 +1277,7 @@ class Bsp(ReadWriteFile):
 
         header.entities = _write_lump(bsp.entities, _Entities)
         header.planes = _write_iter_lump(bsp.planes)
-        header.textures = _write_lump(bsp.miptextures, _Textures)
+        header.textures = _write_lump(bsp.textures, _Textures)
         header.vertexes = _write_iter_lump(bsp.vertexes)
         header.visibilities = _write_lump(bsp.visibilities, _Visibilities)
         header.nodes = _write_iter_lump(bsp.nodes)
