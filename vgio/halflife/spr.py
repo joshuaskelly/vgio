@@ -37,9 +37,9 @@ class Header:
 
         radius: Bounding radius.
 
-        width: Width in pixels.
+        width_max: Maximum width of sprite in pixels.
 
-        height: Height in pixels.
+        height_max: Maximum height of sprite in pixels.
 
         frame_count: Number of frames.
 
@@ -56,8 +56,8 @@ class Header:
         'type',
         'texture_format',
         'radius',
-        'width',
-        'height',
+        'width_max',
+        'height_max',
         'frame_count',
         'beam_length',
         'sync_type'
@@ -69,8 +69,8 @@ class Header:
                  type_,
                  texture_format,
                  radius,
-                 width,
-                 height,
+                 width_max,
+                 height_max,
                  frame_count,
                  beam_length,
                  sync_type):
@@ -79,8 +79,8 @@ class Header:
         self.type = type_
         self.texture_format = texture_format
         self.radius = radius
-        self.width = width
-        self.height = height
+        self.width_max = width_max
+        self.height_max = height_max
         self.frame_count = frame_count
         self.beam_length = beam_length
         self.sync_type = sync_type
@@ -94,8 +94,8 @@ class Header:
             header.type,
             header.texture_format,
             header.radius,
-            header.width,
-            header.height,
+            header.width_max,
+            header.height_max,
             header.frame_count,
             header.beam_length,
             header.sync_type
@@ -119,9 +119,9 @@ class Frame:
 
         origin: The offset of the model. Used to correctly position the model.
 
-        width: The pixel width of the sprite.
+        width: The pixel width of this individual frame.
 
-        height: The pixel height of the sprite.
+        height: The pixel height of this individual frame.
 
         pixels: A tuple of unstructured indexed pixel data represented as
             integers. A palette must be used to obtain RGB data.
@@ -206,9 +206,9 @@ class Spr(ReadWriteFile):
 
         radius: Bounding radius.
 
-        width: Width in pixels.
+        width_max: Maximum width of sprite in pixels.
 
-        height: Height in pixels.
+        height_max: Maximum height of sprite in pixels.
 
         beam_length: Beam length.
 
@@ -229,8 +229,8 @@ class Spr(ReadWriteFile):
                  type_,
                  texture_format,
                  radius,
-                 width,
-                 height,
+                 width_max,
+                 height_max,
                  beam_length,
                  sync_type,
                  frames,
@@ -243,8 +243,8 @@ class Spr(ReadWriteFile):
         self.type = type_
         self.texture_format = texture_format
         self.radius = radius
-        self.width = width
-        self.height = height
+        self.width_max = width_max
+        self.height_max = height_max
         self.beam_length = beam_length
         self.sync_type = sync_type
         self.frames = frames
@@ -265,8 +265,8 @@ class Spr(ReadWriteFile):
             header.type,
             header.texture_format,
             header.radius,
-            header.width,
-            header.height,
+            header.width_max,
+            header.height_max,
             header.beam_length,
             header.sync_type,
             frames,
@@ -281,8 +281,8 @@ class Spr(ReadWriteFile):
             spr.type,
             spr.texture_format,
             spr.radius,
-            spr.width,
-            spr.height,
+            spr.width_max,
+            spr.height_max,
             len(spr.frames),
             spr.beam_length,
             spr.sync_type
