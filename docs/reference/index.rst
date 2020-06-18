@@ -6,6 +6,7 @@ Reference
 
    devildaggers/index
    duke3d/index
+   hrot/index
    quake/index
    quake2/index
    _core
