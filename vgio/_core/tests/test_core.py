@@ -1,9 +1,12 @@
 import io
+import threading
 import unittest
 
 from unittest import mock
 
+from vgio._core import ArchiveExtFile
 from vgio._core import ReadWriteFile
+from vgio._core import _SharedFile
 
 
 class TestReadWriteFile(unittest.TestCase):
@@ -93,6 +96,110 @@ class TestReadWriteFile(unittest.TestCase):
 
             self.assertTrue(fp.closed)
             self.assertIsNone(read_file.fp)
+
+
+class TestSharedFile(unittest.TestCase):
+    def test_read(self):
+        data = b'\x00\x01\x02\x03\x04\x05\x06\x07'
+        buff = io.BytesIO(data)
+        shared_file = _SharedFile(
+            buff,
+            0,
+            len(data),
+            lambda x: None,
+            threading.RLock(),
+            lambda: False
+        )
+
+        # Read one byte
+        self.assertEqual(shared_file.read(1), b'\x00')
+
+        # Read two bytes
+        self.assertEqual(shared_file.read(2), b'\x01\x02')
+
+        # Read byte at arbitrary position
+        shared_file.seek(5)
+        self.assertEqual(shared_file.tell(), 5)
+        self.assertEqual(shared_file.read(1), b'\x05')
+
+        shared_file.close()
+        self.assertIsNone(shared_file._file)
+
+
+class TestArchiveExtFile(unittest.TestCase):
+    def setUp(self):
+        data = b'\x00\x01\x02\x03\x04\x05\x06\x07'
+        self.buff = io.BytesIO(data)
+        shared_file = _SharedFile(
+            self.buff,
+            0,
+            len(data),
+            lambda x: None,
+            threading.RLock(),
+            lambda: False
+        )
+
+        class TestInfo:
+            def __init__(self):
+                self.filename = 'test'
+                self.file_offset = 0
+                self.file_size = len(data)
+
+        self.ext_file = ArchiveExtFile(
+            shared_file,
+            'r',
+            TestInfo()
+        )
+
+        self.data = data
+
+    def tearDown(self):
+        self.ext_file.close()
+
+    def test_read(self):
+        # Read one byte
+        self.assertEqual(b'\x00', self.ext_file.read(1))
+
+        # Read two bytes
+        self.assertEqual(b'\x01\x02', self.ext_file.read(2))
+
+        # Seek then read
+        self.ext_file.seek(5)
+        self.assertEqual(b'\x05', self.ext_file.read(1))
+
+        # Read everything
+        self.ext_file.seek(0)
+        self.assertEqual(self.data, self.ext_file.read(-1))
+
+        self.ext_file.seek(0, 2)
+        self.assertEqual(b'', self.ext_file.read(1))
+
+    def test_tell(self):
+        # Start of the file
+        self.assertEqual(0, self.ext_file.tell())
+
+        # Arbitrary position inside file
+        self.ext_file.seek(5)
+        self.assertEqual(5, self.ext_file.tell())
+
+        # End of file
+        self.ext_file.seek(0, 2)
+        self.assertEqual(8, self.ext_file.tell())
+
+    def test_peek(self):
+        # Start of file
+        self.assertEqual(b'\x00', self.ext_file.peek(1)[:1])
+        self.assertEqual(0, self.ext_file.tell())
+
+        # Arbitrary position inside file
+        self.ext_file.seek(5)
+        self.assertEqual(b'\x05', self.ext_file.peek(1)[:1])
+        self.assertEqual(5, self.ext_file.tell())
+
+        # End of file
+        self.ext_file.seek(0, 2)
+        self.assertEqual(b'', self.ext_file.peek(1)[:1])
+        self.assertEqual(8, self.ext_file.tell())
 
 
 if __name__ == '__main__':
