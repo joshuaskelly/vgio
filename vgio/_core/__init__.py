@@ -204,13 +204,26 @@ class ArchiveInfo:
 
 
 class _SharedFile:
-    def __init__(self, file, position, size, close, lock):
+    def __init__(self, file, position, size, close, lock, writing):
         self._file = file
         self._position = position
         self._start = position
         self._end = position + size
         self._close = close
         self._lock = lock
+        self._writing = writing
+
+    def seek(self, offset, whence=0):
+        with self._lock:
+            if self._writing():
+                raise ValueError(
+                    "Can't reposition in the archive file while there is an "
+                    "open writing handle on it. Close the writing handle "
+                    "before trying to read."
+                )
+
+            self._file.seek(offset, whence)
+            self._position = self._file.tell()
 
     def read(self, n=-1):
         with self._lock:
@@ -223,16 +236,14 @@ class _SharedFile:
             self._position = self._file.tell()
             return data
 
+    def tell(self):
+        return self._file.tell()
+
     def close(self):
         if self._file is not None:
             file_object = self._file
             self._file = None
             self._close(file_object)
-
-    def seek(self, n):
-        n = min(self._start + n, self._end)
-        self._file.seek(n)
-        self._position = self._file.tell()
 
 
 class ArchiveExtFile(io.BufferedIOBase):
@@ -243,11 +254,14 @@ class ArchiveExtFile(io.BufferedIOBase):
 
     MAX_N = 1 << 31 - 1
     MIN_READ_SIZE = 4096
+    MAX_SEEK_READ = 1 << 24
 
     def __init__(self, file_object, mode, archive_info, close_file_object=False):
         self._file_object = file_object
         self._close_file_object = close_file_object
         self._bytes_left = archive_info.file_size
+        self._original_size = archive_info.file_size
+        self._original_start = file_object.tell()
 
         self._eof = False
         self._readbuffer = b''
@@ -336,10 +350,51 @@ class ArchiveExtFile(io.BufferedIOBase):
         # Return up to 512 bytes to reduce allocation overhead for tight loops.
         return self._readbuffer[self._offset: self._offset + 512]
 
-    def seek(self, offset):
-        self._file_object.seek(offset)
-        self._readbuffer = b''
-        self._offset = 0
+    def seek(self, offset, whence=0):
+        current_position = self.tell()
+
+        if whence == 0:
+            new_position = offset
+
+        elif whence == 1:
+            new_position = current_position + offset
+
+        elif whence == 2:
+            new_position = self._original_size + offset
+
+        else:
+            raise ValueError("whence must be os.SEEK_SET (0), os.SEEK_CUR (1), or os.SEEK_END (2)")
+
+        if new_position > self._original_size:
+            new_position = self._original_size
+
+        if new_position < 0:
+            new_position = 0
+
+        read_offset = new_position - current_position
+        buff_offset = read_offset + self._offset
+
+        if buff_offset >= 0 and buff_offset < len(self._readbuffer):
+            self._offset = buff_offset
+            read_offset = 0
+
+        elif read_offset < 0:
+            self._file_object.seek(self._original_start)
+            self._bytes_left = self._original_size
+            self._readbuffer = b''
+            self._offset = 0
+            self._eof = False
+            read_offset = new_position
+
+        while read_offset > 0:
+            read_length = min(self.MAX_SEEK_READ, read_offset)
+            self.read(read_length)
+            read_offset -= read_length
+
+    def tell(self):
+        filepos = self._original_size - self._bytes_left - len(self._readbuffer) + self._offset
+
+        return filepos
 
     def close(self):
         try:
@@ -354,6 +409,7 @@ class _ArchiveWriteFile(io.BufferedIOBase):
         self._archive_info = archive_info
         self._archive_file = archive_file
         self._file_size = 0
+        self._start_of_file = self._fileobj.tell()
 
     @property
     def _fileobj(self):
@@ -364,14 +420,25 @@ class _ArchiveWriteFile(io.BufferedIOBase):
 
     def write(self, data):
         number_of_bytes = len(data)
-        self._file_size += number_of_bytes
+        relative_offset = self.tell()
+        self._file_size = max(self._file_size, relative_offset + number_of_bytes)
         self._fileobj.write(data)
 
         return number_of_bytes
 
+    def peek(self, n=1):
+        return self._fileobj.peek(n)
+
+    def seek(self, offset, whence=0):
+        self._fileobj.seek(offset + self._start_of_file, whence)
+
+    def tell(self):
+        return self._fileobj.tell() - self._start_of_file
+
     def close(self):
         super().close()
 
+        self._archive_info.file_size = self._file_size
         self._archive_file.end_of_data = self._fileobj.tell()
         self._archive_file._writing = False
         self._archive_file.file_list.append(self._archive_info)
@@ -551,7 +618,8 @@ class ArchiveFile:
             info = name
 
         elif mode == 'w':
-            info = self.factory.ArchiveInfo.from_file(name)
+            info = self.factory.ArchiveInfo(name)
+            info.file_offset = self.fp.tell()
 
         else:
             info = self.getinfo(name)
@@ -560,7 +628,14 @@ class ArchiveFile:
             return self._open_to_write(info)
 
         self._file_reference_count += 1
-        shared_file = self.factory.SharedFile(self.fp, info.file_offset, info.file_size, self._fpclose, self._lock)
+        shared_file = self.factory.SharedFile(
+            self.fp,
+            info.file_offset,
+            info.file_size,
+            self._fpclose,
+            self._lock,
+            lambda: self._writing
+        )
 
         try:
             return self.factory.ArchiveExtFile(shared_file, mode, info, True)
@@ -574,6 +649,8 @@ class ArchiveFile:
             raise ValueError("Can't write to the archive file while there is "
                              "another write handle open on it. Close the first"
                              " handle before opening another.")
+
+        self._write_check(archive_info)
 
         self._did_modify = True
         self._writing = True
@@ -686,6 +763,13 @@ class ArchiveFile:
             shutil.copyfileobj(source, target)
 
         return target_path
+
+    def _write_check(self, archive_info):
+        if self.mode not in ('w', 'x', 'a'):
+            raise ValueError("write() requires mode 'w', 'x', or 'a'")
+
+        if not self.fp:
+            raise ValueError('Attempting to write to archive that was already closed')
 
     def write(self, filename, arcname=None):
         """Write the file named filename to the archive, giving it the archive

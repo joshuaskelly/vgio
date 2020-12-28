@@ -1,0 +1,10 @@
+v1.2.0
+======
+
+API Additions
+-------------
+
+HROT Subpackage
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+vgio now supports the PAK file format for HROT.

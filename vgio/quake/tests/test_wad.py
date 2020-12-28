@@ -35,6 +35,22 @@ class TestWadReadWrite(TestCase):
         self.assertTrue(fp.closed, 'File should be closed')
         self.assertIsNone(wad_file.fp, 'File pointer should be cleaned up')
 
+    def test_read_file(self):
+        wad_file = wad.WadFile('./test_data/test.wad', 'r')
+        self.assertFalse(wad_file.fp.closed, 'File should be open')
+
+        info = wad_file.infolist()[0]
+        read_file = wad_file.open(info)
+
+        self.assertEqual(read_file.mode, 'r', 'File mode should be "r"')
+
+        wad_file.close()
+
+    def test_read_file_raises_on_write(self):
+        with self.assertRaises(ValueError):
+            with wad.WadFile('./test_data/test.wad', 'r') as wad_file:
+                wad_file.open('new_file', 'w')
+
     def test_write(self):
         wad_file = wad.WadFile(self.buff, 'w')
         self.assertFalse(wad_file.fp.closed, 'File should be open')
@@ -78,6 +94,36 @@ class TestWadReadWrite(TestCase):
         w1.close()
         self.buff.close()
 
+    def test_write_file(self):
+        wad_file = wad.WadFile(self.buff, 'w')
+        self.assertFalse(wad_file.fp.closed, 'File should be open')
+
+        from vgio.quake.bsp.bsp29 import Bsp
+        bsp_file = Bsp.open('./test_data/test.bsp')
+        bsp_file.close()
+
+        # Write with an ArchiveWriteFile object
+        write_file = wad_file.open('test.bsp', 'w')
+
+        self.assertTrue(wad_file._writing, 'Wad file should be flagged as being written to')
+
+        bsp_file.save(write_file)
+        write_file.close()
+
+        self.assertFalse(wad_file._writing, 'Wad file should no longer be flagged as being written to')
+        self.assertTrue('test.bsp' in wad_file.namelist(), 'Written file should be in Wad file')
+
+        fp = wad_file.fp
+        wad_file.close()
+        self.assertFalse(fp.closed, 'File should be open')
+        self.assertIsNone(wad_file.fp, 'File pointer should be cleaned up')
+
+        info = wad_file.infolist()[0]
+
+        self.assertEqual('test.bsp', info.filename, 'Filename should be "test.bsp"')
+        self.assertEqual(12, info.file_offset, 'Offset should be 12')
+        self.assertEqual(58422, info.file_size, 'File size should be 58428')
+
     def test_append(self):
         f = open('./test_data/test.wad', 'rb')
         buff = io.BytesIO(f.read(-1))
@@ -118,7 +164,7 @@ class TestWadReadWrite(TestCase):
         with wad.WadFile(self.buff, 'r') as wad_file:
             self.assertEqual(len(wad_file.namelist()), 0, 'Wad file should have not entries')
             self.assertEqual(wad_file.end_of_data, 12, 'Directory should start immediately after header')
-            
+
     def test_zero_byte_file(self):
         with wad.WadFile(self.buff, 'w') as wad_file:
             wad_file.writestr('zero.txt', b'')
@@ -132,6 +178,7 @@ class TestWadReadWrite(TestCase):
 
             data = wad_file.read('zero.txt')
             self.assertEqual(len(data), 0, 'Length of bytes read should be zero.')
+
 
 if __name__ == '__main__':
     unittest.main()
