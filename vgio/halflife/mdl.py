@@ -22,6 +22,35 @@ VERSION = 10
 IDENTITY = b'IDST'
 
 
+def _check_mdlfile(fp):
+    fp.seek(0)
+    data = fp.read(struct.calcsize('<4s'))
+
+    return data == IDENTITY
+
+
+def is_mdlfile(filename):
+    """Quickly see if a file is a mdl file by checking the magic number.
+
+    The filename argument may be a file for file-like object.
+
+    Args:
+        filename: File to check as string or file-like object.
+
+    Returns:
+        True if given file's magic number is correct.
+    """
+    try:
+        if hasattr(filename, 'read'):
+            return _check_mdlfile(fp=filename)
+        else:
+            with open(filename, 'rb') as fp:
+                return _check_mdlfile(fp)
+
+    except Exception:
+        return False
+
+
 class Header:
     """ Class for representing a Mdl file header
 
@@ -227,43 +256,45 @@ class Header:
 
     @classmethod
     def write(cls, file, header):
-        header_data = struct.pack(cls.format,
-                                  header.identity.encode('ascii'),
-                                  header.version,
-                                  header.name.encode('ascii'),
-                                  header.filesize,
-                                  *header.eye_position,
-                                  *header.min,
-                                  *header.max,
-                                  *header.bounding_box_min,
-                                  *header.bounding_box_max,
-                                  header.flags,
-                                  header.bone_count,
-                                  header.bone_offset,
-                                  header.bone_controller_count,
-                                  header.bone_controller_offset,
-                                  header.hitbox_count,
-                                  header.hitbox_offset,
-                                  header.sequence_count,
-                                  header.sequence_offset,
-                                  header.sequence_group_count,
-                                  header.sequence_group_offset,
-                                  header.texture_count,
-                                  header.texture_offset,
-                                  header.texture_data_offset,
-                                  header.skin_count,
-                                  header.skin_group_count,
-                                  header.skin_offset,
-                                  header.body_part_count,
-                                  header.body_part_offset,
-                                  header.attachment_count,
-                                  header.attachment_offset,
-                                  header.sound_table,
-                                  header.sound_index,
-                                  header.sound_groups,
-                                  header.sound_group_offset,
-                                  header.transition_count,
-                                  header.transition_offset)
+        header_data = struct.pack(
+            cls.format,
+            header.identity.encode('ascii'),
+            header.version,
+            header.name.encode('ascii'),
+            header.filesize,
+            *header.eye_position,
+            *header.min,
+            *header.max,
+            *header.bounding_box_min,
+            *header.bounding_box_max,
+            header.flags,
+            header.bone_count,
+            header.bone_offset,
+            header.bone_controller_count,
+            header.bone_controller_offset,
+            header.hitbox_count,
+            header.hitbox_offset,
+            header.sequence_count,
+            header.sequence_offset,
+            header.sequence_group_count,
+            header.sequence_group_offset,
+            header.texture_count,
+            header.texture_offset,
+            header.texture_data_offset,
+            header.skin_count,
+            header.skin_group_count,
+            header.skin_offset,
+            header.body_part_count,
+            header.body_part_offset,
+            header.attachment_count,
+            header.attachment_offset,
+            header.sound_table,
+            header.sound_index,
+            header.sound_groups,
+            header.sound_group_offset,
+            header.transition_count,
+            header.transition_offset
+        )
 
         file.write(header_data)
 
@@ -335,13 +366,15 @@ class Bone:
 
     @classmethod
     def write(cls, file, bone):
-        bone_data = struct.pack(cls.format,
-                                bone.name.encode('ascii'),
-                                bone.parent,
-                                bone.flags,
-                                *bone.bone_controller,
-                                *bone.value,
-                                *bone.scale)
+        bone_data = struct.pack(
+            cls.format,
+            bone.name.encode('ascii'),
+            bone.parent,
+            bone.flags,
+            *bone.bone_controller,
+            *bone.value,
+            *bone.scale
+        )
 
         file.write(bone_data)
 
@@ -398,13 +431,15 @@ class BoneController:
 
     @classmethod
     def write(cls, file, bonecontroller):
-        bonecontroller_data = struct.pack(cls.format,
-                                          bonecontroller.bone,
-                                          bonecontroller.type,
-                                          bonecontroller.start,
-                                          bonecontroller.end,
-                                          bonecontroller.rest,
-                                          bonecontroller.index)
+        bonecontroller_data = struct.pack(
+            cls.format,
+            bonecontroller.bone,
+            bonecontroller.type,
+            bonecontroller.start,
+            bonecontroller.end,
+            bonecontroller.rest,
+            bonecontroller.index
+        )
 
         file.write(bonecontroller_data)
 
@@ -455,11 +490,13 @@ class HitBox:
 
     @classmethod
     def write(cls, file, hitbox):
-        hitbox_data = struct.pack(cls.format,
-                                  hitbox.bone,
-                                  hitbox.group,
-                                  *hitbox.bounding_box_min,
-                                  *hitbox.bounding_box_max)
+        hitbox_data = struct.pack(
+            cls.format,
+            hitbox.bone,
+            hitbox.group,
+            *hitbox.bounding_box_min,
+            *hitbox.bounding_box_max
+        )
 
         file.write(hitbox_data)
 
@@ -506,11 +543,13 @@ class Sequence:
 
     @classmethod
     def write(cls, file, sequence):
-        sequence_data = struct.pack(cls.format,
-                                    sequence.identity.encode('ascii'),
-                                    sequence.version,
-                                    sequence.name.encode('ascii'),
-                                    sequence.length)
+        sequence_data = struct.pack(
+            cls.format,
+            sequence.identity.encode('ascii'),
+            sequence.version,
+            sequence.name.encode('ascii'),
+            sequence.length
+        )
 
         file.write(sequence_data)
 
@@ -557,11 +596,13 @@ class SequenceGroup:
 
     @classmethod
     def write(cls, file, sequencegroup):
-        sequencegroup_data = struct.pack(cls.format,
-                                         sequencegroup.label.encode('ascii'),
-                                         sequencegroup.name.encode('ascii'),
-                                         sequencegroup.cache,
-                                         sequencegroup.data)
+        sequencegroup_data = struct.pack(
+            cls.format,
+            sequencegroup.label.encode('ascii'),
+            sequencegroup.name.encode('ascii'),
+            sequencegroup.cache,
+            sequencegroup.data
+        )
 
         file.write(sequencegroup_data)
 
@@ -613,12 +654,14 @@ class Texture:
 
     @classmethod
     def write(cls, file, texture):
-        texture_data = struct.pack(cls.format,
-                                   texture.name.encode('ascii'),
-                                   texture.flags,
-                                   texture.width,
-                                   texture.height,
-                                   texture.index)
+        texture_data = struct.pack(
+            cls.format,
+            texture.name.encode('ascii'),
+            texture.flags,
+            texture.width,
+            texture.height,
+            texture.index
+        )
 
         file.write(texture_data)
 
@@ -666,11 +709,13 @@ class BodyPart:
 
     @classmethod
     def write(cls, file, bodypart):
-        bodypart_data = struct.pack(cls.format,
-                                    bodypart.name.encode('ascii'),
-                                    bodypart.model_count,
-                                    bodypart.base,
-                                    bodypart.model_offset)
+        bodypart_data = struct.pack(
+            cls.format,
+            bodypart.name.encode('ascii'),
+            bodypart.model_count,
+            bodypart.base,
+            bodypart.model_offset
+        )
 
         file.write(bodypart_data)
 
@@ -774,20 +819,22 @@ class Model:
 
     @classmethod
     def write(cls, file, model):
-        model_data = struct.pack(cls.format,
-                                 model.name.encode('ascii'),
-                                 model.type,
-                                 model.radius,
-                                 model.mesh_count,
-                                 model.mesh_offset,
-                                 model.vertex_count,
-                                 model.vertex_info_offset,
-                                 model.vertex_offset,
-                                 model.normal_count,
-                                 model.normal_info_offset,
-                                 model.normal_offset,
-                                 model.group_count,
-                                 model.group_offset)
+        model_data = struct.pack(
+            cls.format,
+            model.name.encode('ascii'),
+            model.type,
+            model.radius,
+            model.mesh_count,
+            model.mesh_offset,
+            model.vertex_count,
+            model.vertex_info_offset,
+            model.vertex_offset,
+            model.normal_count,
+            model.normal_info_offset,
+            model.normal_offset,
+            model.group_count,
+            model.group_offset
+        )
 
         file.write(model_data)
 
@@ -859,12 +906,14 @@ class Mesh:
 
     @classmethod
     def write(cls, file, mesh):
-        mesh_data = struct.pack(cls.format,
-                                mesh.triangle_count,
-                                mesh.triangle_offset,
-                                mesh.skin_index,
-                                mesh.normal_count,
-                                mesh.normal_offset)
+        mesh_data = struct.pack(
+            cls.format,
+            mesh.triangle_count,
+            mesh.triangle_offset,
+            mesh.skin_index,
+            mesh.normal_count,
+            mesh.normal_offset
+        )
 
         file.write(mesh_data)
 
@@ -925,11 +974,13 @@ class TriVertex:
 
     @classmethod
     def write(cls, file, trivertex):
-        trivertex_data = struct.pack(cls.format,
-                                     trivertex.vertex_index,
-                                     trivertex.normal_index,
-                                     trivertex.s,
-                                     trivertex.t)
+        trivertex_data = struct.pack(
+            cls.format,
+            trivertex.vertex_index,
+            trivertex.normal_index,
+            trivertex.s,
+            trivertex.t
+        )
 
         file.write(trivertex_data)
 
@@ -999,14 +1050,16 @@ class Attachment:
 
     @classmethod
     def write(cls, file, attachment):
-        attachment_data = struct.pack(cls.format,
-                                      attachment.name.encode('ascii'),
-                                      attachment.type,
-                                      attachment.bone,
-                                      *attachment.origin,
-                                      *attachment.vector_0,
-                                      *attachment.vector_1,
-                                      *attachment.vector_2)
+        attachment_data = struct.pack(
+            cls.format,
+            attachment.name.encode('ascii'),
+            attachment.type,
+            attachment.bone,
+            *attachment.origin,
+            *attachment.vector_0,
+            *attachment.vector_1,
+            *attachment.vector_2
+        )
 
         file.write(attachment_data)
 
