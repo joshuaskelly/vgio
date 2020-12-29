@@ -23,7 +23,7 @@ from types import SimpleNamespace
 __all__ = ['ReadWriteFile', 'ArchiveInfo', 'ArchiveFile']
 
 
-class ReadWriteFile(object):
+class ReadWriteFile:
     """ReadWriteFile serves as base class for serializing/deserialing
     binary data.
 

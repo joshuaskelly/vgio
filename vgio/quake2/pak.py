@@ -132,7 +132,7 @@ class Entry:
         return Entry(*entry_struct)
 
 
-class PakInfo(object):
+class PakInfo:
     """Class with attributes describing each entry in the pak file archive."""
 
     __slots__ = (
