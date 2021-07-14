@@ -33,6 +33,7 @@ def _check_bspfile(fp):
     fp.seek(0)
     data = fp.read(struct.calcsize('<1l'))
     version = struct.unpack('<1l', data)[0]
+    fp.seek(0)
 
     return version == VERSION
 
