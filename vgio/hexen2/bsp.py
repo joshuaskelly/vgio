@@ -38,7 +38,7 @@ class Model(bsp29.Bsp.factory.Model):
 
         origin: The origin of the model.
 
-        head_node: A four-tuple of indexes. Corresponds to number of map hulls.
+        head_node: An eight-tuple of indexes. Corresponds to number of map hulls.
 
         visleafs: The number of leaves in the bsp tree?
 
