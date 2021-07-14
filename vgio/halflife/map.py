@@ -130,7 +130,7 @@ def loads(s):
     separator_pattern = '\B([{}\(\)\[\]])\B'
     comment_pattern = '(\/\/.*)'
     quoted_literal_pattern = '(?:\"(.+?)\")'
-    numeric_literal_pattern = '(-?\d+\.?\d*)\\b'
+    numeric_literal_pattern = '(-?\d+\.?\d*(?:e-\d+)?)\\b'
     literal_pattern = '([\S\w\/\.]+)'
     white_space_pattern = '([\s\n])'
     rest_pattern = '(.)'
