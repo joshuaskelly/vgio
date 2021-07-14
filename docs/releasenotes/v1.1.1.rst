@@ -4,7 +4,7 @@ v1.1.1
 Bug Fixes
 ---------
 
-Quake Subpackage
+quake Subpackage
 ^^^^^^^^^^^^^^^^
 
 - Fixes broken bsp29 SurfEdge serialization.
