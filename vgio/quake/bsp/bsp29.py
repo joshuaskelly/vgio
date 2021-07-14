@@ -1470,7 +1470,7 @@ class Bsp(ReadWriteFile):
 
         for i in p:
             d += palette[i]
-            d += [255] if i is not 255 else [0]
+            d += [255] if i != 255 else [0]
 
         image.pixels = d
 
