@@ -17,6 +17,7 @@ vgio is a Python package for video game file I/O
 
 - [Devil Daggers](./vgio/devildaggers)
 - [Duke Nukem 3D](./vgio/duke3d)
+- [Hexen II](./vgio/hexen2)
 - [HROT](./vgio/hrot)
 - [Quake](./vgio/quake)
 - [Quake II](./vgio/quake2)

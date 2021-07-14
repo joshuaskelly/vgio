@@ -1,0 +1,24 @@
+v1.3.0
+======
+
+API Additions
+-------------
+
+Hexen 2 Subpackage
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+vgio now supports the BSP file format for Hexen 2.
+
+Bug Fixes
+---------
+
+_core Subpackage
+^^^^^^^^^^^^^^^^
+
+- Improved support for working with ArchiveFile file objects.
+
+quake Subpackage
+^^^^^^^^^^^^^^^^
+
+- Fixed issue with using bsp subpackge :py:meth:`~vgio.quake.bsp.Bsp.open` method to load bsp files.
+- Fixed issue with parsing floats of form 1.50e-08
