@@ -33,6 +33,7 @@ def _check_bspfile(fp):
     fp.seek(0)
     data = fp.read(struct.calcsize('<1l'))
     version = struct.unpack('<1l', data)[0]
+    fp.seek(0)
 
     return version == VERSION
 
@@ -1469,7 +1470,7 @@ class Bsp(ReadWriteFile):
 
         for i in p:
             d += palette[i]
-            d += [255] if i is not 255 else [0]
+            d += [255] if i != 255 else [0]
 
         image.pixels = d
 

@@ -143,6 +143,23 @@ class TestMapReadWrite(TestCase):
         m0 = map.loads(map_text)
         self.assertEqual(m0[0].brushes[0].planes[0].texture_name, '32_tex')
 
+    def test_floats_close_to_zero(self):
+        map_text = """
+        {
+        {
+        ( 2 0 1.5e-06 ) ( 2 1 0 ) ( 2 0 1 ) 32_tex 0 0 0 1.0 1.0
+        ( 2 0 0 ) ( 2 1 0 ) ( 2 0 1 ) 32_tex 1.50e-05 0 0 1.0 1.0
+        ( 2 0 0 ) ( 2 1 0 ) ( 2 0 1 ) 32_tex 0 0 0 1.0 1.0
+        ( 2 0 0 ) ( 2 1 0 ) ( 2 0 1 ) 32_tex 0 0 0 1.0 1.0
+        ( 2 0 0 ) ( 2 1 0 ) ( 2 0 1 ) 32_tex 0 0 0 1.0 1.0
+        }
+        }
+        """
+
+        m0 = map.loads(map_text)
+        self.assertAlmostEqual(m0[0].brushes[0].planes[0].points[0][2], 1.5e-06, significant_digits)
+        self.assertAlmostEqual(m0[0].brushes[0].planes[1].offset[0], 1.5e-05, significant_digits)
+
 
 if __name__ == '__main__':
     unittest.main()

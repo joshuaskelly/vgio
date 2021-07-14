@@ -19,6 +19,7 @@ def _check_bspfile(fp):
     fp.seek(0)
     data = fp.read(struct.calcsize('<4s'))
     identity = struct.unpack('<4s', data)[0]
+    fp.seek(0)
 
     return identity == IDENTITY
 
