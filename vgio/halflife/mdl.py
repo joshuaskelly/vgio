@@ -637,7 +637,9 @@ class Texture:
         'flags',
         'width',
         'height',
-        'index'
+        'index',
+        'pixels',
+        'palette'
     )
 
     def __init__(self,
@@ -660,17 +662,41 @@ class Texture:
             texture.flags,
             texture.width,
             texture.height,
-            texture.index
+            file.tell() + cls.size
         )
 
+        pixels_size = texture.width * texture.height
+        pixels_format = f'<{pixels_size}B'
+        pixels_data = struct.pack(pixels_format, *texture.pixels)
+
+        palette_data = struct.pack('<768B', *[channel for rgb in texture.palette for channel in rgb])
+
         file.write(texture_data)
+        file.write(pixels_data)
+        file.write(palette_data)
 
     @classmethod
     def read(cls, file):
         texture_data = file.read(cls.size)
         texture_struct = struct.unpack(cls.format, texture_data)
 
-        return Texture(*texture_struct)
+        texture = Texture(*texture_struct)
+
+        offset = file.tell()
+
+        file.seek(texture.index)
+
+        pixels_size = texture.width * texture.height
+        pixels_format = f'<{pixels_size}B'
+        pixel_data = file.read(pixels_size)
+        texture.pixels = struct.unpack(pixels_format, pixel_data)
+
+        palette_data = file.read(struct.calcsize('<768B'))
+        texture.palette = tuple(struct.iter_unpack('<3B', palette_data))
+
+        file.seek(offset)
+
+        return texture
 
 
 class BodyPart:
@@ -930,6 +956,7 @@ class Mesh:
         m.triangles = tuple(TriVertex.read(file) for _ in range(m.triangle_count))
 
         file.seek(m.normal_offset)
+        # TODO: Fix normals. Are they packed in?
         #format = '<fff'
         #size = struct.calcsize(format)
         #m.normals = tuple(struct.unpack(format, file.read(size)) for _ in range(m.normal_count))
@@ -1097,13 +1124,17 @@ class Mdl(ReadWriteFile):
         mdl = cls()
         header = Header.read(file)
 
+        # TODO: Flags?
         mdl.bones = _read_chunk(Bone, header.bone_offset, header.bone_count)
         mdl.bone_controllers = _read_chunk(BoneController, header.bone_controller_offset, header.bone_controller_count)
         mdl.hit_boxes = _read_chunk(HitBox, header.hitbox_offset, header.hitbox_count)
         mdl.sequences = _read_chunk(Sequence, header.sequence_offset, header.sequence_count)
         mdl.sequence_groups = _read_chunk(SequenceGroup, header.sequence_group_offset, header.sequence_group_count)
         mdl.textures = _read_chunk(Texture, header.texture_offset, header.texture_count)
+        # TODO: Skins
         mdl.body_parts = _read_chunk(BodyPart, header.body_part_offset, header.body_part_count)
         mdl.attachments = _read_chunk(Attachment, header.attachment_offset, header.attachment_count)
+        # TODO: Sounds
+        # TODO: Transitions
 
         return mdl

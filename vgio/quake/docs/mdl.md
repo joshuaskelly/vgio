@@ -19,7 +19,7 @@ The Mdl file contains 3D model data for the video game Quake.
 | 0x14   | 12   | float[3] | Origin                | Offset for model origin.                     |
 | 0x20   | 4    | float    | Radius                | Bounding radius of model.                    |
 | 0x24   | 12   | float[3] | Eye Position          | Offset for eye position.                     |
-| 0x30   | 4    | int      | Skin Count            | The number of Skins or Skin Groups in the Skins chunk.  |
+| 0x30   | 4    | int      | Skin Count            | The number of Skins or froups in the Skins chunk.  |
 | 0x34   | 4    | float    | Skin Width            | The width of the skins in pixels.            |
 | 0x38   | 4    | int      | Skin Height           | The height of the skins in pixels.           |
 | 0x3C   | 4    | int      | Vertex Count          | The number of vertexes per frame.            |
